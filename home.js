@@ -115,32 +115,7 @@ function loadUserData(userData) {
         console.log('👤 Accesso UTENTE - Sezione staff nascosta');
     }
 }
-    // Se è admin, aggiungi badge e mostra contenuti admin
-    if (userData.isAdmin) {
-        usernameDisplay.textContent = userData.username + ' (Admin)';
-        usernameDisplay.style.color = '#e74c3c';
-        usernameDisplay.style.fontWeight = 'bold';
-        
-        // Mostra il link "Sezione Staff" nella navbar
-        document.getElementById('staffNavItem').style.display = 'block';
-        
-        // Mostra contenuto admin nella sezione staff
-        document.getElementById('staffUserContent').style.display = 'none';
-        document.getElementById('staffAdminContent').style.display = 'block';
-        
-        console.log('👑 Accesso ADMIN - Pannello staff visibile');
-    } else {
-        usernameDisplay.textContent = userData.username;
-        
-        // Nascondi il link "Sezione Staff" per utenti normali
-        document.getElementById('staffNavItem').style.display = 'none';
-        
-        // Mostra messaggio "Accesso Negato" nella sezione staff
-        document.getElementById('staffUserContent').style.display = 'block';
-        document.getElementById('staffAdminContent').style.display = 'none';
-        
-        console.log('👤 Accesso UTENTE - Sezione staff nascosta');
-    }
+
 // Inizializza tutti gli event listeners
 function initializeEventListeners() {
     // Logout
