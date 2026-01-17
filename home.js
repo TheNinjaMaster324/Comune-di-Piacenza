@@ -1,10 +1,30 @@
+// Tempo di scadenza sessione: 5 ore (in millisecondi)
+const SESSION_DURATION = 5 * 60 * 60 * 1000; // 5 ore
+
 // Controllo se l'utente è loggato
 window.addEventListener('DOMContentLoaded', () => {
     const savedUser = localStorage.getItem('piacenzaRP_user');
+    const loginTime = localStorage.getItem('piacenzaRP_loginTime');
     
-    if (!savedUser) {
-        // Se l'utente NON è loggato, reindirizza al login
-        window.location.href = 'index.html';
+    // Verifica se l'utente è loggato
+    if (!savedUser || !loginTime) {
+        // Nessun utente loggato, reindirizza al login
+        window.location.href = 'Login.html';
+        return;
+    }
+    
+    // Verifica se la sessione è scaduta (5 ore)
+    const currentTime = new Date().getTime();
+    const elapsedTime = currentTime - parseInt(loginTime);
+    
+    if (elapsedTime > SESSION_DURATION) {
+        // Sessione scaduta, logout automatico
+        localStorage.removeItem('piacenzaRP_user');
+        localStorage.removeItem('piacenzaRP_loginTime');
+        showNotification('Sessione scaduta. Effettua nuovamente il login.', 'error');
+        setTimeout(() => {
+            window.location.href = 'Login.html';
+        }, 2000);
         return;
     }
     
@@ -14,18 +34,112 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Inizializza event listeners
     initializeEventListeners();
+    
+    // Mostra tempo rimanente sessione (opzionale - per debug)
+    const remainingTime = SESSION_DURATION - elapsedTime;
+    const remainingHours = Math.floor(remainingTime / (60 * 60 * 1000));
+    const remainingMinutes = Math.floor((remainingTime % (60 * 60 * 1000)) / (60 * 1000));
+    console.log(`Sessione valida per ancora ${remainingHours}h ${remainingMinutes}m`);
 });
 
 // Carica i dati utente nella pagina
 function loadUserData(userData) {
     // Mostra il nome utente nell'header
     const usernameDisplay = document.getElementById('usernameDisplay');
-    usernameDisplay.textContent = userData.username;
+    const userTypeIndicator = document.getElementById('userTypeIndicator');
+    const homeUserType = document.getElementById('homeUserType');
+    const homeUserTypeIndicator = document.getElementById('homeUserTypeIndicator');
     
-    // Se è admin, aggiungi badge
+    // Se è admin, aggiungi badge e mostra contenuti admin
     if (userData.isAdmin) {
-        usernameDisplay.textContent += ' (Admin)';
+        usernameDisplay.textContent = userData.username + ' (Admin)';
         usernameDisplay.style.color = '#e74c3c';
+        usernameDisplay.style.fontWeight = 'bold';
+        
+        // Aggiorna indicatore nella Home
+        if (homeUserType && homeUserTypeIndicator) {
+            homeUserType.innerHTML = '👑 <strong>AMMINISTRATORE</strong> - Hai accesso alla Sezione Staff';
+            homeUserTypeIndicator.style.background = '#28a745';
+        }
+        
+        // Aggiorna indicatore tipo utente nella sezione staff
+        if (userTypeIndicator) {
+            userTypeIndicator.innerHTML = '👑 <strong>AMMINISTRATORE</strong> - Accesso Completo Garantito';
+            userTypeIndicator.parentElement.style.background = '#28a745';
+        }
+        
+        // Mostra il link "Sezione Staff" nella navbar
+        const staffNavItem = document.getElementById('staffNavItem');
+        if (staffNavItem) {
+            staffNavItem.style.display = 'list-item';
+            console.log('✅ Link Sezione Staff mostrato');
+        } else {
+            console.error('❌ Elemento staffNavItem non trovato!');
+        }
+        
+        // Mostra contenuto admin nella sezione staff
+        const staffUserContent = document.getElementById('staffUserContent');
+        const staffAdminContent = document.getElementById('staffAdminContent');
+        if (staffUserContent) staffUserContent.style.display = 'none';
+        if (staffAdminContent) staffAdminContent.style.display = 'block';
+        
+        console.log('👑 Accesso ADMIN - Pannello staff visibile');
+    } else {
+        usernameDisplay.textContent = userData.username;
+        
+        // Aggiorna indicatore nella Home
+        if (homeUserType && homeUserTypeIndicator) {
+            homeUserType.innerHTML = '👤 <strong>UTENTE NORMALE</strong> - NON hai accesso alla Sezione Staff';
+            homeUserTypeIndicator.style.background = '#dc3545';
+        }
+        
+        // Aggiorna indicatore tipo utente nella sezione staff
+        if (userTypeIndicator) {
+            userTypeIndicator.innerHTML = '👤 <strong>UTENTE NORMALE</strong> - Accesso Staff Negato';
+            userTypeIndicator.parentElement.style.background = '#dc3545';
+        }
+        
+        // Nascondi il link "Sezione Staff" per utenti normali
+        const staffNavItem = document.getElementById('staffNavItem');
+        if (staffNavItem) {
+            staffNavItem.style.display = 'none';
+            console.log('✅ Link Sezione Staff nascosto per utente normale');
+        }
+        
+        // Mostra messaggio "Accesso Negato" nella sezione staff
+        const staffUserContent = document.getElementById('staffUserContent');
+        const staffAdminContent = document.getElementById('staffAdminContent');
+        if (staffUserContent) staffUserContent.style.display = 'block';
+        if (staffAdminContent) staffAdminContent.style.display = 'none';
+        
+        console.log('👤 Accesso UTENTE - Sezione staff nascosta');
+    }
+}
+    // Se è admin, aggiungi badge e mostra contenuti admin
+    if (userData.isAdmin) {
+        usernameDisplay.textContent = userData.username + ' (Admin)';
+        usernameDisplay.style.color = '#e74c3c';
+        usernameDisplay.style.fontWeight = 'bold';
+        
+        // Mostra il link "Sezione Staff" nella navbar
+        document.getElementById('staffNavItem').style.display = 'block';
+        
+        // Mostra contenuto admin nella sezione staff
+        document.getElementById('staffUserContent').style.display = 'none';
+        document.getElementById('staffAdminContent').style.display = 'block';
+        
+        console.log('👑 Accesso ADMIN - Pannello staff visibile');
+    } else {
+        usernameDisplay.textContent = userData.username;
+        
+        // Nascondi il link "Sezione Staff" per utenti normali
+        document.getElementById('staffNavItem').style.display = 'none';
+        
+        // Mostra messaggio "Accesso Negato" nella sezione staff
+        document.getElementById('staffUserContent').style.display = 'block';
+        document.getElementById('staffAdminContent').style.display = 'none';
+        
+        console.log('👤 Accesso UTENTE - Sezione staff nascosta');
     }
 }
 
@@ -50,11 +164,12 @@ function initializeEventListeners() {
 function handleLogout() {
     if (confirm('Sei sicuro di voler uscire?')) {
         localStorage.removeItem('piacenzaRP_user');
+        localStorage.removeItem('piacenzaRP_loginTime');
         showNotification('Logout effettuato', 'success');
         
         // Reindirizza al login dopo 1 secondo
         setTimeout(() => {
-            window.location.href = 'index.html';
+            window.location.href = 'Login.html';
         }, 1000);
     }
 }
