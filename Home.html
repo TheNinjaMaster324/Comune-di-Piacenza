@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comune di Piacenza RP - Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Navbar Fissa -->
+    <nav class="bg-blue-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo e Titolo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                        <span class="text-blue-900 text-xs font-bold">PC</span>
+                    </div>
+                    <span class="font-bold text-xl hidden md:block">Comune di Piacenza RP</span>
+                </div>
+
+                <!-- Menu Desktop -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#" class="hover:text-blue-200 transition">
+                        Home
+                    </a>
+                    <a href="https://discord.gg/piacenzarp" target="_blank" 
+                       class="hover:text-blue-200 transition">
+                        Server Discord
+                    </a>
+                    <a href="https://www.roblox.com/groups/piacenzarp" target="_blank" 
+                       class="hover:text-blue-200 transition">
+                        Gruppo Roblox
+                    </a>
+                    <a href="#staff" class="hover:text-blue-200 transition">
+                        Sezione Staff
+                    </a>
+                    <button onclick="handleLogout()" 
+                            class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition">
+                        Esci
+                    </button>
+                </div>
+
+                <!-- Menu Mobile Toggle -->
+                <button onclick="toggleMobileMenu()" class="md:hidden" id="menuToggle">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Menu Mobile -->
+            <div id="mobileMenu" class="md:hidden py-4 space-y-3 border-t border-blue-800 hidden">
+                <a href="#" class="block hover:text-blue-200 transition">Home</a>
+                <a href="https://discord.gg/piacenzarp" target="_blank" 
+                   class="block hover:text-blue-200 transition">Server Discord</a>
+                <a href="https://www.roblox.com/groups/piacenzarp" target="_blank" 
+                   class="block hover:text-blue-200 transition">Gruppo Roblox</a>
+                <a href="#staff" class="block hover:text-blue-200 transition">Sezione Staff</a>
+                <button onclick="handleLogout()" 
+                        class="w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition text-left">
+                    Esci
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header con Logo -->
+    <header class="bg-white shadow-md py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div class="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <span class="text-gray-500 text-sm">[Inserisci Logo Qui]</span>
+            </div>
+            <h1 class="text-4xl font-bold text-blue-900 mb-2">Comune di Piacenza RP</h1>
+            <p class="text-xl text-gray-600">
+                Benvenuto, <span class="font-semibold text-blue-700" id="username"></span>
+                <span id="adminBadge" class="ml-2 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold hidden">
+                    ADMIN
+                </span>
+            </p>
+        </div>
+    </header>
+
+    <!-- Contenuto Principale -->
+    <main class="max-w-7xl mx-auto px-4 py-12">
+        
+        <!-- Sezione Benvenuto -->
+        <section class="bg-white rounded-lg shadow-md p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                Benvenuto nel portale ufficiale
+            </h2>
+            <p class="text-gray-600 leading-relaxed">
+                Questo è il sito ufficiale del Comune di Piacenza Roleplay su Roblox. 
+                Qui potrai trovare tutte le informazioni necessarie, gestire il tuo profilo 
+                e rimanere aggiornato sulle novità del server.
+            </p>
+        </section>
+
+        <!-- Sezione Staff -->
+        <section id="staff" class="bg-white rounded-lg shadow-md p-8 mb-8">
+            <div class="flex items-center gap-3 mb-4">
+                <svg class="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-800">Sezione Staff</h2>
+            </div>
+            
+            <!-- Contenuto Admin (visibile solo agli admin) -->
+            <div id="adminContent" class="bg-green-50 border border-green-200 rounded-lg p-6 hidden">
+                <h3 class="text-lg font-bold text-green-800 mb-3">
+                    ✓ Accesso Amministratore Confermato
+                </h3>
+                <p class="text-green-700 mb-4">
+                    Benvenuto nella sezione riservata allo staff. Qui potrai gestire 
+                    le impostazioni del server, moderare i contenuti e accedere agli 
+                    strumenti amministrativi.
+                </p>
+                <div class="bg-white rounded p-4 border border-green-300">
+                    <h4 class="font-semibold text-gray-800 mb-2">Pannello Amministrativo</h4>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li>• Gestione utenti</li>
+                        <li>• Moderazione contenuti</li>
+                        <li>• Statistiche server</li>
+                        <li>• Configurazioni avanzate</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Contenuto Utente Normale (accesso negato) -->
+            <div id="userContent" class="bg-red-50 border border-red-200 rounded-lg p-6 hidden">
+                <h3 class="text-lg font-bold text-red-800 mb-2">
+                    ⚠ Accesso Negato
+                </h3>
+                <p class="text-red-700">
+                    Non hai i permessi necessari per accedere a questa sezione. 
+                    Solo gli amministratori possono visualizzare il contenuto di questa area.
+                </p>
+                <p class="text-sm text-red-600 mt-3">
+                    Se ritieni di dover avere accesso, contatta un amministratore.
+                </p>
+            </div>
+        </section>
+
+        <!-- Link Social Media -->
+        <section class="bg-blue-50 rounded-lg p-6 mb-8">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">
+                Seguici sui Social Media
+            </h3>
+            <div class="flex justify-center gap-4 flex-wrap">
+                <a href="https://discord.gg/piacenzarp" target="_blank"
+                   class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition">
+                    Discord
+                </a>
+                <a href="https://www.roblox.com/groups/piacenzarp" target="_blank"
+                   class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition">
+                    Roblox
+                </a>
+                <a href="#" class="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2 rounded-lg transition">
+                    Twitter
+                </a>
+                <a href="#" class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-lg transition">
+                    Instagram
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                
+                <!-- Dove Rivolgersi -->
+                <div>
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Dove Rivolgersi
+                    </h3>
+                    <p class="text-gray-400 text-sm">
+                        Per qualsiasi informazione, contatta il nostro team di supporto 
+                        attraverso i canali ufficiali.
+                    </p>
+                </div>
+
+                <!-- Creatori -->
+                <div>
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Creato da
+                    </h3>
+                    <p class="text-gray-400 text-sm">
+                        Team di Sviluppo Comune di Piacenza RP
+                    </p>
+                </div>
+
+                <!-- Email Supporto -->
+                <div>
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        Email di Supporto
+                    </h3>
+                    <a href="mailto:supporto@piacenzarp.it" 
+                       class="text-blue-400 hover:text-blue-300 text-sm">
+                        supporto@piacenzarp.it
+                    </a>
+                </div>
+            </div>
+
+            <!-- Social Media Links -->
+            <div class="border-t border-gray-800 pt-8 mb-6">
+                <div class="flex justify-center gap-6 mb-6 flex-wrap">
+                    <a href="https://discord.gg/piacenzarp" target="_blank"
+                       class="text-gray-400 hover:text-white transition">Discord</a>
+                    <a href="https://www.roblox.com/groups/piacenzarp" target="_blank"
+                       class="text-gray-400 hover:text-white transition">Roblox</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">Twitter</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">Instagram</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">YouTube</a>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="text-center text-gray-500 text-sm border-t border-gray-800 pt-6">
+                <p>© 2026 Comune di Piacenza RP. Tutti i diritti riservati.</p>
+                <p class="mt-2">Roblox Roleplay Community</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentUser = null;
+        const SESSION_DURATION = 5 * 60 * 60 * 1000; // 5 ore
+
+        // Carica l'utente al caricamento della pagina
+        window.onload = function() {
+            const savedUser = localStorage.getItem('piacenzaRP_user');
+            const loginTime = localStorage.getItem('piacenzaRP_loginTime');
+            
+            if (!savedUser || !loginTime) {
+                // Se non c'è utente loggato, torna al login
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Verifica se la sessione è scaduta
+            const currentTime = new Date().getTime();
+            const elapsedTime = currentTime - parseInt(loginTime);
+            
+            if (elapsedTime > SESSION_DURATION) {
+                // Sessione scaduta, logout automatico
+                localStorage.removeItem('piacenzaRP_user');
+                localStorage.removeItem('piacenzaRP_loginTime');
+                alert('Sessione scaduta. Effettua nuovamente il login.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            currentUser = JSON.parse(savedUser);
+            
+            // Mostra il nome utente
+            document.getElementById('username').textContent = currentUser.username;
+            
+            // Mostra badge admin se è admin
+            if (currentUser.isAdmin) {
+                document.getElementById('adminBadge').classList.remove('hidden');
+                document.getElementById('adminContent').classList.remove('hidden');
+            } else {
+                document.getElementById('userContent').classList.remove('hidden');
+            }
+            
+            // Mostra tempo rimanente (opzionale - per debug)
+            const remainingTime = SESSION_DURATION - elapsedTime;
+            const remainingHours = Math.floor(remainingTime / (60 * 60 * 1000));
+            const remainingMinutes = Math.floor((remainingTime % (60 * 60 * 1000)) / (60 * 1000));
+            console.log(`Sessione valida per ancora ${remainingHours}h ${remainingMinutes}m`);
+        };
+
+        // Logout
+        function handleLogout() {
+            if (confirm('Sei sicuro di voler uscire?')) {
+                localStorage.removeItem('piacenzaRP_user');
+                localStorage.removeItem('piacenzaRP_loginTime');
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Toggle menu mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+    </script>
+
+</body>
+</html>
