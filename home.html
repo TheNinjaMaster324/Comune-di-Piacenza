@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - Comune di Piacenza Roleplay</title>
-    <link rel="stylesheet" href="syle.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -24,7 +24,7 @@
                 <li><a href="#home" class="nav-link active">Home</a></li>
                 <li><a href="https://discord.gg/tuoserver" target="_blank" class="nav-link">Server Discord</a></li>
                 <li><a href="https://www.roblox.com/groups/tuogruppo" target="_blank" class="nav-link">Gruppo Roblox</a></li>
-                <li><a href="#staff" class="nav-link">Sezione Staff</a></li>
+                <li id="staffNavItem" style="display: none;"><a href="#staff" class="nav-link">Sezione Staff</a></li>
                 <li><a href="#social" class="nav-link">Social Media</a></li>
                 <li><a href="#contact" class="nav-link">Contatti</a></li>
                 <li><button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Esci</button></li>
@@ -71,8 +71,70 @@
 
         <section id="staff" class="content-section">
             <div class="container">
-                <h2>Sezione Staff</h2>
-                <p>Area riservata ai membri dello staff. Contenuti in fase di sviluppo.</p>
+                <!-- Contenuto per UTENTI NORMALI (nascosto agli admin) -->
+                <div id="staffUserContent">
+                    <h2>⚠️ Accesso Negato</h2>
+                    <div style="background: #f8d7da; border: 2px solid #dc3545; border-radius: 10px; padding: 30px; text-align: center; margin-top: 30px;">
+                        <i class="fas fa-lock" style="font-size: 64px; color: #dc3545; margin-bottom: 20px;"></i>
+                        <h3 style="color: #721c24; margin-bottom: 15px;">Area Riservata</h3>
+                        <p style="color: #721c24; font-size: 18px;">
+                            Questa sezione è accessibile <strong>solo ai membri dello staff</strong>.<br>
+                            Se sei un membro dello staff, effettua il login come amministratore.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Contenuto per ADMIN (nascosto agli utenti normali) -->
+                <div id="staffAdminContent" style="display: none;">
+                    <h2>🛡️ Pannello Amministratore</h2>
+                    <p style="background: #d4edda; border: 2px solid #28a745; border-radius: 10px; padding: 15px; color: #155724; font-weight: 600; margin-bottom: 30px;">
+                        <i class="fas fa-check-circle"></i> Accesso autorizzato - Benvenuto nello staff panel!
+                    </p>
+                    
+                    <div class="info-cards">
+                        <div class="info-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                            <i class="fas fa-users-cog"></i>
+                            <h3>Gestione Utenti</h3>
+                            <p>Visualizza e gestisci gli utenti registrati sul server</p>
+                            <button class="submit-btn" style="margin-top: 15px; background: white; color: #28a745;">Accedi</button>
+                        </div>
+                        
+                        <div class="info-card" style="background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);">
+                            <i class="fas fa-file-alt"></i>
+                            <h3>Rapporti</h3>
+                            <p>Gestisci i rapporti e le segnalazioni dei giocatori</p>
+                            <button class="submit-btn" style="margin-top: 15px; background: white; color: #dc3545;">Accedi</button>
+                        </div>
+                        
+                        <div class="info-card" style="background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);">
+                            <i class="fas fa-cog"></i>
+                            <h3>Impostazioni</h3>
+                            <p>Configura le impostazioni del server e delle whitelist</p>
+                            <button class="submit-btn" style="margin-top: 15px; background: white; color: #fd7e14;">Accedi</button>
+                        </div>
+
+                        <div class="info-card" style="background: linear-gradient(135deg, #6f42c1 0%, #6610f2 100%);">
+                            <i class="fas fa-chart-line"></i>
+                            <h3>Statistiche</h3>
+                            <p>Visualizza le statistiche e analytics del server</p>
+                            <button class="submit-btn" style="margin-top: 15px; background: white; color: #6f42c1;">Accedi</button>
+                        </div>
+
+                        <div class="info-card" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                            <i class="fas fa-shield-alt"></i>
+                            <h3>Moderazione</h3>
+                            <p>Ban, kick, warn e gestione sanzioni disciplinari</p>
+                            <button class="submit-btn" style="margin-top: 15px; background: white; color: #17a2b8;">Accedi</button>
+                        </div>
+
+                        <div class="info-card" style="background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);">
+                            <i class="fas fa-history"></i>
+                            <h3>Log Attività</h3>
+                            <p>Cronologia completa delle azioni dello staff</p>
+                            <button class="submit-btn" style="margin-top: 15px; background: white; color: #20c997;">Accedi</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 

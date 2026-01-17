@@ -5,10 +5,23 @@ let authCodeRequested = false;
 // Controllo se l'utente è già loggato
 window.addEventListener('DOMContentLoaded', () => {
     const savedUser = localStorage.getItem('piacenzaRP_user');
+    const loginTime = localStorage.getItem('piacenzaRP_loginTime');
     
-    if (savedUser) {
-        // Se l'utente è già loggato, reindirizza alla home
-        window.location.href = 'home.html';
+    if (savedUser && loginTime) {
+        // Verifica se la sessione è ancora valida (5 ore)
+        const currentTime = new Date().getTime();
+        const elapsedTime = currentTime - parseInt(loginTime);
+        const SESSION_DURATION = 5 * 60 * 60 * 1000; // 5 ore
+        
+        if (elapsedTime < SESSION_DURATION) {
+            // Sessione ancora valida, reindirizza alla home
+            window.location.href = 'Comune di Piacenza.html';
+            return;
+        } else {
+            // Sessione scaduta, rimuovi i dati
+            localStorage.removeItem('piacenzaRP_user');
+            localStorage.removeItem('piacenzaRP_loginTime');
+        }
     }
     
     initializeEventListeners();
@@ -62,6 +75,13 @@ function hideAllAuthCodeFields() {
     });
 }
 
+// Salva login con timestamp
+function saveLoginSession(userData) {
+    const currentTime = new Date().getTime();
+    localStorage.setItem('piacenzaRP_user', JSON.stringify(userData));
+    localStorage.setItem('piacenzaRP_loginTime', currentTime.toString());
+}
+
 // Gestione Login
 function handleLogin(e) {
     e.preventDefault();
@@ -84,14 +104,14 @@ function handleLogin(e) {
                 isAdmin: false
             };
             
-            // Salva l'utente
-            localStorage.setItem('piacenzaRP_user', JSON.stringify(userData));
+            // Salva l'utente con timestamp
+            saveLoginSession(userData);
             
-            showNotification('Login effettuato con successo!', 'success');
+            showNotification('Login effettuato con successo! Sessione valida per 5 ore.', 'success');
             
             // Reindirizza alla home dopo 1 secondo
             setTimeout(() => {
-                window.location.href = 'home.html';
+                window.location.href = 'Comune di Piacenza.html';
             }, 1000);
         } else {
             showNotification('Inserisci un codice valido di 6 cifre', 'error');
@@ -122,14 +142,14 @@ function handleRegister(e) {
                 isAdmin: false
             };
             
-            // Salva l'utente
-            localStorage.setItem('piacenzaRP_user', JSON.stringify(userData));
+            // Salva l'utente con timestamp
+            saveLoginSession(userData);
             
-            showNotification('Registrazione completata con successo!', 'success');
+            showNotification('Registrazione completata con successo! Sessione valida per 5 ore.', 'success');
             
             // Reindirizza alla home dopo 1 secondo
             setTimeout(() => {
-                window.location.href = 'home.html';
+                window.location.href = 'Comune di Piacenza.html';
             }, 1000);
         } else {
             showNotification('Inserisci un codice valido di 6 cifre', 'error');
@@ -169,14 +189,14 @@ function handleAdminLogin(e) {
                 isAdmin: true
             };
             
-            // Salva l'utente admin
-            localStorage.setItem('piacenzaRP_user', JSON.stringify(userData));
+            // Salva l'utente admin con timestamp
+            saveLoginSession(userData);
             
-            showNotification('Accesso amministratore effettuato!', 'success');
+            showNotification('Accesso amministratore effettuato! Sessione valida per 5 ore.', 'success');
             
             // Reindirizza alla home dopo 1 secondo
             setTimeout(() => {
-                window.location.href = 'home.html';
+                window.location.href = 'Comune di Piacenza.html';
             }, 1000);
         } else {
             showNotification('Inserisci un codice valido di 6 cifre', 'error');
