@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - Comune di Piacenza Roleplay</title>
-    <link rel="stylesheet" href="s">
+    <link rel="stylesheet" href="syle.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -45,6 +45,11 @@
     <main class="main-content">
         <section id="home" class="content-section active">
             <div class="container">
+                <!-- INDICATORE DEBUG - Mostra sempre il tipo di utente -->
+                <div id="homeUserTypeIndicator" style="background: #17a2b8; color: white; padding: 15px; border-radius: 10px; margin-bottom: 25px; font-weight: bold; text-align: center; font-size: 18px;">
+                    <i class="fas fa-info-circle"></i> TIPO UTENTE: <span id="homeUserType">Caricamento...</span>
+                </div>
+
                 <h2>Benvenuto nel Comune di Piacenza Roleplay</h2>
                 <p class="description">
                     Qui aggiungeremo la descrizione completa del server, le regole, le novità e tutte le informazioni necessarie per i giocatori.
@@ -71,25 +76,36 @@
 
         <section id="staff" class="content-section">
             <div class="container">
+                <!-- INDICATORE VISIVO PER TESTING -->
+                <div style="background: #17a2b8; color: white; padding: 15px; border-radius: 10px; margin-bottom: 25px; font-weight: bold; text-align: center; font-size: 18px;">
+                    <i class="fas fa-info-circle"></i> INDICATORE TIPO UTENTE: <span id="userTypeIndicator">Caricamento...</span>
+                </div>
+
                 <!-- Contenuto per UTENTI NORMALI (nascosto agli admin) -->
                 <div id="staffUserContent">
                     <h2>⚠️ Accesso Negato</h2>
-                    <div style="background: #f8d7da; border: 2px solid #dc3545; border-radius: 10px; padding: 30px; text-align: center; margin-top: 30px;">
+                    <div style="background: #f8d7da; border: 2px solid #dc3545; border-radius: 10px; padding: 30px; text-align: center; margin-top: 20px;">
                         <i class="fas fa-lock" style="font-size: 64px; color: #dc3545; margin-bottom: 20px;"></i>
                         <h3 style="color: #721c24; margin-bottom: 15px;">Area Riservata</h3>
                         <p style="color: #721c24; font-size: 18px;">
                             Questa sezione è accessibile <strong>solo ai membri dello staff</strong>.<br>
                             Se sei un membro dello staff, effettua il login come amministratore.
                         </p>
+                        <div style="background: #721c24; color: white; padding: 12px; border-radius: 8px; margin-top: 20px; font-size: 16px;">
+                            <i class="fas fa-user"></i> <strong>SEI LOGGATO COME: UTENTE NORMALE</strong>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Contenuto per ADMIN (nascosto agli utenti normali) -->
                 <div id="staffAdminContent" style="display: none;">
                     <h2>🛡️ Pannello Amministratore</h2>
-                    <p style="background: #d4edda; border: 2px solid #28a745; border-radius: 10px; padding: 15px; color: #155724; font-weight: 600; margin-bottom: 30px;">
+                    <p style="background: #d4edda; border: 2px solid #28a745; border-radius: 10px; padding: 15px; color: #155724; font-weight: 600; margin-bottom: 20px;">
                         <i class="fas fa-check-circle"></i> Accesso autorizzato - Benvenuto nello staff panel!
                     </p>
+                    <div style="background: #28a745; color: white; padding: 12px; border-radius: 8px; margin-bottom: 30px; font-size: 16px; text-align: center;">
+                        <i class="fas fa-crown"></i> <strong>SEI LOGGATO COME: AMMINISTRATORE</strong>
+                    </div>
                     
                     <div class="info-cards">
                         <div class="info-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
