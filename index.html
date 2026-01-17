@@ -3,100 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Comune di Piacenza Roleplay</title>
-    <link rel="stylesheet" href="syle.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Comune di Piacenza RP - Login</title>
+    <script src="auth.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+    </style>
 </head>
-<body>
-    <!-- Pagina di Autenticazione -->
-    <div id="authPage" class="page active">
-        <div class="auth-container">
-            <div class="auth-header">
-                <h1>Benvenuto da Comune di Piacenza</h1>
-                <div class="logo-container">
-                    <img src="logo.png" alt="Logo Comune di Piacenza" id="logo">
+<body class="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 min-h-screen flex items-center justify-center p-4">
+    
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <!-- Logo e Titolo -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-blue-900 mb-2">
+                    Benvenuto da Comune di Piacenza
+                </h1>
+                <div class="w-32 h-32 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <span class="text-gray-500 text-sm">[Inserisci Logo Qui]</span>
                 </div>
             </div>
 
-            <div class="auth-links">
-                <a href="https://discord.gg/tuoserver" target="_blank" class="link-btn discord">
-                    <i class="fab fa-discord"></i> Server Discord
+            <!-- Link Discord e Roblox -->
+            <div class="flex gap-3 mb-6">
+                <a href="https://discord.gg/piacenzarp" target="_blank" 
+                   class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg text-center text-sm font-medium transition">
+                    Discord Server
                 </a>
-                <a href="https://www.roblox.com/groups/tuogruppo" target="_blank" class="link-btn roblox">
-                    <i class="fas fa-gamepad"></i> Gruppo Roblox
+                <a href="https://www.roblox.com/groups/piacenzarp" target="_blank" 
+                   class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg text-center text-sm font-medium transition">
+                    Gruppo Roblox
                 </a>
             </div>
 
-            <!-- Form di Login/Registrazione -->
-            <div class="auth-forms" id="normalAuth">
-                <div class="auth-toggle">
-                    <button class="toggle-btn active" data-form="login">Login</button>
-                    <button class="toggle-btn" data-form="register">Registrazione</button>
-                    <button class="toggle-btn admin-btn" data-form="admin">Amministratore</button>
+            <!-- Toggle Login/Registrazione -->
+            <div id="normalLoginToggle" class="flex bg-gray-100 rounded-lg p-1 mb-6">
+                <button onclick="switchToLogin()" id="loginBtn"
+                        class="flex-1 py-2 rounded-md font-medium transition bg-white text-blue-900 shadow">
+                    Login
+                </button>
+                <button onclick="switchToRegister()" id="registerBtn"
+                        class="flex-1 py-2 rounded-md font-medium transition text-gray-600">
+                    Registrazione
+                </button>
+            </div>
+
+            <!-- Alert Amministratore -->
+            <div id="adminAlert" class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 hidden">
+                <p class="text-sm text-yellow-800 font-medium">
+                    Accesso Amministratore
+                </p>
+            </div>
+
+            <!-- Form Container -->
+            <div id="formContainer" class="space-y-4">
+                <!-- Username (solo registrazione) -->
+                <div id="usernameField" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Nome Utente
+                    </label>
+                    <input type="text" id="username" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
 
-                <!-- Login Form -->
-                <form id="loginForm" class="auth-form active">
-                    <div class="form-group">
-                        <label for="loginEmail">Email *</label>
-                        <input type="email" id="loginEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="loginPassword">Password *</label>
-                        <input type="password" id="loginPassword" required>
-                    </div>
-                    <div id="loginAuthCode" class="form-group hidden">
-                        <label for="loginCode">Codice di Autenticazione (6 cifre) *</label>
-                        <input type="text" id="loginCode" maxlength="6" pattern="[0-9]{6}">
-                    </div>
-                    <button type="submit" class="submit-btn">Accedi</button>
-                </form>
+                <!-- Email -->
+                <div id="emailField">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                    </label>
+                    <input type="email" id="email" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
 
-                <!-- Register Form -->
-                <form id="registerForm" class="auth-form">
-                    <div class="form-group">
-                        <label for="registerUsername">Nome Utente *</label>
-                        <input type="text" id="registerUsername" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="registerEmail">Email *</label>
-                        <input type="email" id="registerEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="registerPassword">Password *</label>
-                        <input type="password" id="registerPassword" required>
-                    </div>
-                    <div id="registerAuthCode" class="form-group hidden">
-                        <label for="registerCode">Codice di Autenticazione (6 cifre) *</label>
-                        <input type="text" id="registerCode" maxlength="6" pattern="[0-9]{6}">
-                    </div>
-                    <button type="submit" class="submit-btn">Registrati</button>
-                </form>
+                <!-- Password -->
+                <div id="passwordField">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Password
+                    </label>
+                    <input type="password" id="password" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
 
-                <!-- Admin Form -->
-                <form id="adminForm" class="auth-form">
-                    <div class="form-group">
-                        <label for="adminUsername">Nome Utente Amministratore *</label>
-                        <input type="text" id="adminUsername" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="adminEmail">Email Amministratore *</label>
-                        <input type="email" id="adminEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="adminPassword">Password Amministratore *</label>
-                        <input type="password" id="adminPassword" required>
-                    </div>
-                    <div id="adminAuthCode" class="form-group hidden">
-                        <label for="adminCode">Codice di Autenticazione (6 cifre) *</label>
-                        <input type="text" id="adminCode" maxlength="6" pattern="[0-9]{6}">
-                    </div>
-                    <button type="submit" class="submit-btn admin">Accedi come Amministratore</button>
-                </form>
+                <!-- Codice Autenticazione -->
+                <div id="authCodeField" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Codice di Autenticazione
+                    </label>
+                    <input type="text" id="authCode" placeholder="Inserisci il codice ricevuto via email"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-sm text-gray-500 mt-2" id="emailSentTo"></p>
+                </div>
+
+                <!-- Submit Button -->
+                <button onclick="handleSubmit()" id="submitBtn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition">
+                    Accedi
+                </button>
             </div>
+
+            <!-- Link Amministratore -->
+            <button onclick="showAdminLogin()" id="adminLoginBtn"
+                    class="w-full mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Entra come Amministratore
+            </button>
+
+            <!-- Torna indietro (admin) -->
+            <button onclick="hideAdminLogin()" id="backBtn"
+                    class="w-full mt-4 text-gray-600 hover:text-gray-700 text-sm hidden">
+                Torna indietro
+            </button>
         </div>
     </div>
 
-    <script src="auth.js"></script>
+    <script>
+        let isLoginMode = true;
+        let isAdminMode = false;
+        let showAuthCode = false;
+
+        function switchToLogin() {
+            isLoginMode = true;
+            document.getElementById('loginBtn').className = 'flex-1 py-2 rounded-md font-medium transition bg-white text-blue-900 shadow';
+            document.getElementById('registerBtn').className = 'flex-1 py-2 rounded-md font-medium transition text-gray-600';
+            document.getElementById('usernameField').classList.add('hidden');
+            document.getElementById('submitBtn').textContent = 'Accedi';
+            resetAuthCode();
+        }
+
+        function switchToRegister() {
+            isLoginMode = false;
+            document.getElementById('loginBtn').className = 'flex-1 py-2 rounded-md font-medium transition text-gray-600';
+            document.getElementById('registerBtn').className = 'flex-1 py-2 rounded-md font-medium transition bg-white text-blue-900 shadow';
+            document.getElementById('usernameField').classList.remove('hidden');
+            document.getElementById('submitBtn').textContent = 'Registrati';
+            resetAuthCode();
+        }
+
+        function showAdminLogin() {
+            isAdminMode = true;
+            document.getElementById('normalLoginToggle').classList.add('hidden');
+            document.getElementById('adminAlert').classList.remove('hidden');
+            document.getElementById('adminLoginBtn').classList.add('hidden');
+            document.getElementById('backBtn').classList.remove('hidden');
+            document.getElementById('usernameField').classList.add('hidden');
+            isLoginMode = true;
+            resetAuthCode();
+        }
+
+        function hideAdminLogin() {
+            isAdminMode = false;
+            document.getElementById('normalLoginToggle').classList.remove('hidden');
+            document.getElementById('adminAlert').classList.add('hidden');
+            document.getElementById('adminLoginBtn').classList.remove('hidden');
+            document.getElementById('backBtn').classList.add('hidden');
+            resetAuthCode();
+        }
+
+        function resetAuthCode() {
+            showAuthCode = false;
+            document.getElementById('authCodeField').classList.add('hidden');
+            document.getElementById('emailField').classList.remove('hidden');
+            document.getElementById('passwordField').classList.remove('hidden');
+            document.getElementById('authCode').value = '';
+            updateSubmitButton();
+        }
+
+        function updateSubmitButton() {
+            const btn = document.getElementById('submitBtn');
+            if (showAuthCode) {
+                btn.textContent = 'Verifica e Accedi';
+            } else {
+                btn.textContent = isLoginMode ? 'Accedi' : 'Registrati';
+            }
+        }
+
+        function simulateEmailAuth() {
+            const email = document.getElementById('email').value;
+            alert(`Codice di autenticazione inviato a: ${email}`);
+            
+            showAuthCode = true;
+            document.getElementById('emailField').classList.add('hidden');
+            document.getElementById('passwordField').classList.add('hidden');
+            document.getElementById('usernameField').classList.add('hidden');
+            document.getElementById('authCodeField').classList.remove('hidden');
+            document.getElementById('emailSentTo').textContent = `Codice inviato a: ${email}`;
+            updateSubmitButton();
+        }
+
+        function handleSubmit() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value;
+            const authCode = document.getElementById('authCode').value;
+
+            if (!showAuthCode) {
+                // Prima fase: richiedi email e password
+                if (!email) {
+                    alert('Inserisci la tua email');
+                    return;
+                }
+                if (!password) {
+                    alert('Inserisci la tua password');
+                    return;
+                }
+                if (!isLoginMode && !username) {
+                    alert('Inserisci il tuo nome utente');
+                    return;
+                }
+                
+                simulateEmailAuth();
+                return;
+            }
+
+            // Seconda fase: verifica codice
+            if (!authCode) {
+                alert('Inserisci il codice di autenticazione');
+                return;
+            }
+
+            if (authCode.length < 4) {
+                alert('Codice non valido');
+                return;
+            }
+
+            // Crea oggetto utente
+            const user = {
+                username: username || email.split('@')[0],
+                email: email,
+                isAdmin: isAdminMode && email === 'admin@piacenzarp.it'
+            };
+
+            if (!isLoginMode) {
+                // Salva nuovo utente
+                const users = JSON.parse(localStorage.getItem('piacenzaRP_users') || '[]');
+                users.push(user);
+                localStorage.setItem('piacenzaRP_users', JSON.stringify(users));
+            }
+
+            // Salva sessione
+            localStorage.setItem('piacenzaRP_user', JSON.stringify(user));
+
+            // Reindirizza a home.html
+            window.location.href = 'home.html';
+        }
+
+        // Controlla se l'utente è già loggato
+        window.onload = function() {
+            const savedUser = localStorage.getItem('piacenzaRP_user');
+            if (savedUser) {
+                window.location.href = 'home.html';
+            }
+        };
+    </script>
 </body>
 </html>
