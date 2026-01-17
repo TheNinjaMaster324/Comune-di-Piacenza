@@ -9,7 +9,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Verifica se l'utente è loggato
     if (!savedUser || !loginTime) {
         // Nessun utente loggato, reindirizza al login
-        window.location.href = 'Login.html';
+        window.location.href = 'index.html';
         return;
     }
     
@@ -23,7 +23,7 @@ window.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('piacenzaRP_loginTime');
         showNotification('Sessione scaduta. Effettua nuovamente il login.', 'error');
         setTimeout(() => {
-            window.location.href = 'Login.html';
+            window.location.href = 'index.html';
         }, 2000);
         return;
     }
@@ -142,7 +142,7 @@ function handleLogout() {
         
         // Reindirizza al login dopo 1 secondo
         setTimeout(() => {
-            window.location.href = 'Login.html';
+            window.location.href = 'index.html';
         }, 1000);
     }
 }

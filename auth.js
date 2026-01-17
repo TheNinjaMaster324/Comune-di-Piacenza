@@ -15,7 +15,7 @@ window.addEventListener('DOMContentLoaded', () => {
         
         if (elapsedTime < SESSION_DURATION) {
             // Sessione ancora valida, reindirizza alla home
-            window.location.href = 'Comune di Piacenza.html';
+            window.location.href = 'index.html';
             return;
         } else {
             // Sessione scaduta, rimuovi i dati
