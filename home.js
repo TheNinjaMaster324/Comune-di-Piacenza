@@ -141,8 +141,6 @@ function loadUserData(userData) {
         
         console.log('👤 Accesso UTENTE - Sezione staff nascosta');
     }
-}
-
 // Inizializza tutti gli event listeners
 function initializeEventListeners() {
     // Logout
