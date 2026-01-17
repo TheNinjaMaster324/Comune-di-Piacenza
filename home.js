@@ -72,7 +72,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         const href = this.getAttribute('href');
         
         // Ignora i link che non sono per scroll
-        if (href === '#' || href === '#staff') return;
+        if (href === '#') return;
         
         e.preventDefault();
         const target = document.querySelector(href);
@@ -85,9 +85,32 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 top: targetPosition,
                 behavior: 'smooth'
             });
+            
+            // Chiudi il menu mobile se aperto
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.remove('active');
         }
     });
 });
+
+// Gestione form contatti
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('contactName').value;
+    const email = document.getElementById('contactEmail').value;
+    const message = document.getElementById('contactMessage').value;
+    
+    // Simula invio messaggio (in produzione invieresti al server)
+    console.log('📧 Messaggio inviato:', { name, email, message });
+    
+    // Mostra conferma
+    alert('✅ Messaggio inviato con successo!\n\nGrazie per averci contattato, ' + name + '!\nRiceverai una risposta entro 24-48 ore.');
+    
+    // Reset form
+    this.reset();
+});
+
 
 // Navbar scroll effect
 let lastScroll = 0;
