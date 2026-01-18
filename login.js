@@ -83,19 +83,34 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         return;
     }
     
-    // VALIDAZIONE: Verifica se l'utente esiste nel database locale
+    // VALIDAZIONE: Verifica se l'utente esiste nel database locale PRIMA di tutto
     const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    
+    // Controlla se ci sono utenti registrati
+    if (users.length === 0) {
+        alert('⚠️ Nessun utente registrato!\n\nNon ci sono account nel sistema.\nEffettua prima la registrazione per creare un account.');
+        return;
+    }
+    
+    // Cerca l'utente con username e password corretti
     const userExists = users.find(u => 
         u.username.toLowerCase() === username.toLowerCase() && 
         u.password === password
     );
     
     if (!userExists) {
-        alert('⚠️ Credenziali non valide!\n\nUtente non registrato o password errata.\n\nSe non hai un account, registrati prima di effettuare il login.');
+        // Verifica se esiste l'username ma la password è sbagliata
+        const usernameExists = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+        
+        if (usernameExists) {
+            alert('⚠️ Password errata!\n\nLa password inserita non è corretta per questo utente.');
+        } else {
+            alert('⚠️ Utente non registrato!\n\nQuesto nome utente non esiste nel sistema.\nEffettua prima la registrazione per creare un account.');
+        }
         return;
     }
     
-    // Genera codice e invia email
+    // SOLO SE l'utente esiste E la password è corretta, genera il codice
     generatedCode = generateAuthCode();
     
     userData = {
@@ -348,7 +363,7 @@ console.log('🔐 Sistema di autenticazione caricato!');
 console.log('📝 Funzioni debug disponibili:');
 console.log('  - showRegisteredUsers() : Mostra tutti gli utenti registrati');
 console.log('  - resetAllData() : Cancella tutti i dati salvati');
-console.log('  - showLastCode() : Mostra l\'ultimo codice 2FA generato');
+console.log('  - showLastCode() : Mostra ultimo codice 2FA generato');
 console.log('🔑 Password admin: admin123');
 console.log('📧 Il codice viene mostrato nella console per test');// Variabili globali
 let currentTab = 'login';
