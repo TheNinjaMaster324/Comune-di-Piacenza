@@ -42,9 +42,19 @@ function checkStaffAccess(event) {
     
     if (!userData || !userData.isAdmin) {
         event.preventDefault();
-        alert('⚠️ Accesso Negato\n\nQuesta sezione è riservata solo agli amministratori.\n\nSe sei un membro dello staff, effettua il login dalla sezione "Amministratore" nella pagina di accesso.');
+        showAccessDeniedModal();
         return false;
     }
+}
+
+// Mostra modal accesso negato
+function showAccessDeniedModal() {
+    document.getElementById('accessDeniedModal').style.display = 'flex';
+}
+
+// Chiudi modal accesso negato
+function closeAccessModal() {
+    document.getElementById('accessDeniedModal').style.display = 'none';
 }
 
 // Logout
