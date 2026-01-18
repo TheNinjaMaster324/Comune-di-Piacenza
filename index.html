@@ -13,7 +13,7 @@
                 <h1>Benvenuto da</h1>
                 <h2>Comune di Piacenza Roleplay</h2>
                 <div class="logo-placeholder">
-                    <img id="logo" src="logo.png" alt="Logo Comune di Piacenza" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <img id="logo" src="logo.png" alt="Logo Comune di Piacenza" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="logo-text" style="display: none;">LOGO</div>
                 </div>
             </div>
@@ -33,14 +33,12 @@
                 </a>
             </div>
 
-            <!-- Tabs -->
             <div class="tabs">
                 <button class="tab active" onclick="showTab('login')">Login</button>
                 <button class="tab" onclick="showTab('register')">Registrazione</button>
                 <button class="tab" onclick="showTab('admin')">Amministratore</button>
             </div>
 
-            <!-- Form Login -->
             <form id="loginForm" class="form-container active">
                 <div class="input-group">
                     <label for="loginUsername">Nome Utente</label>
@@ -53,7 +51,6 @@
                 <button type="submit" class="submit-btn">Accedi</button>
             </form>
 
-            <!-- Form Registrazione -->
             <form id="registerForm" class="form-container">
                 <div class="input-group">
                     <label for="regUsername">Nome Utente</label>
@@ -74,7 +71,6 @@
                 <button type="submit" class="submit-btn">Registrati</button>
             </form>
 
-            <!-- Form Admin -->
             <form id="adminForm" class="form-container">
                 <div class="input-group">
                     <label for="adminUsername">Nome Utente</label>
@@ -93,7 +89,6 @@
         </div>
     </div>
 
-    <!-- Modal Codice Autenticazione -->
     <div id="authModal" class="modal">
         <div class="modal-content">
             <h3>Codice di Autenticazione</h3>
@@ -108,106 +103,171 @@
         </div>
     </div>
 
-    <script>
-        let currentTab = 'login';
-        let userData = {};
+    <script src="login.js">
+        
+    // SISTEMA AUTENTICAZIONE INCORPORATO
+    let generatedCode = '';
+    let pendingUser = null;
 
-        function showTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById(tab + 'Form').classList.add('active');
+    // Redirect se loggato
+    if (sessionStorage.getItem('logged') === 'yes') {
+        window.location.href = 'home.html';
+    }
+
+    function makeCode() {
+        return String(Math.floor(100000 + Math.random() * 900000));
+    }
+
+    function showTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById(tab + 'Form').classList.add('active');
+    }
+
+    // LOGIN
+    document.getElementById('loginForm').onsubmit = function(e) {
+        e.preventDefault();
+        
+        let user = document.getElementById('loginUsername').value.trim();
+        let pass = document.getElementById('loginPassword').value.trim();
+        
+        console.log('🔍 Tentativo login:', user);
+        
+        let saved = localStorage.getItem('piacenzaUsers');
+        
+        if (!saved) {
+            alert('❌ NESSUN UTENTE REGISTRATO!\n\nDevi prima REGISTRARTI.');
+            console.log('❌ localStorage vuoto');
+            return;
         }
-
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            userData = {
-                username: document.getElementById('loginUsername').value,
-                isAdmin: false,
-                type: 'login'
-            };
-            showAuthModal();
-        });
-
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const password = document.getElementById('regPassword').value;
-            const confirmPassword = document.getElementById('regPasswordConfirm').value;
-            
-            if (password !== confirmPassword) {
-                alert('Le password non coincidono!');
-                return;
-            }
-            
-            userData = {
-                username: document.getElementById('regUsername').value,
-                email: document.getElementById('regEmail').value,
-                password: password,
-                isAdmin: false,
-                type: 'register'
-            };
-            
-            // Salva i dati di registrazione
-            let users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-            users.push(userData);
-            localStorage.setItem('registeredUsers', JSON.stringify(users));
-            
-            showAuthModal();
-        });
-
-        document.getElementById('adminForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('adminEmail').value;
-            
-            // Verifica email amministratore
-            if (email !== 'admin@piacenzarp.it') {
-                alert('Email amministratore non valida!');
-                return;
-            }
-            
-            userData = {
-                username: document.getElementById('adminUsername').value,
-                email: email,
-                isAdmin: true,
-                type: 'admin'
-            };
-            showAuthModal();
-        });
-
-        function showAuthModal() {
-            document.getElementById('authModal').style.display = 'flex';
+        
+        let users = JSON.parse(saved);
+        console.log('👥 Utenti trovati:', users);
+        
+        let found = users.find(u => u.username === user && u.password === pass);
+        
+        if (!found) {
+            alert('❌ CREDENZIALI ERRATE!\n\nUsername o password sbagliati.');
+            console.log('❌ Utente non trovato');
+            return;
         }
+        
+        console.log('✅ Utente trovato!');
+        generatedCode = makeCode();
+        pendingUser = {username: found.username, email: found.email, admin: false};
+        
+        console.log('🔑 CODICE:', generatedCode);
+        alert('📧 CODICE INVIATO!\n\n' + generatedCode + '\n\n(Inseriscilo nel modal)');
+        
+        document.getElementById('authModal').style.display = 'flex';
+    };
 
-        function closeAuthModal() {
-            document.getElementById('authModal').style.display = 'none';
-            document.getElementById('authCode').value = '';
+    // REGISTRAZIONE
+    document.getElementById('registerForm').onsubmit = function(e) {
+        e.preventDefault();
+        
+        let user = document.getElementById('regUsername').value.trim();
+        let email = document.getElementById('regEmail').value.trim();
+        let pass = document.getElementById('regPassword').value.trim();
+        let conf = document.getElementById('regPasswordConfirm').value.trim();
+        
+        console.log('📝 Registrazione:', user);
+        
+        if (pass !== conf) {
+            alert('❌ Le password non coincidono!');
+            return;
         }
+        
+        if (pass.length < 6) {
+            alert('❌ Password troppo corta! Minimo 6 caratteri.');
+            return;
+        }
+        
+        let saved = localStorage.getItem('piacenzaUsers');
+        let users = saved ? JSON.parse(saved) : [];
+        
+        if (users.find(u => u.username === user)) {
+            alert('❌ UTENTE GIÀ ESISTENTE!');
+            return;
+        }
+        
+        generatedCode = makeCode();
+        pendingUser = {username: user, email: email, password: pass, admin: false, register: true};
+        
+        console.log('🔑 CODICE:', generatedCode);
+        alert('📧 CODICE INVIATO!\n\n' + generatedCode + '\n\n(Inseriscilo nel modal)');
+        
+        document.getElementById('authModal').style.display = 'flex';
+    };
 
-        document.getElementById('authForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const code = document.getElementById('authCode').value;
-            
-            if (code.length === 6) {
-                // Salva i dati di sessione
-                sessionStorage.setItem('currentUser', JSON.stringify(userData));
-                sessionStorage.setItem('isLoggedIn', 'true');
-                
-                // Reindirizza alla home
-                window.location.href = 'home.html';
-            } else {
-                alert('Inserisci un codice valido a 6 cifre');
-            }
-        });
+    // ADMIN
+    document.getElementById('adminForm').onsubmit = function(e) {
+        e.preventDefault();
+        
+        let user = document.getElementById('adminUsername').value.trim();
+        let email = document.getElementById('adminEmail').value.trim();
+        let pass = document.getElementById('adminPassword').value.trim();
+        
+        if (email !== 'admin@piacenzarp.it' || pass !== 'admin123') {
+            alert('❌ CREDENZIALI ADMIN ERRATE!');
+            return;
+        }
+        
+        generatedCode = makeCode();
+        pendingUser = {username: user, email: email, admin: true};
+        
+        console.log('🔑 CODICE:', generatedCode);
+        alert('📧 CODICE ADMIN!\n\n' + generatedCode);
+        
+        document.getElementById('authModal').style.display = 'flex';
+    };
 
-        // Impedisce accesso alla home se non loggato
-        window.addEventListener('load', function() {
-            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-            if (isLoggedIn === 'true') {
-                window.location.href = 'home.html';
-            }
-        });
+    // VERIFICA CODICE
+    document.getElementById('authForm').onsubmit = function(e) {
+        e.preventDefault();
+        
+        let code = document.getElementById('authCode').value.trim();
+        
+        console.log('🔍 Verifica:', code, '===', generatedCode);
+        
+        if (code !== generatedCode) {
+            alert('❌ CODICE ERRATO!\n\nCorretto: ' + generatedCode);
+            return;
+        }
+        
+        console.log('✅ Codice corretto!');
+        
+        if (pendingUser.register) {
+            let saved = localStorage.getItem('piacenzaUsers');
+            let users = saved ? JSON.parse(saved) : [];
+            users.push({username: pendingUser.username, email: pendingUser.email, password: pendingUser.password});
+            localStorage.setItem('piacenzaUsers', JSON.stringify(users));
+            console.log('💾 Utente salvato');
+        }
+        
+        sessionStorage.setItem('logged', 'yes');
+        sessionStorage.setItem('currentUser', JSON.stringify({
+            username: pendingUser.username,
+            email: pendingUser.email,
+            isAdmin: pendingUser.admin
+        }));
+        
+        alert('✅ ACCESSO EFFETTUATO!');
+        window.location.href = 'home.html';
+    };
+
+    function closeAuthModal() {
+        document.getElementById('authModal').style.display = 'none';
+        document.getElementById('authCode').value = '';
+    }
+
+    document.getElementById('authCode').oninput = function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    };
+
+    console.log('✅ SISTEMA CARICATO!');
+    console.log('💾 Utenti nel localStorage:', localStorage.getItem('piacenzaUsers'));
     </script>
 </body>
 </html>

@@ -1,316 +1,267 @@
 // Variabili globali
-let currentTab = 'login';
-let userData = {};
 let generatedCode = '';
+let pendingUserData = null;
 
-// Controlla se l'utente è già loggato
+// Controlla se già loggato
 window.addEventListener('load', function() {
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-    if (isLoggedIn === 'true') {
+    if (sessionStorage.getItem('isLoggedIn') === 'true') {
         window.location.href = 'home.html';
     }
 });
 
-// Genera codice casuale a 6 cifre
-function generateAuthCode() {
+// Genera codice random
+function generateCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Funzione per inviare email con EmailJS (servizio gratuito)
-async function sendAuthEmail(email, code, username) {
-    console.log(`📧 Invio email a: ${email}`);
-    console.log(`🔑 Codice di autenticazione: ${code}`);
-    console.log(`👤 Username: ${username}`);
-    
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            console.log('✅ Email inviata con successo (simulata)');
-            resolve(true);
-        }, 1000);
-    });
-}
-
-// Gestione tabs
+// Cambia tab
 function showTab(tab) {
-    currentTab = tab;
-    
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
-    
     event.target.classList.add('active');
     document.getElementById(tab + 'Form').classList.add('active');
 }
 
-// Gestione form Login
+// ==================== LOGIN ====================
 document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value;
+    const password = document.getElementById('loginPassword').value.trim();
     
-    if (!username || !password) {
-        alert('⚠️ Compila tutti i campi!');
+    console.log('🔍 Tentativo login:', username);
+    
+    // Prendi utenti dal localStorage
+    const savedUsers = localStorage.getItem('piacenzaUsers');
+    console.log('💾 Dati salvati:', savedUsers);
+    
+    if (!savedUsers) {
+        alert('❌ ERRORE\n\nNessun utente registrato nel sistema!\n\nDevi prima REGISTRARTI prima di fare il login.');
         return;
     }
     
-    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const users = JSON.parse(savedUsers);
+    console.log('👥 Utenti trovati:', users);
     
-    if (users.length === 0) {
-        alert('⚠️ Nessun utente registrato!\n\nNon ci sono account nel sistema.\nEffettua prima la registrazione per creare un account.');
-        return;
-    }
+    // Cerca utente
+    const user = users.find(u => u.username === username && u.password === password);
     
-    const userExists = users.find(u => 
-        u.username.toLowerCase() === username.toLowerCase() && 
-        u.password === password
-    );
-    
-    if (!userExists) {
-        const usernameExists = users.find(u => u.username.toLowerCase() === username.toLowerCase());
-        
+    if (!user) {
+        // Verifica se esiste username
+        const usernameExists = users.find(u => u.username === username);
         if (usernameExists) {
-            alert('⚠️ Password errata!\n\nLa password inserita non è corretta per questo utente.');
+            alert('❌ PASSWORD ERRATA\n\nLa password non è corretta!');
         } else {
-            alert('⚠️ Utente non registrato!\n\nQuesto nome utente non esiste nel sistema.\nEffettua prima la registrazione per creare un account.');
+            alert('❌ UTENTE NON TROVATO\n\nQuesto username non esiste!\n\nDevi prima REGISTRARTI.');
         }
         return;
     }
     
-    generatedCode = generateAuthCode();
-    
-    userData = {
-        username: userExists.username,
-        email: userExists.email,
+    // Utente trovato! Genera codice
+    console.log('✅ Utente trovato:', user);
+    generatedCode = generateCode();
+    pendingUserData = {
+        username: user.username,
+        email: user.email,
         isAdmin: false,
         type: 'login'
     };
     
-    sendAuthEmail(userExists.email, generatedCode, userExists.username);
+    console.log('🔑 CODICE GENERATO:', generatedCode);
+    alert('📧 Codice inviato!\n\nCodice: ' + generatedCode + '\n\n(In produzione sarebbe inviato via email)');
+    
     showAuthModal();
 });
 
-// Gestione form Registrazione
+// ==================== REGISTRAZIONE ====================
 document.getElementById('registerForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const username = document.getElementById('regUsername').value.trim();
     const email = document.getElementById('regEmail').value.trim();
-    const password = document.getElementById('regPassword').value;
-    const confirmPassword = document.getElementById('regPasswordConfirm').value;
+    const password = document.getElementById('regPassword').value.trim();
+    const confirm = document.getElementById('regPasswordConfirm').value.trim();
     
-    if (!username || !email || !password || !confirmPassword) {
-        alert('⚠️ Compila tutti i campi!');
-        return;
-    }
+    console.log('📝 Tentativo registrazione:', username);
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        alert('⚠️ Inserisci un\'email valida!');
+    // Validazioni
+    if (!username || !email || !password || !confirm) {
+        alert('❌ Compila tutti i campi!');
         return;
     }
     
     if (password.length < 6) {
-        alert('⚠️ La password deve contenere almeno 6 caratteri!');
+        alert('❌ La password deve avere almeno 6 caratteri!');
         return;
     }
     
-    if (password !== confirmPassword) {
-        alert('⚠️ Le password non coincidono!');
+    if (password !== confirm) {
+        alert('❌ Le password non coincidono!');
         return;
     }
     
-    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const userExists = users.find(u => 
-        u.username.toLowerCase() === username.toLowerCase() || 
-        u.email.toLowerCase() === email.toLowerCase()
-    );
+    // Controlla se esiste già
+    const savedUsers = localStorage.getItem('piacenzaUsers');
+    let users = savedUsers ? JSON.parse(savedUsers) : [];
     
-    if (userExists) {
-        alert('⚠️ Utente già registrato!\n\nQuesto nome utente o email è già in uso.\nProva con credenziali diverse o effettua il login.');
+    const exists = users.find(u => u.username === username || u.email === email);
+    if (exists) {
+        alert('❌ UTENTE GIÀ ESISTENTE\n\nQuesto username o email è già registrato!\n\nProva con altri dati o fai il LOGIN.');
         return;
     }
     
-    generatedCode = generateAuthCode();
-    
-    userData = {
+    // Genera codice
+    generatedCode = generateCode();
+    pendingUserData = {
         username: username,
         email: email,
         password: password,
         isAdmin: false,
-        type: 'register',
-        registeredAt: new Date().toISOString()
+        type: 'register'
     };
     
-    sendAuthEmail(email, generatedCode, username);
+    console.log('🔑 CODICE GENERATO:', generatedCode);
+    alert('📧 Codice inviato!\n\nCodice: ' + generatedCode + '\n\n(In produzione sarebbe inviato via email)');
+    
     showAuthModal();
 });
 
-// Gestione form Amministratore
+// ==================== ADMIN ====================
 document.getElementById('adminForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const username = document.getElementById('adminUsername').value.trim();
     const email = document.getElementById('adminEmail').value.trim();
-    const password = document.getElementById('adminPassword').value;
+    const password = document.getElementById('adminPassword').value.trim();
     
-    if (!username || !email || !password) {
-        alert('⚠️ Compila tutti i campi!');
-        return;
-    }
+    const validEmails = ['admin@piacenzarp.it', 'amministratore@piacenzarp.it', 'staff@piacenzarp.it'];
     
-    const validAdminEmails = [
-        'admin@piacenzarp.it',
-        'amministratore@piacenzarp.it',
-        'staff@piacenzarp.it'
-    ];
-    
-    if (!validAdminEmails.includes(email.toLowerCase())) {
-        alert('⚠️ Email amministratore non valida!\n\nSolo gli amministratori autorizzati possono accedere.\nEmail consentite:\n- admin@piacenzarp.it\n- amministratore@piacenzarp.it\n- staff@piacenzarp.it');
+    if (!validEmails.includes(email)) {
+        alert('❌ EMAIL NON VALIDA\n\nEmail admin consentite:\n- admin@piacenzarp.it\n- amministratore@piacenzarp.it\n- staff@piacenzarp.it');
         return;
     }
     
     if (password !== 'admin123') {
-        alert('⚠️ Password amministratore non corretta!');
+        alert('❌ PASSWORD ADMIN ERRATA');
         return;
     }
     
-    generatedCode = generateAuthCode();
-    
-    userData = {
+    generatedCode = generateCode();
+    pendingUserData = {
         username: username,
         email: email,
         isAdmin: true,
         type: 'admin'
     };
     
-    sendAuthEmail(email, generatedCode, username);
+    console.log('🔑 CODICE GENERATO:', generatedCode);
+    alert('📧 Codice inviato!\n\nCodice: ' + generatedCode);
+    
     showAuthModal();
 });
 
-// Mostra modal codice autenticazione
+// ==================== MODAL CODICE ====================
 function showAuthModal() {
     document.getElementById('authModal').style.display = 'flex';
+    document.getElementById('authCode').value = '';
     document.getElementById('authCode').focus();
-    
-    console.log('🔐 Codice generato:', generatedCode);
-    console.log('📧 Email inviata a:', userData.email);
 }
 
-// Chiudi modal codice autenticazione
 function closeAuthModal() {
     document.getElementById('authModal').style.display = 'none';
     document.getElementById('authCode').value = '';
     generatedCode = '';
+    pendingUserData = null;
 }
 
-// Gestione form codice autenticazione
+// Verifica codice
 document.getElementById('authForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const code = document.getElementById('authCode').value.trim();
+    const inputCode = document.getElementById('authCode').value.trim();
     
-    if (code.length !== 6) {
-        alert('⚠️ Il codice deve essere di 6 cifre!');
+    console.log('🔍 Codice inserito:', inputCode);
+    console.log('🔑 Codice corretto:', generatedCode);
+    
+    if (inputCode !== generatedCode) {
+        alert('❌ CODICE ERRATO!\n\nIl codice inserito non è corretto.\n\nCodice corretto: ' + generatedCode);
         return;
     }
     
-    if (!/^\d+$/.test(code)) {
-        alert('⚠️ Il codice deve contenere solo numeri!');
-        return;
-    }
+    console.log('✅ Codice corretto!');
     
-    if (code !== generatedCode) {
-        alert('❌ Codice non valido!\n\nIl codice inserito non corrisponde a quello inviato via email.\nControlla la tua casella di posta e riprova.');
-        document.getElementById('authCode').value = '';
-        document.getElementById('authCode').focus();
-        return;
-    }
-    
-    if (userData.type === 'register') {
-        const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    // Se è registrazione, salva l'utente
+    if (pendingUserData.type === 'register') {
+        const savedUsers = localStorage.getItem('piacenzaUsers');
+        let users = savedUsers ? JSON.parse(savedUsers) : [];
+        
         users.push({
-            username: userData.username,
-            email: userData.email,
-            password: userData.password,
-            registeredAt: userData.registeredAt
+            username: pendingUserData.username,
+            email: pendingUserData.email,
+            password: pendingUserData.password
         });
-        localStorage.setItem('registeredUsers', JSON.stringify(users));
+        
+        localStorage.setItem('piacenzaUsers', JSON.stringify(users));
+        console.log('💾 Utente salvato nel localStorage');
     }
     
-    const userSession = {
-        username: userData.username,
-        email: userData.email,
-        isAdmin: userData.isAdmin,
-        loginTime: new Date().toISOString()
-    };
-    
-    sessionStorage.setItem('currentUser', JSON.stringify(userSession));
+    // Salva sessione
+    sessionStorage.setItem('currentUser', JSON.stringify({
+        username: pendingUserData.username,
+        email: pendingUserData.email,
+        isAdmin: pendingUserData.isAdmin
+    }));
     sessionStorage.setItem('isLoggedIn', 'true');
     
-    let successMessage = '';
-    if (userData.type === 'register') {
-        successMessage = '✅ Registrazione completata con successo!\n\nBenvenuto, ' + userData.username + '!';
-    } else if (userData.type === 'admin') {
-        successMessage = '✅ Accesso amministratore effettuato!\n\nBenvenuto, ' + userData.username + '!';
-    } else {
-        successMessage = '✅ Login effettuato con successo!\n\nBenvenuto, ' + userData.username + '!';
-    }
+    alert('✅ ACCESSO EFFETTUATO!\n\nBenvenuto ' + pendingUserData.username + '!');
     
-    alert(successMessage);
-    
-    setTimeout(() => {
-        window.location.href = 'home.html';
-    }, 500);
+    window.location.href = 'home.html';
 });
 
-// Permetti solo numeri nel campo codice
-document.getElementById('authCode').addEventListener('input', function(e) {
+// Solo numeri nel codice
+document.getElementById('authCode').addEventListener('input', function() {
     this.value = this.value.replace(/[^0-9]/g, '');
 });
 
-// Chiudi modal con ESC
+// ESC per chiudere
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const modal = document.getElementById('authModal');
-        if (modal.style.display === 'flex') {
-            closeAuthModal();
-        }
+    if (e.key === 'Escape' && document.getElementById('authModal').style.display === 'flex') {
+        closeAuthModal();
     }
 });
 
-// Chiudi modal cliccando fuori
+// Click fuori per chiudere
 document.getElementById('authModal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeAuthModal();
     }
 });
 
-// Funzioni debug
-function showRegisteredUsers() {
-    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    console.log('👥 Utenti registrati:', users);
-    console.log('📊 Totale utenti:', users.length);
+// ==================== DEBUG ====================
+function mostraUtenti() {
+    const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
+    console.log('=== UTENTI REGISTRATI ===');
+    console.table(users);
+    console.log('Totale:', users.length);
     return users;
 }
 
-function resetAllData() {
-    if (confirm('⚠️ ATTENZIONE!\n\nQuesto cancellerà tutti i dati.\nSei sicuro?')) {
-        localStorage.clear();
+function cancellaUtenti() {
+    if (confirm('Cancellare tutti gli utenti?')) {
+        localStorage.removeItem('piacenzaUsers');
         sessionStorage.clear();
-        alert('✅ Tutti i dati sono stati cancellati!');
+        alert('✅ Dati cancellati!');
         location.reload();
     }
 }
 
-function showLastCode() {
-    console.log('🔑 Ultimo codice generato:', generatedCode);
+function mostraCodice() {
+    console.log('🔑 Codice attuale:', generatedCode);
     return generatedCode;
 }
 
-console.log('🔐 Sistema di autenticazione caricato!');
-console.log('📝 Funzioni debug disponibili:');
-console.log('  - showRegisteredUsers() : Mostra tutti gli utenti registrati');
-console.log('  - resetAllData() : Cancella tutti i dati salvati');
-console.log('  - showLastCode() : Mostra ultimo codice 2FA generato');
-console.log('🔑 Password admin: admin123');
-console.log('📧 Il codice viene mostrato nella console per test');
+console.log('✅ Sistema caricato!');
+console.log('📝 Comandi console:');
+console.log('  mostraUtenti() - Mostra utenti registrati');
+console.log('  cancellaUtenti() - Cancella tutti i dati');
+console.log('  mostraCodice() - Mostra ultimo codice generato');
