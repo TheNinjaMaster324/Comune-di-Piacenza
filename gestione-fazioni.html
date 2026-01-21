@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Fazioni - Comune di Piacenza RP</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="gestione.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="logo.png" alt="Logo" onerror="this.style.display='none';">
+                <span>Comune di Piacenza RP</span>
+            </div>
+            
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="home.html">Home</a></li>
+                <li><a href="gestione-fazioni.html" class="active">Gestione Fazioni</a></li>
+                <li><button class="logout-btn" onclick="logout()">Esci</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Pannello Gestione -->
+    <section class="management-section">
+        <div class="container">
+            <h1>🏛️ Pannello Gestione Fazioni</h1>
+            <p class="welcome-text">Benvenuto, <span id="userName"></span> - <span id="factionName"></span></p>
+
+            <!-- Card Fazione -->
+            <div class="faction-management-card" id="factionCard">
+                <div class="faction-header-manage">
+                    <img id="factionLogo" src="" alt="Logo Fazione" class="faction-logo">
+                    <h2 id="factionTitle"></h2>
+                </div>
+
+                <div class="management-tabs">
+                    <button class="manage-tab active" onclick="showManageTab('schedule')">📅 Programmazione</button>
+                    <button class="manage-tab" onclick="showManageTab('questions')">❓ Domande Concorso</button>
+                    <button class="manage-tab" onclick="showManageTab('applications')">📋 Candidature</button>
+                    <button class="manage-tab" onclick="showManageTab('results')">📊 Risultati</button>
+                    <button class="manage-tab" onclick="showManageTab('webhook')">🔗 Discord Webhook</button>
+                </div>
+
+                <!-- Tab: Programmazione -->
+                <div id="scheduleTab" class="manage-tab-content active">
+                    <h3>Programmazione Concorso</h3>
+                    
+                    <div class="schedule-box">
+                        <h4>📅 Apertura Candidature</h4>
+                        <div class="input-group">
+                            <label>Data e Ora Apertura:</label>
+                            <input type="datetime-local" id="openDate">
+                        </div>
+                        <button onclick="scheduleOpen()" class="btn-primary">Programma Apertura</button>
+                    </div>
+
+                    <div class="schedule-box">
+                        <h4>🔒 Chiusura Candidature</h4>
+                        <div class="input-group">
+                            <label>Data e Ora Chiusura:</label>
+                            <input type="datetime-local" id="closeDate">
+                        </div>
+                        <button onclick="scheduleClose()" class="btn-danger">Programma Chiusura</button>
+                    </div>
+
+                    <div class="schedule-box">
+                        <h4>⚡ Azioni Immediate</h4>
+                        <button onclick="openNow()" class="btn-success">Apri Subito</button>
+                        <button onclick="closeNow()" class="btn-danger">Chiudi Subito</button>
+                    </div>
+
+                    <div class="status-box" id="statusBox">
+                        <h4>Stato Attuale:</h4>
+                        <p id="currentStatus"></p>
+                    </div>
+                </div>
+
+                <!-- Tab: Domande -->
+                <div id="questionsTab" class="manage-tab-content">
+                    <h3>Gestione Domande Concorso</h3>
+                    
+                    <button onclick="addQuestion()" class="btn-primary">➕ Aggiungi Domanda</button>
+                    
+                    <div id="questionsList"></div>
+                </div>
+
+                <!-- Tab: Candidature -->
+                <div id="applicationsTab" class="manage-tab-content">
+                    <h3>Candidature Ricevute</h3>
+                    
+                    <div id="applicationsList"></div>
+                </div>
+
+                <!-- Tab: Risultati -->
+                <div id="resultsTab" class="manage-tab-content">
+                    <h3>Pubblica Risultati</h3>
+                    
+                    <button onclick="publishResults()" class="btn-primary">📢 Pubblica Tutti i Risultati</button>
+                    
+                    <div id="resultsList"></div>
+                </div>
+
+                <!-- Tab: Webhook -->
+                <div id="webhookTab" class="manage-tab-content">
+                    <h3>Configurazione Discord Webhook</h3>
+                    
+                    <div class="webhook-info">
+                        <h4>📚 Come Ottenere i Webhook</h4>
+                        <ol>
+                            <li>Vai sul tuo server Discord</li>
+                            <li>Click destro sul canale → Modifica Canale</li>
+                            <li>Integrazioni → Webhook → Nuovo Webhook</li>
+                            <li>Copia l'URL del Webhook</li>
+                            <li>Incolla qui sotto</li>
+                        </ol>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Webhook Gestione (notifiche apertura/chiusura):</label>
+                        <input type="url" id="webhookManagement" placeholder="https://discord.com/api/webhooks/...">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Webhook Candidature (nuove candidature):</label>
+                        <input type="url" id="webhookApplications" placeholder="https://discord.com/api/webhooks/...">
+                    </div>
+
+                    <button onclick="saveWebhooks()" class="btn-primary">💾 Salva Webhook</button>
+                    <button onclick="testWebhook()" class="btn-secondary">🧪 Testa Webhook</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="home.js"></script>
+    <script src="gestione.js"></script>
+</body>
+</html>

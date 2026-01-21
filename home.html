@@ -25,10 +25,13 @@
                 <li><a href="#home" class="active">Home</a></li>
                 <li><a href="https://discord.gg/tuoserver" target="_blank">Server Discord</a></li>
                 <li><a href="https://www.roblox.com/groups/tuogruppo" target="_blank">Gruppo Roblox</a></li>
+                <li><a href="#roleplay">Roleplay</a></li>
+                <li><a href="#fazioni">Fazioni</a></li>
                 <li><a href="#regolamento">Regolamento</a></li>
                 <li><a href="#guide">Guide</a></li>
                 <li><a href="#eventi">Eventi</a></li>
                 <li><a href="#staff" onclick="checkStaffAccess(event)">Sezione Staff</a></li>
+                <li><a href="gestione-fazioni.html" id="gestioneLink" style="display: none;">🏛️ Gestione Fazioni</a></li>
                 <li><a href="#contatti">Contatti</a></li>
                 <li><button class="logout-btn" onclick="logout()">Esci</button></li>
             </ul>
@@ -120,11 +123,328 @@
             </div>
         </section>
 
+        <!-- Sezione Roleplay -->
+        <section class="roleplay-section" id="roleplay">
+            <div class="container">
+                <h2>🎭 Sistema Roleplay</h2>
+                <p class="section-subtitle">Scopri come funziona il roleplay nel nostro server</p>
+                
+                <div class="roleplay-grid">
+                    <div class="roleplay-card">
+                        <div class="roleplay-icon">📖</div>
+                        <h3>Cos'è il Roleplay?</h3>
+                        <p>Il roleplay (gioco di ruolo) è l'interpretazione di un personaggio in situazioni realistiche. Nel nostro server ricrei la vita quotidiana nella città di Piacenza.</p>
+                    </div>
+                    
+                    <div class="roleplay-card">
+                        <div class="roleplay-icon">🎯</div>
+                        <h3>Obiettivi</h3>
+                        <p>Crea il tuo personaggio, scegli una professione, interagisci con altri giocatori e vivi esperienze realistiche seguendo le regole del roleplay.</p>
+                    </div>
+                    
+                    <div class="roleplay-card">
+                        <div class="roleplay-icon">💼</div>
+                        <h3>Professioni</h3>
+                        <p>Scegli tra diverse carriere: Polizia, Medico, Vigili del Fuoco, Commerciante, Civile e molte altre. Ogni professione ha responsabilità uniche.</p>
+                    </div>
+                    
+                    <div class="roleplay-card">
+                        <div class="roleplay-icon">⚖️</div>
+                        <h3>Regole Base</h3>
+                        <p>Rispetta gli altri giocatori, mantieni il realismo, non usare meta-gaming e segui sempre le regole del server per un'esperienza ottimale.</p>
+                    </div>
+                </div>
+                
+                <div class="rp-rules-box">
+                    <h3>📋 Regole Fondamentali del Roleplay</h3>
+                    <div class="rules-list">
+                        <div class="rule-item">
+                            <span class="rule-number">1</span>
+                            <div class="rule-content">
+                                <h4>IC e OOC</h4>
+                                <p><strong>IC (In Character):</strong> Tutto ciò che fai come personaggio nel gioco.<br>
+                                <strong>OOC (Out of Character):</strong> Comunicazioni fuori dal personaggio (usa la chat apposita).</p>
+                            </div>
+                        </div>
+                        
+                        <div class="rule-item">
+                            <span class="rule-number">2</span>
+                            <div class="rule-content">
+                                <h4>No Meta-Gaming</h4>
+                                <p>Non usare informazioni ottenute fuori dal gioco (Discord, chat OOC) per avvantaggiarti nel roleplay.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="rule-item">
+                            <span class="rule-number">3</span>
+                            <div class="rule-content">
+                                <h4>No PowerGaming</h4>
+                                <p>Non forzare azioni sugli altri giocatori senza dar loro possibilità di reagire (es: "/me lo mette KO" senza combattimento).</p>
+                            </div>
+                        </div>
+                        
+                        <div class="rule-item">
+                            <span class="rule-number">4</span>
+                            <div class="rule-content">
+                                <h4>Valore della Vita (VDM)</h4>
+                                <p>Comportati come se la tua vita fosse reale. Se sei minacciato con un'arma, non fare l'eroe. Valuta sempre i rischi.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="rule-item">
+                            <span class="rule-number">5</span>
+                            <div class="rule-content">
+                                <h4>Realismo</h4>
+                                <p>Mantieni le azioni realistiche. Non puoi fare cose impossibili nella vita reale (volare, resistere a 10 colpi, ecc.).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sezione Fazioni -->
+        <section class="factions-section" id="fazioni">
+            <div class="container">
+                <h2>👮 Fazioni Disponibili</h2>
+                <p class="section-subtitle">Unisciti a una fazione e inizia la tua carriera</p>
+                
+                <div class="factions-grid">
+                    <!-- Polizia -->
+                    <div class="faction-card police">
+                        <div class="faction-header">
+                            <div class="faction-icon">👮</div>
+                            <h3>Polizia di Stato</h3>
+                            <span class="faction-badge">Forze dell'Ordine</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Mantieni l'ordine pubblico, arresta i criminali e garantisci la sicurezza dei cittadini.</p>
+                            <ul class="faction-features">
+                                <li>🚔 Pattugliamento della città</li>
+                                <li>⚖️ Arresti e multe</li>
+                                <li>🔫 Interventi armati</li>
+                                <li>📋 Rapporti e investigazioni</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 18 anni (nel gioco)</li>
+                                    <li>Fedina penale pulita</li>
+                                    <li>Superare l'addestramento</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Polizia')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Medici -->
+                    <div class="faction-card medic">
+                        <div class="faction-header">
+                            <div class="faction-icon">⚕️</div>
+                            <h3>Servizio Sanitario</h3>
+                            <span class="faction-badge">Emergenze</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Salva vite, cura i feriti e gestisci le emergenze mediche della città.</p>
+                            <ul class="faction-features">
+                                <li>🚑 Interventi di emergenza</li>
+                                <li>💊 Cure mediche</li>
+                                <li>🏥 Gestione ospedale</li>
+                                <li>🩺 Visite e diagnosi</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 21 anni (nel gioco)</li>
+                                    <li>Formazione medica di base</li>
+                                    <li>Pazienza e dedizione</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Medici')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Vigili del Fuoco -->
+                    <div class="faction-card firefighter">
+                        <div class="faction-header">
+                            <div class="faction-icon">🚒</div>
+                            <h3>Vigili del Fuoco</h3>
+                            <span class="faction-badge">Protezione Civile</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Combatti gli incendi, effettua salvataggi e intervieni nelle emergenze.</p>
+                            <ul class="faction-features">
+                                <li>🔥 Spegnimento incendi</li>
+                                <li>🪜 Operazioni di salvataggio</li>
+                                <li>🚨 Interventi di emergenza</li>
+                                <li>⚠️ Prevenzione incendi</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 20 anni (nel gioco)</li>
+                                    <li>Buona forma fisica</li>
+                                    <li>Spirito di squadra</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Vigili del Fuoco')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Meccanico -->
+                    <div class="faction-card mechanic">
+                        <div class="faction-header">
+                            <div class="faction-icon">🔧</div>
+                            <h3>Meccanici</h3>
+                            <span class="faction-badge">Servizi</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Ripara veicoli, gestisci un'officina e offri servizi di soccorso stradale.</p>
+                            <ul class="faction-features">
+                                <li>🚗 Riparazione veicoli</li>
+                                <li>🛠️ Manutenzione</li>
+                                <li>🚙 Soccorso stradale</li>
+                                <li>💰 Gestione officina</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 18 anni (nel gioco)</li>
+                                    <li>Conoscenze base meccanica</li>
+                                    <li>Licenza commerciale</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Meccanici')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Tassista -->
+                    <div class="faction-card taxi">
+                        <div class="faction-header">
+                            <div class="faction-icon">🚕</div>
+                            <h3>Tassisti</h3>
+                            <span class="faction-badge">Trasporti</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Trasporta cittadini, guadagna dalle corse e conosci la città.</p>
+                            <ul class="faction-features">
+                                <li>🚖 Trasporto passeggeri</li>
+                                <li>🗺️ Conoscenza città</li>
+                                <li>💵 Guadagno da corse</li>
+                                <li>⭐ Servizio clienti</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 21 anni (nel gioco)</li>
+                                    <li>Patente di guida</li>
+                                    <li>Nessuna precedente penale grave</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Tassisti')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Civile -->
+                    <div class="faction-card civilian">
+                        <div class="faction-header">
+                            <div class="faction-icon">👤</div>
+                            <h3>Civile</h3>
+                            <span class="faction-badge">Libero</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Vivi la tua vita come preferisci: apri un'attività, lavora o semplicemente esplora.</p>
+                            <ul class="faction-features">
+                                <li>🏪 Apertura negozi</li>
+                                <li>💼 Lavori vari</li>
+                                <li>🎨 Totale libertà</li>
+                                <li>🤝 Interazione sociale</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Nessun requisito</li>
+                                    <li>Rispetto delle regole</li>
+                                    <li>Roleplay di qualità</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="selectCivilian()">Inizia Subito</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faction-info-box">
+                    <h3>ℹ️ Come Funzionano le Candidature</h3>
+                    <ol class="process-list">
+                        <li><strong>Scegli la fazione</strong> - Clicca su "Candidati" nella fazione desiderata</li>
+                        <li><strong>Compila il form</strong> - Inserisci i tuoi dati e la motivazione</li>
+                        <li><strong>Attendi risposta</strong> - Lo staff esaminerà la tua richiesta</li>
+                        <li><strong>Addestramento</strong> - Se accettato, dovrai completare l'addestramento</li>
+                        <li><strong>Inizio servizio</strong> - Inizia a lavorare nella tua fazione!</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
         <!-- Sezione Regolamento -->
         <section class="section" id="regolamento">
             <div class="container">
-                <h2>📋 Regolamento</h2>
-                <p>Il regolamento completo sarà disponibile a breve. Ricordati di rispettare sempre gli altri giocatori!</p>
+                <h2>📋 Regolamento Completo</h2>
+                <div class="rules-accordion">
+                    <div class="rule-section">
+                        <h3>1. Regole Generali</h3>
+                        <ul>
+                            <li>Rispetta tutti i giocatori e lo staff</li>
+                            <li>Non usare linguaggio offensivo, razzista o discriminatorio</li>
+                            <li>Il trolling e il disturbo intenzionale sono vietati</li>
+                            <li>Segui sempre le indicazioni dello staff</li>
+                            <li>Non pubblicizzare altri server</li>
+                        </ul>
+                    </div>
+
+                    <div class="rule-section">
+                        <h3>2. Regole Roleplay</h3>
+                        <ul>
+                            <li>Mantieni sempre il personaggio (IC)</li>
+                            <li>Non fare meta-gaming (usare info OOC in IC)</li>
+                            <li>Non fare power-gaming (forzare azioni)</li>
+                            <li>Rispetta il valore della vita (VDM)</li>
+                            <li>Non fare revenge kill (uccidere per vendetta OOC)</li>
+                            <li>Mantieni il realismo in ogni situazione</li>
+                        </ul>
+                    </div>
+
+                    <div class="rule-section">
+                        <h3>3. Regole Combattimento</h3>
+                        <ul>
+                            <li>Devi avere una motivazione IC valida per combattere</li>
+                            <li>Non sparare senza roleplay (RDM - Random Deathmatch)</li>
+                            <li>Non investire senza motivo (VDM - Vehicle Deathmatch)</li>
+                            <li>Dopo essere stato sconfitto, dimentichi gli ultimi 15 minuti</li>
+                        </ul>
+                    </div>
+
+                    <div class="rule-section">
+                        <h3>4. Regole Fazioni</h3>
+                        <ul>
+                            <li>Rispetta la gerarchia della tua fazione</li>
+                            <li>Indossa sempre la divisa di servizio</li>
+                            <li>Non abusare dei poteri della fazione</li>
+                            <li>Segui le procedure operative standard</li>
+                            <li>Segnala le assenze prolungate</li>
+                        </ul>
+                    </div>
+
+                    <div class="rule-section">
+                        <h3>5. Sanzioni</h3>
+                        <ul>
+                            <li><strong>Warn:</strong> Avviso per infrazioni minori</li>
+                            <li><strong>Kick:</strong> Espulsione temporanea dal server</li>
+                            <li><strong>Ban temporaneo:</strong> 1-30 giorni per infrazioni gravi</li>
+                            <li><strong>Ban permanente:</strong> Infrazioni molto gravi o recidive</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -206,8 +526,28 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h3>Comune di Piacenza RP</h3>
-                    <p>Il miglior server roleplay di Piacenza su Roblox</p>
+                    <h3>📞 Contattaci</h3>
+                    <div class="footer-contact-item">
+                        <span class="contact-icon">📧</span>
+                        <div>
+                            <strong>Email di Supporto</strong>
+                            <p>support@piacenzarp.it</p>
+                        </div>
+                    </div>
+                    <div class="footer-contact-item">
+                        <span class="contact-icon">💬</span>
+                        <div>
+                            <strong>Discord</strong>
+                            <p>Apri un ticket sul nostro server Discord per assistenza immediata</p>
+                        </div>
+                    </div>
+                    <div class="footer-contact-item">
+                        <span class="contact-icon">👥</span>
+                        <div>
+                            <strong>Creato da</strong>
+                            <p>Team Piacenza RP</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="footer-section">
@@ -221,17 +561,17 @@
                 <div class="footer-section">
                     <h3>Social Media</h3>
                     <div class="social-links">
-                        <a href="https://discord.gg/tuoserver" target="_blank" class="social-icon discord">
+                        <a href="https://discord.gg/tuoserver" target="_blank" class="social-icon discord" title="Discord">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
                             </svg>
                         </a>
-                        <a href="#" target="_blank" class="social-icon twitter">
+                        <a href="#" target="_blank" class="social-icon twitter" title="Twitter">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
                             </svg>
                         </a>
-                        <a href="#" target="_blank" class="social-icon youtube">
+                        <a href="#" target="_blank" class="social-icon youtube" title="YouTube">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                             </svg>
@@ -246,6 +586,17 @@
             </div>
         </div>
     </footer>
+
+    <!-- Modal Accesso Negato -->
+    <div id="accessDeniedModal" class="access-modal">
+        <div class="access-modal-content">
+            <div class="access-modal-icon">⚠️</div>
+            <h3>Accesso Negato</h3>
+            <p>Questa sezione è riservata solo agli amministratori.</p>
+            <p>Se sei un membro dello staff, effettua il login dalla sezione "Amministratore" nella pagina di accesso.</p>
+            <button class="modal-ok-btn" onclick="closeAccessModal()">Ok</button>
+        </div>
+    </div>
 
     <script src="home.js"></script>
 </body>

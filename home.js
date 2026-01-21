@@ -1,23 +1,35 @@
 // Verifica se l'utente è loggato
+// Verifica se l'utente è loggato
 window.addEventListener('load', function() {
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+    const isLoggedIn = sessionStorage.getItem('logged');
     
-    if (isLoggedIn !== 'true') {
+    if (isLoggedIn !== 'yes') {
         window.location.href = 'index.html';
         return;
     }
     
     // Carica i dati dell'utente
-    const userData = JSON.parse(sessionStorage.getItem('currentUser'));
+    const userData = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     
-    if (userData) {
+    if (userData.username) {
         // Mostra il messaggio di benvenuto
         document.getElementById('welcomeMessage').textContent = `Benvenuto, ${userData.username}!`;
         
         // Se è admin, mostra la sezione staff
         if (userData.isAdmin) {
-            document.getElementById('staff').style.display = 'block';
+            const staffSection = document.getElementById('staff');
+            if (staffSection) {
+                staffSection.style.display = 'block';
+            }
             updateAdminStats();
+        }
+        
+        // Se è esponente istituzionale, mostra link gestione
+        if (userData.isInstitutional) {
+            const gestioneLink = document.getElementById('gestioneLink');
+            if (gestioneLink) {
+                gestioneLink.style.display = 'block';
+            }
         }
     }
 });

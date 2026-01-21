@@ -1,0 +1,381 @@
+/* Gestione Fazioni Styles */
+.management-section {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 100px 20px 50px;
+}
+
+.management-section h1 {
+    color: white;
+    text-align: center;
+    font-size: 42px;
+    margin-bottom: 15px;
+}
+
+.welcome-text {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 18px;
+    margin-bottom: 40px;
+}
+
+.welcome-text span {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+/* Faction Card */
+.faction-management-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.faction-header-manage {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    padding-bottom: 30px;
+    border-bottom: 3px solid #eee;
+    margin-bottom: 30px;
+}
+
+.faction-logo {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+}
+
+.faction-header-manage h2 {
+    font-size: 32px;
+    margin: 0;
+}
+
+/* Tabs */
+.management-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.manage-tab {
+    flex: 1;
+    min-width: 150px;
+    padding: 15px 20px;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 15px;
+}
+
+.manage-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.manage-tab:hover:not(.active) {
+    background: #e0e0e0;
+}
+
+/* Tab Content */
+.manage-tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.manage-tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.manage-tab-content h3 {
+    font-size: 28px;
+    margin-bottom: 25px;
+    color: #333;
+}
+
+/* Schedule Box */
+.schedule-box {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.schedule-box h4 {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.input-group input,
+.input-group textarea,
+.input-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+}
+
+.input-group input:focus,
+.input-group textarea:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(39, 174, 96, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+/* Status Box */
+.status-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.status-box h4 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.status-box p {
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* Question Card */
+.question-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border-left: 4px solid #667eea;
+}
+
+.question-card h5 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.question-options {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+/* Application Card */
+.application-card {
+    background: white;
+    border: 2px solid #e0e0e0;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.application-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.application-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.application-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.application-answers {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.application-answers h5 {
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.application-answers p {
+    margin: 8px 0;
+    color: #666;
+}
+
+.score-input {
+    width: 100px;
+    padding: 8px;
+    border: 2px solid #667eea;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Webhook Info */
+.webhook-info {
+    background: #e8f4f8;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.webhook-info h4 {
+    color: #2980b9;
+    margin-bottom: 15px;
+}
+
+.webhook-info ol {
+    padding-left: 20px;
+    line-height: 1.8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .faction-management-card {
+        padding: 25px 20px;
+    }
+
+    .management-tabs {
+        flex-direction: column;
+    }
+
+    .manage-tab {
+        min-width: 100%;
+    }
+
+    .faction-header-manage {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .application-info {
+        grid-template-columns: 1fr;
+    }
+}

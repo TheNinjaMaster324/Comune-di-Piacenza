@@ -37,6 +37,7 @@
                 <button class="tab active" onclick="showTab('login')">Login</button>
                 <button class="tab" onclick="showTab('register')">Registrazione</button>
                 <button class="tab" onclick="showTab('admin')">Amministratore</button>
+                <button class="tab" onclick="showTab('institutional')">Esponente Istituzionale</button>
             </div>
 
             <form id="loginForm" class="form-container active">
@@ -86,6 +87,39 @@
                 </div>
                 <button type="submit" class="submit-btn admin-btn">Accedi come Admin</button>
             </form>
+
+            <form id="institutionalForm" class="form-container">
+                <div class="input-group">
+                    <label for="instEmail">Email</label>
+                    <input type="email" id="instEmail" placeholder="tua@email.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="instFaction">Fazione</label>
+                    <select id="instFaction" required>
+                        <option value="">Seleziona la tua fazione</option>
+                        <option value="Polizia di Stato">👮 Polizia di Stato</option>
+                        <option value="Arma dei Carabinieri">🎖️ Arma dei Carabinieri</option>
+                        <option value="Polizia Locale">🚓 Polizia Locale</option>
+                        <option value="Guardia di Finanza">💰 Guardia di Finanza</option>
+                        <option value="Polizia Penitenziaria">🔒 Polizia Penitenziaria</option>
+                        <option value="Vigili del Fuoco">🚒 Vigili del Fuoco</option>
+                        <option value="Croce Rossa Italiana">🏥 Croce Rossa Italiana</option>
+                        <option value="Croce Verde">💚 Croce Verde</option>
+                        <option value="ACI">🚗 ACI (Automobile Club)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="instID">ID Esponente</label>
+                    <input type="text" id="instID" placeholder="Es: PS001" required>
+                </div>
+                <div class="input-group">
+                    <label for="instPassword">Password</label>
+                    <input type="password" id="instPassword" required>
+                </div>
+                <button type="submit" class="submit-btn institutional-btn">Accedi come Esponente</button>
+            </form>
+        </div>
+    </div>
         </div>
     </div>
 
@@ -103,8 +137,7 @@
         </div>
     </div>
 
-    <script src="login.js">
-        
+    <script>
     // SISTEMA AUTENTICAZIONE INCORPORATO
     let generatedCode = '';
     let pendingUser = null;
@@ -215,10 +248,59 @@
         }
         
         generatedCode = makeCode();
-        pendingUser = {username: user, email: email, admin: true};
+        pendingUser = {username: user, email: email, admin: true, institutional: false};
         
         console.log('🔑 CODICE:', generatedCode);
         alert('📧 CODICE ADMIN!\n\n' + generatedCode);
+        
+        document.getElementById('authModal').style.display = 'flex';
+    };
+
+    // ESPONENTE ISTITUZIONALE
+    document.getElementById('institutionalForm').onsubmit = function(e) {
+        e.preventDefault();
+        
+        let email = document.getElementById('instEmail').value;
+        let id = document.getElementById('instID').value.trim();
+        let pass = document.getElementById('instPassword').value.trim();
+        
+        if (!email) {
+            alert('❌ Seleziona una fazione!');
+            return;
+        }
+        
+        // Password default per test: "istituzionale123"
+        if (pass !== 'istituzionale123') {
+            alert('❌ PASSWORD ERRATA!\n\nPassword default: istituzionale123');
+            return;
+        }
+        
+        // Mappa email -> fazione
+        const factionMap = {
+            'poliziadistato@piacenzarp.it': 'Polizia di Stato',
+            'carabinieri@piacenzarp.it': 'Arma dei Carabinieri',
+            'polizialocale@piacenzarp.it': 'Polizia Locale',
+            'guardiadifinanza@piacenzarp.it': 'Guardia di Finanza',
+            'poliziapenitenziaria@piacenzarp.it': 'Polizia Penitenziaria',
+            'vigilidelfuoco@piacenzarp.it': 'Vigili del Fuoco',
+            'crocerossaitaliana@piacenzarp.it': 'Croce Rossa Italiana',
+            'croceverde@piacenzarp.it': 'Croce Verde',
+            'aci@piacenzarp.it': 'ACI'
+        };
+        
+        const factionName = factionMap[email];
+        
+        generatedCode = makeCode();
+        pendingUser = {
+            username: id,
+            email: email,
+            admin: false,
+            institutional: true,
+            faction: factionName
+        };
+        
+        console.log('🔑 CODICE ISTITUZIONALE:', generatedCode);
+        alert('📧 CODICE ESPONENTE!\n\nFazione: ' + factionName + '\n\n' + generatedCode);
         
         document.getElementById('authModal').style.display = 'flex';
     };
@@ -250,7 +332,9 @@
         sessionStorage.setItem('currentUser', JSON.stringify({
             username: pendingUser.username,
             email: pendingUser.email,
-            isAdmin: pendingUser.admin
+            isAdmin: pendingUser.admin,
+            isInstitutional: pendingUser.institutional || false,
+            faction: pendingUser.faction || null
         }));
         
         alert('✅ ACCESSO EFFETTUATO!');
