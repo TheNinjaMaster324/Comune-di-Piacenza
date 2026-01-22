@@ -126,7 +126,7 @@
                 </div>
                 <div class="input-group">
                     <label for="adminEmail">Email Admin</label>
-                    <input type="email" id="adminEmail" placeholder="admin@piacenzarp.it" required>
+                    <input type="email" id="adminEmail" placeholder="Esempio: admin@email.com" required>
                 </div>
                 <div class="input-group">
                     <label for="adminPassword">Password</label>
@@ -291,7 +291,7 @@
             const user = document.getElementById('adminUsername').value.trim();
             const email = document.getElementById('adminEmail').value.trim();
             const pass = document.getElementById('adminPassword').value.trim();
-            if (email !== 'admin@piacenzarp.it' || pass !== 'admin123') { alert('❌ CREDENZIALI ADMIN ERRATE!'); return; }
+            if (email !== 'amministrazionepiacenzarp@gmail.com' || pass !== 'amministrazionePiacenzaRP2.0') { alert('❌ CREDENZIALI ADMIN ERRATE!'); return; }
             generatedCode = makeCode();
             pendingUser = {username: user, email: email, isAdmin: true, isInstitutional: false};
             await sendEmail(email, generatedCode, 'Login Admin');
