@@ -48,6 +48,7 @@
                     <button class="manage-tab" onclick="showManageTab('questions')">❓ Domande Concorso</button>
                     <button class="manage-tab" onclick="showManageTab('applications')">📋 Candidature</button>
                     <button class="manage-tab" onclick="showManageTab('results')">📊 Risultati</button>
+                    <button class="manage-tab" onclick="showManageTab('archive')">📦 Archivio</button>
                     <button class="manage-tab" onclick="showManageTab('webhook')">🔗 Discord Webhook</button>
                 </div>
 
@@ -106,8 +107,17 @@
                     <h3>Pubblica Risultati</h3>
                     
                     <button onclick="publishResults()" class="btn-primary">📢 Pubblica Tutti i Risultati</button>
+                    <button onclick="archiveAllCandidates()" class="btn-secondary" style="background: #3498db; margin-left: 10px;">📦 Archivia Tutti i Candidati</button>
                     
                     <div id="resultsList"></div>
+                </div>
+
+                <!-- Tab: Archivio -->
+                <div id="archiveTab" class="manage-tab-content">
+                    <h3>📦 Candidati Archiviati</h3>
+                    <p style="color: #666; margin-bottom: 20px;">Qui trovi tutti i candidati archiviati dei concorsi passati.</p>
+                    
+                    <div id="archiveList"></div>
                 </div>
 
                 <!-- Tab: Webhook -->
@@ -133,6 +143,11 @@
                     <div class="input-group">
                         <label>Webhook Candidature (nuove candidature):</label>
                         <input type="url" id="webhookApplications" placeholder="https://discord.com/api/webhooks/...">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Webhook Archivio (candidati archiviati):</label>
+                        <input type="url" id="webhookArchive" placeholder="https://discord.com/api/webhooks/...">
                     </div>
 
                     <button onclick="saveWebhooks()" class="btn-primary">💾 Salva Webhook</button>

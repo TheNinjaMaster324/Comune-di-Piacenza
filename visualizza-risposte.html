@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizza Risposte - Comune di Piacenza RP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .result-passed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .result-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .result-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .questions-section {
+            margin-top: 30px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .question-number {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .answer-text {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .score-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .total-score {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .total-score h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .total-score .score {
+            font-size: 42px;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: #95a5a6;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+
+        .error-container {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .error-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .error-text {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .content {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Visualizza Risposte</h1>
+            <p id="factionName">Candidatura</p>
+        </div>
+
+        <div class="content" id="content">
+            <!-- Il contenuto verrà caricato qui -->
+        </div>
+    </div>
+
+    <script>
+        // Ottieni ID dalla URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const answerId = urlParams.get('id');
+
+        const contentDiv = document.getElementById('content');
+
+        if (!answerId) {
+            showError('ID non valido');
+        } else {
+            loadAnswers(answerId);
+        }
+
+        function loadAnswers(id) {
+            const answerData = JSON.parse(localStorage.getItem(`answer_${id}`) || 'null');
+
+            if (!answerData) {
+                showError('Dati non trovati o link scaduto');
+                return;
+            }
+
+            const { faction, application } = answerData;
+            const app = application;
+
+            document.getElementById('factionName').textContent = `Candidatura per ${faction}`;
+
+            let html = `
+                <div class="info-section">
+                    <h3 style="margin-bottom: 20px;">👤 Informazioni Candidato</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Nome Completo</span>
+                            <span class="info-value">${app.name} ${app.surname}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Discord</span>
+                            <span class="info-value">${app.discord}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">${app.email}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Data Candidatura</span>
+                            <span class="info-value">${new Date(app.date).toLocaleDateString('it-IT')}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Risultato</span>
+                            <span class="result-badge ${app.result === 'passed' ? 'result-passed' : app.result === 'failed' ? 'result-failed' : 'result-pending'}">
+                                ${app.result === 'passed' ? '✅ IDONEO' : app.result === 'failed' ? '❌ NON IDONEO' : '⏳ In attesa'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="questions-section">
+                    <h2 class="section-title">📝 Risposte del Candidato</h2>
+            `;
+
+            app.answers.forEach((answer, index) => {
+                const questionScore = app.questionScores && app.questionScores[index] !== undefined ? app.questionScores[index] : 0;
+                const maxScore = answer.maxScore || 0;
+
+                html += `
+                    <div class="question-card">
+                        <div class="question-number">Domanda ${index + 1}</div>
+                        <div class="question-text">${answer.question}</div>
+                        <div class="answer-text">${answer.answer || '<em style="color: #999;">Nessuna risposta</em>'}</div>
+                        ${maxScore > 0 ? `
+                            <div class="score-info">
+                                <span style="color: #666; font-size: 14px;">Punteggio assegnato:</span>
+                                <span class="score-badge">${questionScore} / ${maxScore} punti</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            html += `
+                </div>
+
+                <div class="total-score">
+                    <h3>📊 Punteggio Totale</h3>
+                    <div class="score">${app.totalScore || 0}</div>
+                    <p style="margin-top: 10px; opacity: 0.9;">punti</p>
+                </div>
+
+                <div style="text-align: center;">
+                    <a href="javascript:window.close();" class="back-btn">← Chiudi</a>
+                </div>
+            `;
+
+            contentDiv.innerHTML = html;
+        }
+
+        function showError(message) {
+            contentDiv.innerHTML = `
+                <div class="error-container">
+                    <div class="error-icon">⚠️</div>
+                    <div class="error-text">${message}</div>
+                    <a href="javascript:window.close();" class="back-btn">← Chiudi</a>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

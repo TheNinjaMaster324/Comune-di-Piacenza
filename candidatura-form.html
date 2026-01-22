@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidatura - Comune di Piacenza RP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .form-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .form-body {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .question-block {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .question-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .required-mark {
+            color: #e74c3c;
+            font-size: 18px;
+        }
+
+        .question-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .question-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .question-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .radio-group,
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .radio-option,
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .radio-option:hover,
+        .checkbox-option:hover {
+            background: #f0f0f0;
+        }
+
+        .radio-option input,
+        .checkbox-option input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .submit-section {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 50px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid #2980b9;
+        }
+
+        .info-box h3 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .form-body {
+                padding: 25px 20px;
+            }
+
+            .form-header {
+                padding: 30px 20px;
+            }
+
+            .form-header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <h1 id="factionTitle">Candidatura</h1>
+            <p>Compila il modulo con attenzione. I campi con * sono obbligatori.</p>
+        </div>
+
+        <div class="form-body">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+
+            <div class="info-box">
+                <h3>ℹ️ Informazioni Importanti</h3>
+                <p>• Puoi candidarti solo una volta per apertura</p>
+                <p>• Rispondi con sincerità a tutte le domande</p>
+                <p>• Riceverai una risposta su Discord entro 48-72 ore</p>
+            </div>
+
+            <form id="candidaturaForm">
+                <!-- Sezione Dati Personali -->
+                <div class="form-section">
+                    <h2 class="section-title">📋 Dati Personali</h2>
+
+                    <div class="question-block">
+                        <div class="question-text">
+                            Nome (Roleplay) <span class="required-mark">*</span>
+                        </div>
+                        <input type="text" class="question-input" id="rpName" required placeholder="Es: Mario">
+                        <div class="error-message" id="error-rpName">Campo obbligatorio</div>
+                    </div>
+
+                    <div class="question-block">
+                        <div class="question-text">
+                            Cognome (Roleplay) <span class="required-mark">*</span>
+                        </div>
+                        <input type="text" class="question-input" id="rpSurname" required placeholder="Es: Rossi">
+                        <div class="error-message" id="error-rpSurname">Campo obbligatorio</div>
+                    </div>
+
+                    <div class="question-block">
+                        <div class="question-text">
+                            Nome Discord (con #tag) <span class="required-mark">*</span>
+                        </div>
+                        <input type="text" class="question-input" id="discord" required placeholder="Es: username#1234">
+                        <div class="error-message" id="error-discord">Campo obbligatorio</div>
+                    </div>
+
+                    <div class="question-block">
+                        <div class="question-text">
+                            Email <span class="required-mark">*</span>
+                        </div>
+                        <input type="email" class="question-input" id="email" required placeholder="Es: email@example.com">
+                        <div class="error-message" id="error-email">Inserisci un'email valida</div>
+                    </div>
+                </div>
+
+                <!-- Sezione Domande Concorso -->
+                <div class="form-section">
+                    <h2 class="section-title">❓ Domande del Concorso</h2>
+                    <div id="questionsContainer">
+                        <!-- Le domande verranno caricate qui dinamicamente -->
+                    </div>
+                </div>
+
+                <!-- Bottone Invio -->
+                <div class="submit-section">
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        📤 Invia Candidatura
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Ottieni parametri URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const faction = urlParams.get('faction');
+
+        if (!faction) {
+            alert('⚠️ Errore: Fazione non specificata!');
+            window.location.href = 'home.html';
+        }
+
+        // Imposta titolo
+        document.getElementById('factionTitle').textContent = `Candidatura per ${faction}`;
+
+        // Verifica se l'utente è loggato
+        const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+        if (!user.username) {
+            alert('⚠️ Devi essere loggato per candidarti!');
+            window.location.href = 'index.html';
+        }
+
+        // Verifica se il concorso è aperto
+        const schedule = JSON.parse(localStorage.getItem(`schedule_${faction}`) || '{}');
+        if (schedule.status !== 'open') {
+            alert('🔒 Le candidature sono chiuse!\n\nTorna alla home.');
+            window.location.href = 'home.html';
+        }
+
+        // Verifica se ha già candidato
+        const applications = JSON.parse(localStorage.getItem(`applications_${faction}`) || '[]');
+        const alreadyApplied = applications.find(app => 
+            app.username === user.username && 
+            app.sessionId === schedule.sessionId
+        );
+
+        if (alreadyApplied) {
+            alert('⚠️ HAI GIÀ INVIATO UNA CANDIDATURA!\n\nData: ' + new Date(alreadyApplied.date).toLocaleString('it-IT'));
+            window.location.href = 'home.html';
+        }
+
+        // Carica domande
+        const questions = JSON.parse(localStorage.getItem(`questions_${faction}`) || '[]');
+        const questionsContainer = document.getElementById('questionsContainer');
+
+        if (questions.length === 0) {
+            questionsContainer.innerHTML = '<p style="color: #888; text-align: center;">Nessuna domanda configurata per questo concorso.</p>';
+            document.getElementById('submitBtn').disabled = true;
+        } else {
+            questions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-block';
+                
+                let inputHtml = '';
+                
+                if (q.type === 'open') {
+                    inputHtml = `
+                        <div class="question-text">
+                            ${index + 1}. ${q.question} 
+                            ${q.required ? '<span class="required-mark">*</span>' : ''}
+                            ${q.maxScore ? `<span style="color: #667eea; font-size: 14px;">(${q.maxScore} punti)</span>` : ''}
+                        </div>
+                        <textarea class="question-input question-textarea" id="q${index}" ${q.required ? 'required' : ''} placeholder="Scrivi qui la tua risposta..."></textarea>
+                        <div class="error-message" id="error-q${index}">Campo obbligatorio</div>
+                    `;
+                } else if (q.type === 'closed') {
+                    inputHtml = `
+                        <div class="question-text">
+                            ${index + 1}. ${q.question} 
+                            ${q.required ? '<span class="required-mark">*</span>' : ''}
+                            ${q.maxScore ? `<span style="color: #667eea; font-size: 14px;">(${q.maxScore} punti)</span>` : ''}
+                        </div>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="q${index}" value="Sì" ${q.required ? 'required' : ''}>
+                                <span>Sì</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="q${index}" value="No" ${q.required ? 'required' : ''}>
+                                <span>No</span>
+                            </label>
+                        </div>
+                        <div class="error-message" id="error-q${index}">Campo obbligatorio</div>
+                    `;
+                } else if (q.type === 'multiple' && q.options) {
+                    inputHtml = `
+                        <div class="question-text">
+                            ${index + 1}. ${q.question} 
+                            ${q.required ? '<span class="required-mark">*</span>' : ''}
+                            ${q.maxScore ? `<span style="color: #667eea; font-size: 14px;">(${q.maxScore} punti)</span>` : ''}
+                        </div>
+                        <div class="radio-group">
+                            ${q.options.map(opt => `
+                                <label class="radio-option">
+                                    <input type="radio" name="q${index}" value="${opt}" ${q.required ? 'required' : ''}>
+                                    <span>${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                        <div class="error-message" id="error-q${index}">Campo obbligatorio</div>
+                    `;
+                }
+                
+                questionDiv.innerHTML = inputHtml;
+                questionsContainer.appendChild(questionDiv);
+            });
+        }
+
+        // Progress bar
+        const form = document.getElementById('candidaturaForm');
+        const inputs = form.querySelectorAll('input, textarea');
+        const progressBar = document.getElementById('progressBar');
+
+        function updateProgress() {
+            let filled = 0;
+            inputs.forEach(input => {
+                if (input.type === 'radio') {
+                    const name = input.name;
+                    if (document.querySelector(`input[name="${name}"]:checked`)) {
+                        filled++;
+                    }
+                } else if (input.value.trim() !== '') {
+                    filled++;
+                }
+            });
+            
+            const progress = (filled / inputs.length) * 100;
+            progressBar.style.width = progress + '%';
+        }
+
+        inputs.forEach(input => {
+            input.addEventListener('input', updateProgress);
+            input.addEventListener('change', updateProgress);
+        });
+
+        // Submit form
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Raccogli risposte
+            const answers = [];
+            questions.forEach((q, index) => {
+                let answer = '';
+                
+                if (q.type === 'open') {
+                    answer = document.getElementById(`q${index}`).value.trim();
+                } else {
+                    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                    answer = selected ? selected.value : '';
+                }
+
+                answers.push({
+                    question: q.question,
+                    answer: answer,
+                    maxScore: q.maxScore || 0
+                });
+            });
+
+            // Crea candidatura
+            const newApp = {
+                username: user.username,
+                name: document.getElementById('rpName').value.trim(),
+                surname: document.getElementById('rpSurname').value.trim(),
+                discord: document.getElementById('discord').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                answers: answers,
+                date: new Date().toISOString(),
+                sessionId: schedule.sessionId,
+                questionScores: Array(questions.length).fill(0),
+                totalScore: 0,
+                result: null,
+                published: false,
+                archived: false
+            };
+
+            // Salva
+            applications.push(newApp);
+            localStorage.setItem(`applications_${faction}`, JSON.stringify(applications));
+
+            // Invia webhook
+            const webhooks = JSON.parse(localStorage.getItem(`webhooks_${faction}`) || '{}');
+            if (webhooks.applications) {
+                sendWebhook(webhooks.applications, newApp);
+            }
+
+            alert('✅ Candidatura inviata con successo!\n\nRiceverai una risposta su Discord entro 48-72 ore.');
+            window.location.href = 'home.html';
+        });
+
+        function sendWebhook(url, data) {
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: 'Candidature - ' + faction,
+                    embeds: [{
+                        title: '📋 Nuova Candidatura',
+                        description: `Nuova candidatura ricevuta per **${faction}**`,
+                        color: 0x667eea,
+                        fields: [
+                            { name: '👤 Nome RP', value: data.name, inline: true },
+                            { name: '👤 Cognome RP', value: data.surname, inline: true },
+                            { name: '💬 Discord', value: data.discord, inline: true },
+                            { name: '📧 Email', value: data.email, inline: false }
+                        ],
+                        timestamp: new Date().toISOString()
+                    }]
+                })
+            }).catch(err => console.error('Errore webhook:', err));
+        }
+    </script>
+</body>
+</html>

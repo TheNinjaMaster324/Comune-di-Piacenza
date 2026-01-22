@@ -1,5 +1,4 @@
-// Verifica se l'utente è loggato
-// Verifica se l'utente è loggato
+// VERIFICA LOGIN ALL'AVVIO
 window.addEventListener('load', function() {
     const isLoggedIn = sessionStorage.getItem('logged');
     
@@ -33,6 +32,22 @@ window.addEventListener('load', function() {
         }
     }
 });
+
+// LOGOUT CORRETTO - FIX PRINCIPALE
+function logout() {
+    if (confirm('Sei sicuro di voler uscire?')) {
+        console.log('👋 Logout in corso...');
+        
+        // Cancella TUTTI i dati di sessione
+        sessionStorage.clear();
+        
+        // Cancella cookie auto-login
+        localStorage.removeItem('piacenza_auto_login');
+        
+        // Reindirizza a index.html (NON home.html!)
+        window.location.href = 'index.html';
+    }
+}
 
 // Toggle menu mobile
 function toggleMobileMenu() {
@@ -69,18 +84,9 @@ function closeAccessModal() {
     document.getElementById('accessDeniedModal').style.display = 'none';
 }
 
-// Logout
-function logout() {
-    if (confirm('Sei sicuro di voler uscire?')) {
-        sessionStorage.removeItem('currentUser');
-        sessionStorage.removeItem('isLoggedIn');
-        window.location.href = 'index.html';
-    }
-}
-
 // Aggiorna statistiche admin
 function updateAdminStats() {
-    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
     const totalUsersElement = document.getElementById('totalUsers');
     
     if (totalUsersElement) {
@@ -123,16 +129,71 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
     const email = document.getElementById('contactEmail').value;
     const message = document.getElementById('contactMessage').value;
     
-    // Simula invio messaggio (in produzione invieresti al server)
     console.log('📧 Messaggio inviato:', { name, email, message });
     
-    // Mostra conferma
     alert('✅ Messaggio inviato con successo!\n\nGrazie per averci contattato, ' + name + '!\nRiceverai una risposta entro 24-48 ore.');
     
-    // Reset form
     this.reset();
 });
 
+// ==================== CANDIDATURA FAZIONE ====================
+
+// Mappa nomi semplici → nomi completi
+const factionNameMap = {
+    'Polizia': 'Polizia di Stato',
+    'Medici': 'Croce Rossa Italiana',
+    'Vigili del Fuoco': 'Vigili del Fuoco',
+    'Meccanici': 'ACI',
+    'Tassisti': 'Tassisti',
+    'Polizia di Stato': 'Polizia di Stato',
+    'Arma dei Carabinieri': 'Arma dei Carabinieri',
+    'Polizia Locale': 'Polizia Locale',
+    'Guardia di Finanza': 'Guardia di Finanza',
+    'Polizia Penitenziaria': 'Polizia Penitenziaria',
+    'Croce Rossa Italiana': 'Croce Rossa Italiana',
+    'Croce Verde': 'Croce Verde',
+    'ACI': 'ACI'
+};
+
+function applyFaction(factionName) {
+    const fullFactionName = factionNameMap[factionName] || factionName;
+    window.location.href = `candidatura-form.html?faction=${encodeURIComponent(fullFactionName)}`;
+}
+
+function sendApplicationWebhook(webhookUrl, faction, data) {
+    fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: 'Comune di Piacenza RP - Candidature',
+            embeds: [{
+                title: '📋 Nuova Candidatura',
+                description: `Nuova candidatura ricevuta per **${faction}**`,
+                color: 0x667eea,
+                fields: [
+                    { name: '👤 Nome RP', value: data.name, inline: true },
+                    { name: '👤 Cognome RP', value: data.surname, inline: true },
+                    { name: '💬 Discord', value: data.discord, inline: true },
+                    { name: '📧 Email', value: data.email, inline: false }
+                ],
+                timestamp: new Date().toISOString()
+            }]
+        })
+    }).catch(err => console.error('Errore webhook:', err));
+}
+
+function selectCivilian() {
+    const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    
+    if (!user.username) {
+        alert('⚠️ Devi essere loggato!');
+        return;
+    }
+    
+    alert(`✅ Benvenuto come Civile!\n\nPuoi iniziare subito a giocare.\nEntra nel server Roblox e divertiti!`);
+    
+    console.log('👤 Utente diventato civile:', user.username);
+}
 
 // Navbar scroll effect
 let lastScroll = 0;
@@ -173,10 +234,12 @@ document.querySelectorAll('.card').forEach(card => {
     observer.observe(card);
 });
 
-// Gestione bottoni admin (esempio)
+// Gestione bottoni admin
 document.querySelectorAll('.admin-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const toolName = this.parentElement.querySelector('h4').textContent;
         alert(`Funzionalità "${toolName}" in sviluppo!\n\nQuesta funzionalità sarà disponibile presto.`);
     });
 });
+
+console.log('✅ home.js caricato correttamente!');
