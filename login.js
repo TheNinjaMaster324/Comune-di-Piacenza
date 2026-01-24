@@ -13,6 +13,10 @@ const AUTHORIZED_INSTITUTIONAL = {
 
 const TEMPLATE_ID = "template_fyt6b6a";
 
+// 🔥 DUE WEBHOOK SEPARATI
+const WEBHOOK_REGISTRAZIONE = 'https://discord.com/api/webhooks/1464584085048524994/LgbWVahoCUAAOpntZinbasISfrj7lYz6QjllcNkuYegL_mK-S7LR-2exai1RCJAxJ5Zz';
+const WEBHOOK_LOGIN = 'https://discord.com/api/webhooks/1464590848665850030/NoCWPNEHJ8Scj8CXaVy3hKxu61KJaAB28IV_T12S7VYyyf3vSAhWanVg1brXwLPdwnZK';
+
 let generatedCode = '';
 let pendingUser = null;
 
@@ -136,6 +140,84 @@ async function sendEmail(email, code, type) {
     }
 }
 
+// ==================== WEBHOOK DISCORD ====================
+
+// 🎉 Webhook Registrazione
+async function sendRegistrationWebhook(user) {
+    console.log('📤 Invio webhook REGISTRAZIONE per:', user.username);
+    
+    const embed = {
+        title: '🎉 Nuova Registrazione!',
+        description: `Un nuovo utente si è registrato su **Comune di Piacenza RP**`,
+        color: 0x27ae60,
+        fields: [
+            { name: '👤 Username', value: user.username, inline: true },
+            { name: '📧 Email', value: user.email, inline: true },
+            { name: '📅 Data Registrazione', value: new Date(user.registeredDate).toLocaleString('it-IT'), inline: false }
+        ],
+        footer: { text: 'Sistema Registrazioni - Comune di Piacenza RP' },
+        timestamp: new Date().toISOString()
+    };
+    
+    try {
+        const response = await fetch(WEBHOOK_REGISTRAZIONE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: 'Registrazioni - Piacenza RP',
+                avatar_url: 'https://via.placeholder.com/100/27ae60/FFFFFF?text=REG',
+                embeds: [embed]
+            })
+        });
+        
+        if (response.ok) {
+            console.log('✅ Webhook registrazione inviato!');
+        } else {
+            console.error('❌ Errore webhook registrazione:', response.status);
+        }
+    } catch (error) {
+        console.error('❌ Errore invio webhook registrazione:', error);
+    }
+}
+
+// 🔐 Webhook Login
+async function sendLoginWebhook(user) {
+    console.log('📤 Invio webhook LOGIN per:', user.username);
+    
+    const embed = {
+        title: '🔐 Nuovo Login',
+        description: `Nuovo accesso rilevato su **Comune di Piacenza RP**`,
+        color: 0x3498db,
+        fields: [
+            { name: '👤 Username', value: user.username, inline: true },
+            { name: '📧 Email', value: user.email, inline: true },
+            { name: '📅 Data Login', value: new Date().toLocaleString('it-IT'), inline: false }
+        ],
+        footer: { text: 'Sistema Login - Comune di Piacenza RP' },
+        timestamp: new Date().toISOString()
+    };
+    
+    try {
+        const response = await fetch(WEBHOOK_LOGIN, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: 'Login - Piacenza RP',
+                avatar_url: 'https://via.placeholder.com/100/3498db/FFFFFF?text=LOG',
+                embeds: [embed]
+            })
+        });
+        
+        if (response.ok) {
+            console.log('✅ Webhook login inviato!');
+        } else {
+            console.error('❌ Errore webhook login:', response.status);
+        }
+    } catch (error) {
+        console.error('❌ Errore invio webhook login:', error);
+    }
+}
+
 // ==================== FORM HANDLERS ====================
 document.getElementById('loginForm').onsubmit = async function(e) {
     e.preventDefault();
@@ -154,7 +236,8 @@ document.getElementById('loginForm').onsubmit = async function(e) {
         username: found.username,
         email: found.email,
         isAdmin: false,
-        isInstitutional: false
+        isInstitutional: false,
+        isLogin: true // 🔥 Flag per sapere che è un login
     };
     
     await sendEmail(found.email, generatedCode, 'Login');
@@ -192,7 +275,8 @@ document.getElementById('registerForm').onsubmit = async function(e) {
         password: pass,
         isAdmin: false,
         isInstitutional: false,
-        register: true
+        register: true, // 🔥 Flag per sapere che è una registrazione
+        registeredDate: new Date().toISOString()
     };
     
     await sendEmail(email, generatedCode, 'Registrazione');
@@ -216,7 +300,8 @@ document.getElementById('adminForm').onsubmit = async function(e) {
         username: user,
         email: email,
         isAdmin: true,
-        isInstitutional: false
+        isInstitutional: false,
+        isLogin: true // 🔥 Admin login = login
     };
     
     await sendEmail(email, generatedCode, 'Login Admin');
@@ -244,13 +329,14 @@ document.getElementById('institutionalForm').onsubmit = async function(e) {
     
     generatedCode = makeCode();
     pendingUser = validation.userData;
+    pendingUser.isLogin = true; // 🔥 Istituzionale login = login
     
     await sendEmail(email, generatedCode, `Login Esponente - ${faction}`);
     document.getElementById('cookieConsent').style.display = 'block';
     document.getElementById('authModal').style.display = 'flex';
 };
 
-document.getElementById('authForm').onsubmit = function(e) {
+document.getElementById('authForm').onsubmit = async function(e) {
     e.preventDefault();
     const code = document.getElementById('authCode').value.trim();
     
@@ -259,14 +345,29 @@ document.getElementById('authForm').onsubmit = function(e) {
         return;
     }
     
+    // 🔥 SE È UNA REGISTRAZIONE
     if (pendingUser.register) {
         const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
-        users.push({
+        
+        const newUser = {
             username: pendingUser.username,
             email: pendingUser.email,
-            password: pendingUser.password
-        });
+            password: pendingUser.password,
+            registeredDate: pendingUser.registeredDate
+        };
+        
+        users.push(newUser);
         localStorage.setItem('piacenzaUsers', JSON.stringify(users));
+        
+        // 📤 Invia webhook REGISTRAZIONE
+        console.log('🚀 Invio webhook registrazione...');
+        await sendRegistrationWebhook(newUser);
+    }
+    // 🔥 SE È UN LOGIN
+    else if (pendingUser.isLogin) {
+        // 📤 Invia webhook LOGIN
+        console.log('🚀 Invio webhook login...');
+        await sendLoginWebhook(pendingUser);
     }
     
     const acceptCookies = document.getElementById('acceptCookies').checked;

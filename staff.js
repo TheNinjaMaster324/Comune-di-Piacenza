@@ -31,7 +31,7 @@ function showTab(tabName) {
     document.getElementById(tabName).classList.add('active');
 }
 
-// ==================== DASHBOARD ====================
+// ==================== DASHBOARD CORRETTA ====================
 function loadDashboard() {
     const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
     const bannedCount = users.filter(u => u.banned).length;
@@ -39,7 +39,7 @@ function loadDashboard() {
     document.getElementById('totalUsers').textContent = users.length;
     document.getElementById('bannedUsers').textContent = bannedCount;
     
-    // Conta candidature
+    // Conta candidature totali
     const factions = [
         'Polizia di Stato', 
         'Arma dei Carabinieri', 
@@ -53,38 +53,60 @@ function loadDashboard() {
     ];
     
     let totalApps = 0;
-    let openApps = 0;
-    
     factions.forEach(faction => {
         const apps = JSON.parse(localStorage.getItem(`applications_${faction}`) || '[]');
         totalApps += apps.length;
-        
-        const schedule = JSON.parse(localStorage.getItem(`schedule_${faction}`) || '{}');
-        if (schedule.status === 'open') openApps++;
     });
     
     document.getElementById('totalApplications').textContent = totalApps;
-    document.getElementById('openApplications').textContent = openApps;
     
-    // Attività recente
+    // Conta segnalazioni
+    const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
+    const openReports = reports.filter(r => r.status === 'pending').length;
+    document.getElementById('totalReports').textContent = openReports;
+    
+    // ⭐ ATTIVITÀ RECENTE - CORRETTO
     const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-    const recentLogs = logs.slice(-5).reverse();
+    const recentLogs = logs.slice(-10).reverse();
     
-    const activityHtml = recentLogs.length > 0 
-        ? recentLogs.map(log => `
+    const activityDiv = document.getElementById('recentActivity');
+    
+    if (!activityDiv) {
+        console.warn('⚠️ Elemento recentActivity non trovato!');
+        return;
+    }
+    
+    if (recentLogs.length === 0) {
+        activityDiv.innerHTML = `
+            <div class="log-item" style="text-align: center; padding: 30px; color: #888;">
+                <p style="font-size: 16px;">📋 Nessuna attività registrata</p>
+                <p style="font-size: 14px; margin-top: 10px;">Le azioni dello staff verranno visualizzate qui</p>
+            </div>
+        `;
+    } else {
+        activityDiv.innerHTML = recentLogs.map(log => `
             <div class="log-item">
                 <div class="log-time">${new Date(log.date).toLocaleString('it-IT')}</div>
-                <div class="log-action">${log.action}</div>
+                <div class="log-action"><strong>${log.admin}:</strong> ${log.action}</div>
             </div>
-        `).join('')
-        : '<p style="color: #888;">Nessuna attività recente</p>';
+        `).join('');
+    }
     
-    document.getElementById('recentActivity').innerHTML = activityHtml;
+    console.log(`📊 Dashboard caricata: ${users.length} utenti, ${totalApps} candidature, ${recentLogs.length} log`);
 }
 
 // ==================== GESTIONE UTENTI ====================
 function loadUsers() {
     allUsers = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
+    
+    // Aggiungi data registrazione se mancante
+    allUsers.forEach(user => {
+        if (!user.registeredDate) {
+            user.registeredDate = new Date().toISOString();
+        }
+    });
+    
+    localStorage.setItem('piacenzaUsers', JSON.stringify(allUsers));
     renderUsers();
 }
 
@@ -103,6 +125,17 @@ function renderUsers() {
         return matchesSearch;
     });
     
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 40px; color: #888;">
+                    Nessun utente trovato
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
     tbody.innerHTML = filtered.map(user => `
         <tr>
             <td><strong>${user.username}</strong></td>
@@ -112,7 +145,7 @@ function renderUsers() {
                     ? '<span class="badge badge-danger">🚫 Bannato</span>' 
                     : '<span class="badge badge-success">✅ Attivo</span>'}
             </td>
-            <td>${new Date(user.registeredDate || Date.now()).toLocaleDateString('it-IT')}</td>
+            <td>${new Date(user.registeredDate).toLocaleDateString('it-IT')} ${new Date(user.registeredDate).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</td>
             <td>
                 ${user.banned 
                     ? `<button class="btn btn-success" onclick="toggleBan('${user.username}')">✅ Sbanna</button>`
@@ -221,32 +254,48 @@ function deleteAnnouncement(id) {
     loadAnnouncements();
 }
 
-// ==================== LOG ====================
+// ==================== LOG CORRETTI ====================
 function addLog(action) {
     const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
     logs.push({
         date: new Date().toISOString(),
         action: action,
-        admin: currentUser.username
+        admin: currentUser.username || 'Admin'
     });
     localStorage.setItem('adminLogs', JSON.stringify(logs));
+    console.log(`✅ Log aggiunto: ${action}`);
 }
 
 function loadLogs() {
     const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
     const list = document.getElementById('logsList');
     
-    if (logs.length === 0) {
-        list.innerHTML = '<p style="color: #888;">Nessuna attività registrata</p>';
+    if (!list) {
+        console.warn('⚠️ Elemento logsList non trovato!');
         return;
     }
     
-    list.innerHTML = logs.slice().reverse().map(log => `
+    if (logs.length === 0) {
+        list.innerHTML = `
+            <div style="text-align: center; padding: 50px; color: #888;">
+                <p style="font-size: 18px; margin-bottom: 10px;">📋 Nessun log disponibile</p>
+                <p style="font-size: 14px;">Le attività dello staff verranno registrate qui</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Ordina per data (più recenti prima)
+    const sortedLogs = logs.slice().reverse();
+    
+    list.innerHTML = sortedLogs.map(log => `
         <div class="log-item">
-            <div class="log-time">${new Date(log.date).toLocaleString('it-IT')} - ${log.admin}</div>
-            <div class="log-action">${log.action}</div>
+            <div class="log-time">${new Date(log.date).toLocaleString('it-IT')}</div>
+            <div class="log-action"><strong>${log.admin}:</strong> ${log.action}</div>
         </div>
     `).join('');
+    
+    console.log(`📋 ${logs.length} log caricati`);
 }
 
 // ==================== IMPOSTAZIONI ====================
@@ -313,16 +362,13 @@ function clearAllData() {
     if (!confirm('⚠️ ATTENZIONE! Vuoi davvero cancellare TUTTI i dati?\n\nQuesta azione è IRREVERSIBILE!')) return;
     if (!confirm('Sei SICURO? Tutti gli utenti, candidature e impostazioni verranno cancellati!')) return;
     
-    // Backup automatico prima di cancellare
     exportAllData();
     
-    // Cancella tutto tranne l'admin corrente
     localStorage.removeItem('piacenzaUsers');
     localStorage.removeItem('announcements');
     localStorage.removeItem('adminLogs');
     localStorage.removeItem('globalSettings');
     
-    // Cancella dati fazioni
     const factions = [
         'Polizia di Stato', 
         'Arma dei Carabinieri', 
@@ -452,4 +498,36 @@ function sendWebhook(type, data) {
         }
     })
     .catch(err => console.error('❌ Errore invio webhook:', err));
+}
+
+// ==================== FUNZIONI NAVBAR ====================
+function toggleMobileMenu() {
+    const navMenu = document.getElementById('navMenu');
+    if (navMenu) {
+        navMenu.classList.toggle('active');
+    }
+}
+
+function logout() {
+    if (confirm('Sei sicuro di voler uscire?')) {
+        console.log('👋 Logout in corso...');
+        sessionStorage.clear();
+        localStorage.removeItem('piacenza_auto_login');
+        window.location.href = 'index.html';
+    }
+}
+
+// ==================== CREA LOG ESEMPIO (OPZIONALE) ====================
+// Esegui UNA VOLTA nella console: createSampleLogs()
+function createSampleLogs() {
+    const sampleLogs = [
+        { date: new Date(Date.now() - 3600000).toISOString(), action: 'Sistema avviato', admin: 'admin' },
+        { date: new Date(Date.now() - 7200000).toISOString(), action: 'Impostazioni aggiornate', admin: 'admin' },
+        { date: new Date(Date.now() - 10800000).toISOString(), action: 'Backup eseguito', admin: 'admin' }
+    ];
+    
+    localStorage.setItem('adminLogs', JSON.stringify(sampleLogs));
+    console.log('✅ Log di esempio creati!');
+    loadDashboard();
+    loadLogs();
 }

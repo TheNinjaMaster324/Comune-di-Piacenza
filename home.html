@@ -114,14 +114,27 @@
                     
                     <div class="tool-card">
                         <h4>📊 Statistiche Server</h4>
-                        <p>Utenti registrati: <span id="totalUsers">0</span></p>
-                        <p>Admin online: <span id="adminOnline">1</span></p>
+                        <div style="margin: 10px 0; line-height: 1.8;">
+                            <p style="margin: 5px 0;">
+                                👥 <strong>Utenti registrati:</strong> 
+                                <span id="totalUsers" style="color: #667eea; font-weight: bold;">0</span>
+                            </p>
+                            <p style="margin: 5px 0;">
+                                🟢 <strong>Utenti online:</strong> 
+                                <span id="onlineUsers" style="color: #27ae60; font-weight: bold;">0</span>
+                            </p>
+                            <p style="margin: 5px 0;">
+                                👨‍💼 <strong>Admin online:</strong> 
+                                <span id="adminOnline" style="color: #f5576c; font-weight: bold;">1</span>
+                            </p>
+                        </div>
+                        <button class="admin-btn" onclick="refreshHomeStats()" style="width: 100%; margin-top: 10px; font-size: 13px;">🔄 Aggiorna</button>
                     </div>
                     
                     <div class="tool-card">
-                        <h4>👥 Gestione Fazioni</h4>
-                        <p>Accedi alla gestione delle fazioni istituzionali</p>
-                        <button class="admin-btn" onclick="window.location.href='gestione-fazioni.html'">🏛️ Gestione Fazioni</button>
+                        <h4>📨 Monitoraggio Accessi</h4>
+                        <p>Traccia login e registrazioni in tempo reale via Discord</p>
+                        <button class="admin-btn" onclick="window.location.href='staff.html'">📋 Visualizza Log</button>
                     </div>
                 </div>
                 
