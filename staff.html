@@ -5,17 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pannello Staff - Comune di Piacenza RP</title>
     <link rel="stylesheet" href="staff.css">
-    <link rel="stylesheet" href="gestione.css">
 </head>
 <body>
     
-    <div class="container">
-        <div class="header">
-            <h1>🔒 Pannello Amministrazione</h1>
-            <p>Benvenuto, <strong id="adminName">Admin</strong></p>
-        </div>
-        
-        <!-- Navbar -->
+    <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
@@ -36,6 +29,13 @@
             </ul>
         </div>
     </nav>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Pannello Amministrazione</h1>
+            <p>Benvenuto, <strong id="adminName">Admin</strong></p>
+        </div>
+        
         <div class="tabs">
             <div class="tab active" onclick="showTab('dashboard')">📊 Dashboard</div>
             <div class="tab" onclick="showTab('users')">👥 Gestione Utenti</div>
@@ -54,9 +54,9 @@
                     <h3>Utenti Registrati</h3>
                     <div class="value" id="totalUsers">0</div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
                     <span class="icon">🚫</span>
-                    <h3>Utenti Bannati</h3>
+                    <h3>Utenti Segnalati</h3>
                     <div class="value" id="bannedUsers">0</div>
                 </div>
                 <div class="stat-card" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">
@@ -66,7 +66,7 @@
                 </div>
                 <div class="stat-card" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">
                     <span class="icon">📊</span>
-                    <h3>Candidature Totali</h3>
+                    <h3>Segnalazioni Totali</h3>
                     <div class="value" id="totalApplications">0</div>
                 </div>
             </div>
@@ -87,8 +87,9 @@
                 <div class="filter-buttons">
                     <button class="filter-btn active" onclick="filterReports('all')">Tutte</button>
                     <button class="filter-btn" onclick="filterReports('pending')">⏳ Da Gestire</button>
-                    <button class="filter-btn" onclick="filterReports('resolved')">✅ Risolte</button>
-                    <button class="filter-btn" onclick="filterReports('rejected')">❌ Respinte</button>
+                    <button class="filter-btn" onclick="filterReports('in_progress')">🔓 Aperte</button>
+                    <button class="filter-btn" onclick="filterReports('resolved')">✅ Chiuse</button>
+                    <button class="filter-btn" onclick="filterReports('archived')">📁 Archiviate</button>
                 </div>
 
                 <div id="reportsList">
@@ -108,8 +109,9 @@
 
                 <div class="filter-buttons">
                     <button class="filter-btn active" onclick="filterByStatus('all')">Tutti</button>
-                    <button class="filter-btn" onclick="filterByStatus('active')">Attivi</button>
-                    <button class="filter-btn" onclick="filterByStatus('banned')">Bannati</button>
+                    <button class="filter-btn" onclick="filterByStatus('active')">✅ Attivi</button>
+                    <button class="filter-btn" onclick="filterByStatus('reported')">🚨 Segnalati</button>
+                    <button class="filter-btn" onclick="filterByStatus('banned')">🚫 Bannati</button>
                 </div>
 
                 <table class="user-table" id="userTable">
@@ -119,6 +121,7 @@
                             <th>Email</th>
                             <th>Stato</th>
                             <th>Data Registrazione</th>
+                            <th>Segnalazioni</th>
                             <th>Azioni</th>
                         </tr>
                     </thead>
@@ -180,7 +183,7 @@
                     </div>
                     <div class="input-group">
                         <label>Email Supporto</label>
-                        <input type="email" id="supportEmail" value="support@piacenzarp.it">
+                        <input type="email" id="supportEmail" value="piacenzarp@gmail.com">
                     </div>
                     <div class="input-group">
                         <label>Webhook Discord Globale</label>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Segnalazioni - Comune di Piacenza RP</title>
+    <link rel="stylesheet" href="segnalazioni.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="/Piace.png" alt="Logo" onerror="this.style.display='none';">
+                <span>Comune di Piacenza RP</span>
+            </div>
+            <a href="home.html" class="back-nav-btn">← Torna alla Home</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>🚨 Segnalazioni</h1>
+            <p>Segnala comportamenti scorretti o violazioni del regolamento</p>
+        </div>
+
+        <div class="form-container">
+            <div class="info-box">
+                <h3>⚠️ Prima di inviare una segnalazione</h3>
+                <ul>
+                    <li>Assicurati di avere prove valide (screenshot, video, log)</li>
+                    <li>Inserisci informazioni accurate e dettagliate</li>
+                    <li>Le segnalazioni false saranno punite</li>
+                    <li>Riceverai una risposta dallo staff entro 48 ore</li>
+                </ul>
+            </div>
+
+            <form id="reportForm">
+                <!-- Sezione Informazioni Segnalante -->
+                <h2 class="section-title">👤 Le tue informazioni</h2>
+                
+                <div class="form-group">
+                    <label for="reporterUsername">Nome Utente Roblox <span class="required">*</span></label>
+                    <input type="text" id="reporterUsername" required placeholder="Il tuo username Roblox">
+                </div>
+
+                <div class="form-group">
+                    <label for="reporterDiscord">Discord (con tag) <span class="required">*</span></label>
+                    <input type="text" id="reporterDiscord" required placeholder="Es: username#1234">
+                </div>
+
+                <div class="form-group">
+                    <label for="reporterEmail">Email <span class="required">*</span></label>
+                    <input type="email" id="reporterEmail" required placeholder="tua@email.com">
+                </div>
+
+                <!-- Sezione Utente Segnalato -->
+                <h2 class="section-title">🎯 Utente Segnalato</h2>
+
+                <div class="form-group">
+                    <label for="reportedUsername">Username Roblox Segnalato <span class="required">*</span></label>
+                    <input type="text" id="reportedUsername" required placeholder="Username dell'utente da segnalare">
+                </div>
+
+                <div class="form-group">
+                    <label for="reportedDiscord">Discord Segnalato (se noto)</label>
+                    <input type="text" id="reportedDiscord" placeholder="username#1234 (opzionale)">
+                </div>
+
+                <!-- Tipo di Violazione -->
+                <div class="form-group">
+                    <label for="violationType">Tipo di Violazione <span class="required">*</span></label>
+                    <select id="violationType" required>
+                        <option value="">Seleziona...</option>
+                        <option value="RDM">RDM (Random Deathmatch)</option>
+                        <option value="VDM">VDM (Vehicle Deathmatch)</option>
+                        <option value="Meta-Gaming">Meta-Gaming</option>
+                        <option value="Power-Gaming">Power-Gaming</option>
+                        <option value="Fail RP">Fail RP</option>
+                        <option value="OOC Insults">Insulti OOC</option>
+                        <option value="Trolling">Trolling</option>
+                        <option value="Bug Abuse">Abuso di Bug</option>
+                        <option value="Altro">Altro</option>
+                    </select>
+                </div>
+
+                <!-- Descrizione -->
+                <div class="form-group">
+                    <label for="description">Descrizione Dettagliata <span class="required">*</span></label>
+                    <textarea id="description" required rows="6" placeholder="Descrivi cosa è successo, quando, dove e chi era presente..."></textarea>
+                </div>
+
+                <!-- Caricamento Prove -->
+                <div class="form-group">
+                    <label for="evidence">Prove (Screenshot/Video) <span class="required">*</span></label>
+                    <input type="file" id="evidence" accept="image/*,video/*" multiple required>
+                    <small>Puoi caricare più file. Formati: immagini e video (max 10MB ciascuno)</small>
+                    <div id="fileList" class="file-list"></div>
+                </div>
+
+                <!-- Data e Ora -->
+                <div class="form-group">
+                    <label for="incidentDate">Data dell'Accaduto <span class="required">*</span></label>
+                    <input type="datetime-local" id="incidentDate" required>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="submit-btn">📤 Invia Segnalazione</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="segnalazioni.js"></script>
+</body>
+</html>

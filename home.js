@@ -443,11 +443,6 @@ document.querySelectorAll('.admin-btn').forEach(btn => {
     if (btn.getAttribute('onclick') === 'refreshHomeStats()') {
         return; // Non aggiungere l'alert a questo bottone
     }
-    
-    btn.addEventListener('click', function() {
-        const toolName = this.parentElement.querySelector('h4').textContent;
-        alert(`Funzionalità "${toolName}" in sviluppo!\n\nQuesta funzionalità sarà disponibile presto.`);
-    });
 });
 
 console.log('✅ home.js caricato correttamente!');
