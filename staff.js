@@ -4,6 +4,78 @@ let allUsers = [];
 let currentFilter = 'all';
 let currentReportFilter = 'all';
 
+// ==================== WEBHOOK AZIONI STAFF ====================
+const WEBHOOK_AZIONI_STAFF = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
+
+async function sendStaffActionWebhook(action, report, staffUsername, note = '') {
+    const actionConfig = {
+        'opened': { title: '👁️ Segnalazione Aperta', description: `${staffUsername} ha preso in carico la segnalazione`, color: 0x3498db },
+        'rejected': { title: '❌ Segnalazione Rifiutata', description: `${staffUsername} ha rifiutato la segnalazione`, color: 0xe74c3c },
+        'resolved': { title: '✅ Segnalazione Chiusa', description: `${staffUsername} ha chiuso la segnalazione`, color: 0x27ae60 },
+        'archived': { title: '📁 Segnalazione Archiviata', description: `${staffUsername} ha archiviato la segnalazione`, color: 0x95a5a6 },
+        'reopened': { title: '🔄 Segnalazione Riaperta', description: `${staffUsername} ha riaperto la segnalazione`, color: 0xf39c12 }
+    };
+
+    const config = actionConfig[action];
+    if (!config) return;
+
+    const embed = {
+        title: config.title,
+        description: config.description,
+        color: config.color,
+        fields: [
+            { name: '🆔 ID Segnalazione', value: `\`${report.id}\``, inline: true },
+            { name: '👤 Segnalato da', value: report.reporter.username, inline: true },
+            { name: '🎯 Utente Segnalato', value: report.reported.username, inline: true },
+            { name: '⚠️ Tipo Violazione', value: report.violationType, inline: true },
+            { name: '👮 Staff', value: staffUsername, inline: true },
+            { name: '📅 Data Azione', value: new Date().toLocaleString('it-IT'), inline: true }
+        ],
+        footer: { text: 'Sistema Segnalazioni - Comune di Piacenza RP' },
+        timestamp: new Date().toISOString()
+    };
+
+    if (note && note.trim() !== '') {
+        embed.fields.push({ name: '📝 Nota', value: note, inline: false });
+    }
+
+    if (report.evidenceUrls && report.evidenceUrls.length > 0) {
+        const imageLinks = report.evidenceUrls.map((img, i) => `[🖼️ Immagine ${i + 1}](${img.url})`).join(' • ');
+        embed.fields.push({ name: '🔗 Prove', value: imageLinks, inline: false });
+        embed.thumbnail = { url: report.evidenceUrls[0].url };
+    }
+
+    const payload = {
+    username: '🚨 Segnalazioni - Piacenza RP',
+    avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
+    embeds: [embed],
+    components: [
+        {
+            type: 1,
+            components: [
+                {
+                    type: 2,
+                    style: 5,
+                    label: '🔍 Visualizza Segnalazione',
+                    url: `${window.location.origin}/staff.html?report=${report.id}`
+                }
+            ]
+        }
+    ]
+};
+
+    try {
+        await fetch(WEBHOOK_AZIONI_STAFF, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        console.log(`✅ Webhook azione "${action}" inviato`);
+    } catch (error) {
+        console.error('Errore webhook:', error);
+    }
+}
+
 // ==================== INIZIALIZZAZIONE ====================
 window.addEventListener('load', function() {
     currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
@@ -286,6 +358,7 @@ function openReport(reportId) {
     report.openedDate = new Date().toISOString();
     
     localStorage.setItem('userReports', JSON.stringify(reports));
+    sendStaffActionWebhook('opened', report, currentUser.username);
     
     sendReportWebhook('open', report);
     addLog(`Segnalazione #${reportId} aperta - Utente: ${report.reported.username}`);
@@ -307,6 +380,7 @@ function resolveReport(reportId) {
     report.resolvedDate = new Date().toISOString();
     
     localStorage.setItem('userReports', JSON.stringify(reports));
+    sendStaffActionWebhook('resolved', report, currentUser.username);
     
     sendReportWebhook('resolve', report);
     addLog(`Segnalazione #${reportId} chiusa - Utente: ${report.reported.username}`);
@@ -327,11 +401,13 @@ function rejectReport(reportId) {
             
             if (!report) return;
             
+            const note = prompt('Motivo del rifiuto (opzionale):') || '';
             report.status = 'rejected';
             report.rejectedBy = currentUser.username;
             report.rejectedDate = new Date().toISOString();
             
             localStorage.setItem('userReports', JSON.stringify(reports));
+            sendStaffActionWebhook('rejected', report, currentUser.username, note);
             
             sendReportWebhook('reject', report);
             addLog(`Segnalazione #${reportId} respinta - Utente: ${report.reported.username}`);
@@ -349,12 +425,14 @@ function archiveReport(reportId) {
     const report = reports.find(r => r.id === reportId);
     
     if (!report) return;
+    const note = prompt('Nota di archiviazione (opzionale):') || '';
     
     report.status = 'archived';
     report.archivedBy = currentUser.username;
     report.archivedDate = new Date().toISOString();
     
     localStorage.setItem('userReports', JSON.stringify(reports));
+    sendStaffActionWebhook('archived', report, currentUser.username, note);
     
     sendReportWebhook('archive', report);
     addLog(`Segnalazione #${reportId} archiviata`);
@@ -374,6 +452,7 @@ function reopenReport(reportId) {
     report.status = 'in_progress';
     
     localStorage.setItem('userReports', JSON.stringify(reports));
+    sendStaffActionWebhook('reopened', report, currentUser.username);
     
     sendReportWebhook('reopen', report);
     addLog(`Segnalazione #${reportId} riaperta`);

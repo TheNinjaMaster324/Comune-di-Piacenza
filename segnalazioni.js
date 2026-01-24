@@ -1,5 +1,6 @@
 // ==================== CONFIGURAZIONE ====================
 const WEBHOOK_SEGNALAZIONI = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
+const IMGBB_API_KEY = '5cbd206261a1b8340b7a826e97316a64'; // ⚠️ INSERISCI LA TUA CLIENT ID
 
 // ==================== VERIFICA LOGIN ====================
 window.addEventListener('load', function() {
@@ -15,39 +16,73 @@ window.addEventListener('load', function() {
     }
 });
 
-// ==================== GESTIONE FILE UPLOAD ====================
+// ==================== GESTIONE FILE MULTIPLI ====================
+let uploadedFiles = [];
+
 document.getElementById('evidence').addEventListener('change', function(e) {
-    const fileList = document.getElementById('fileList');
-    fileList.innerHTML = '';
+    const files = Array.from(e.target.files);
     
-    if (e.target.files.length === 0) return;
-    
-    const validFiles = Array.from(e.target.files).filter(file => 
-        file.type.startsWith('image/') || file.type.startsWith('video/')
-    );
-    const invalidFiles = Array.from(e.target.files).filter(file => 
-        !file.type.startsWith('image/') && !file.type.startsWith('video/')
-    );
-    
-    if (invalidFiles.length > 0) {
-        showCustomNotification('error', '❌ File Non Supportati', `${invalidFiles.length} file non sono immagini o video. Accettiamo: JPG, PNG, GIF, WEBP, MP4, MOV, AVI, WEBM.`);
-    }
-    
-    validFiles.forEach((file) => {
-        const fileItem = document.createElement('div');
-        fileItem.className = 'file-item';
+    files.forEach(file => {
+        // Controlla tipo file
+        if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+            showCustomNotification('error', '❌ File Non Supportato', `${file.name} non è un'immagine o un video valido!`);
+            return;
+        }
         
-        const fileSize = (file.size / 1024 / 1024).toFixed(2);
-        const isVideo = file.type.startsWith('video/');
+        // Controlla dimensione (max 10MB per Imgur)
+        if (file.size > 10 * 1024 * 1024) {
+            showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 10MB!`);
+            return;
+        }
         
-        fileItem.innerHTML = `
-            <span style="color: #555;">
-                ${isVideo ? '🎥' : '🖼️'} ${file.name} (${fileSize} MB) ✅
-            </span>
-        `;
-        fileList.appendChild(fileItem);
+        // Leggi il file come base64
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            uploadedFiles.push({
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                data: event.target.result,
+                isVideo: file.type.startsWith('video/')
+            });
+            
+            updateFileList();
+        };
+        reader.readAsDataURL(file);
     });
 });
+
+function updateFileList() {
+    const fileList = document.getElementById('fileList');
+    
+    if (uploadedFiles.length === 0) {
+        fileList.innerHTML = '<p style="color: #888; font-size: 14px; margin-top: 10px;">Nessun file selezionato</p>';
+        return;
+    }
+    
+    fileList.innerHTML = `
+        <div style="margin-top: 15px;">
+            <strong style="color: #333;">File caricati (${uploadedFiles.length}):</strong>
+            ${uploadedFiles.map((file, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-top: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">${file.isVideo ? '🎥' : '🖼️'}</span>
+                        <div>
+                            <div style="font-size: 14px; color: #333; font-weight: 500;">${file.name}</div>
+                            <div style="font-size: 12px; color: #888;">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeFile(${index})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">🗑️ Rimuovi</button>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function removeFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateFileList();
+}
 
 // ==================== VALIDAZIONE ====================
 document.getElementById('reporterDiscord').addEventListener('blur', function() {
@@ -57,71 +92,111 @@ document.getElementById('reporterDiscord').addEventListener('blur', function() {
     }
 });
 
+// ==================== UPLOAD SU IMGUR ====================
+async function uploadToImgBB(file) {
+    try {
+        const base64Data = file.data.split(',')[1];
+        
+        const formData = new FormData();
+        formData.append('key', IMGBB_API_KEY);
+        formData.append('image', base64Data);
+        formData.append('name', file.name);
+        
+        const response = await fetch('https://api.imgbb.com/1/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Errore upload ImgBB');
+        }
+        
+        const data = await response.json();
+        return {
+            url: data.data.url,
+            deleteUrl: data.data.delete_url,
+            name: file.name
+        };
+    } catch (error) {
+        console.error('Errore upload:', error);
+        throw error;
+    }
+}
+
 // ==================== SUBMIT DEL FORM ====================
 document.getElementById('reportForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    showLoadingOverlay('📤 Invio segnalazione in corso...');
-    
-    const fileInput = document.getElementById('evidence');
-    const files = Array.from(fileInput.files).filter(f => 
-        f.type.startsWith('image/') || f.type.startsWith('video/')
-    );
-    
-    if (fileInput.files.length > 0 && files.length === 0) {
-        hideLoadingOverlay();
-        showCustomNotification('error', '❌ Nessun File Valido', 'Devi allegare almeno un file valido (immagine o video).');
+    if (uploadedFiles.length === 0) {
+        showCustomNotification('error', '❌ Nessun File', 'Devi caricare almeno un file come prova!');
         return;
     }
+
     
-    const evidenceFiles = [];
-    for (const file of files) {
-        try {
-            const base64 = await fileToBase64(file);
-            evidenceFiles.push({
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                data: base64,
-                isVideo: file.type.startsWith('video/')
-            });
-        } catch (err) {
-            console.error('Errore conversione file:', err);
-        }
-    }
-    
-    const reportData = {
-        id: Date.now(),
-        reporter: {
-            username: document.getElementById('reporterUsername').value.trim(),
-            discord: document.getElementById('reporterDiscord').value.trim(),
-            email: document.getElementById('reporterEmail').value.trim()
-        },
-        reported: {
-            username: document.getElementById('reportedUsername').value.trim(),
-            discord: document.getElementById('reportedDiscord').value.trim() || 'Non fornito'
-        },
-        violationType: document.getElementById('violationType').value,
-        description: document.getElementById('description').value.trim(),
-        incidentDate: document.getElementById('incidentDate').value,
-        evidenceCount: files.length,
-        evidenceFiles: evidenceFiles,
-        submittedDate: new Date().toISOString(),
-        status: 'pending',
-        openedBy: null
-    };
-    
-    if (reportData.reporter.username === reportData.reported.username) {
-        hideLoadingOverlay();
-        showCustomNotification('error', '❌ Errore', 'Non puoi segnalare te stesso!');
-        return;
-    }
+    showLoadingOverlay('📤 Caricamento prove su ImgBB...');
     
     try {
+        // Upload di tutte le immagini su Imgur
+        const uploadedUrls = [];
+        for (let i = 0; i < uploadedFiles.length; i++) {
+            const file = uploadedFiles[i];
+            
+            // Imgur supporta solo immagini, non video
+            if (file.isVideo) {
+                showCustomNotification('warning', '⚠️ Video Ignorato', `${file.name} non può essere caricato (ImgBB supporta solo immagini)`);
+                continue;
+            }
+            
+            updateLoadingMessage(`📤 Caricamento ${i + 1}/${uploadedFiles.length}...`);
+            
+            const imgbbData = await uploadToImgBB(file);
+            uploadedUrls.push(imgbbData);
+            
+            // Piccolo delay per evitare rate limiting
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        if (uploadedUrls.length === 0) {
+            hideLoadingOverlay();
+            showCustomNotification('error', '❌ Nessuna Immagine', 'Nessuna immagine è stata caricata con successo!');
+            return;
+        }
+        
+        updateLoadingMessage('📤 Invio segnalazione...');
+        
+        const reportData = {
+            id: Date.now(),
+            reporter: {
+                username: document.getElementById('reporterUsername').value.trim(),
+                discord: document.getElementById('reporterDiscord').value.trim(),
+                email: document.getElementById('reporterEmail').value.trim()
+            },
+            reported: {
+                username: document.getElementById('reportedUsername').value.trim(),
+                discord: document.getElementById('reportedDiscord').value.trim() || 'Non fornito'
+            },
+            violationType: document.getElementById('violationType').value,
+            description: document.getElementById('description').value.trim(),
+            incidentDate: document.getElementById('incidentDate').value,
+            evidenceCount: uploadedUrls.length,
+            evidenceUrls: uploadedUrls,
+            submittedDate: new Date().toISOString(),
+            status: 'pending',
+            openedBy: null
+        };
+        
+        if (reportData.reporter.username === reportData.reported.username) {
+            hideLoadingOverlay();
+            showCustomNotification('error', '❌ Errore', 'Non puoi segnalare te stesso!');
+            return;
+        }
+        
+        // Salva nel localStorage
         const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
         reports.push(reportData);
         localStorage.setItem('userReports', JSON.stringify(reports));
         
+        // Invia webhook Discord
         await sendDiscordWebhook(reportData);
         
         hideLoadingOverlay();
@@ -134,25 +209,12 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     } catch (error) {
         hideLoadingOverlay();
         console.error('Errore:', error);
-        showCustomNotification('error', '❌ Errore', 'Si è verificato un errore. Riprova più tardi.');
+        showCustomNotification('error', '❌ Errore', 'Si è verificato un errore durante il caricamento. Riprova più tardi.');
     }
 });
 
-// ==================== CONVERTI FILE IN BASE64 ====================
-function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
 // ==================== WEBHOOK DISCORD ====================
 async function sendDiscordWebhook(data) {
-    const imageCount = data.evidenceFiles.filter(f => !f.isVideo).length;
-    const videoCount = data.evidenceFiles.filter(f => f.isVideo).length;
-    
     const embed = {
         title: '🚨 Nuova Segnalazione Ricevuta',
         description: 'È stata ricevuta una nuova segnalazione da un utente',
@@ -170,7 +232,7 @@ async function sendDiscordWebhook(data) {
             },
             { name: '\u200B', value: '\u200B', inline: false },
             { name: '⚠️ Tipo Violazione', value: `**${data.violationType}**`, inline: true },
-            { name: '📎 Prove Allegate', value: `${imageCount} immagini, ${videoCount} video`, inline: true },
+            { name: '📎 Prove Allegate', value: `${data.evidenceCount} immagini`, inline: true },
             { name: '\u200B', value: '\u200B', inline: false },
             { 
                 name: '📝 Descrizione Dettagliata', 
@@ -195,29 +257,42 @@ async function sendDiscordWebhook(data) {
             }
         ],
         footer: { 
-            text: 'Sistema Segnalazioni - Comune di Piacenza RP | Gestisci nel pannello staff',
-            icon_url: 'https://via.placeholder.com/100/e74c3c/FFFFFF?text=!'
+            text: 'Sistema Segnalazioni - Comune di Piacenza RP',
+            icon_url: 'https://cdn.discordapp.com/embed/avatars/0.png'
         },
         timestamp: new Date().toISOString()
     };
     
-    const firstImage = data.evidenceFiles.find(f => !f.isVideo);
-    if (firstImage) {
-        embed.thumbnail = { url: firstImage.data };
+    // Aggiungi la prima immagine come thumbnail
+    if (data.evidenceUrls && data.evidenceUrls.length > 0) {
+        embed.thumbnail = { url: data.evidenceUrls[0].url };
+    }
+    
+    // Aggiungi tutte le immagini come field con link
+    if (data.evidenceUrls && data.evidenceUrls.length > 0) {
+        const imageLinks = data.evidenceUrls.map((img, i) => 
+            `[🖼️ Immagine ${i + 1}](${img.url})`
+        ).join(' • ');
+        
+        embed.fields.push({
+            name: '🔗 Link alle Prove',
+            value: imageLinks,
+            inline: false
+        });
     }
     
     const payload = {
         username: '🚨 Segnalazioni - Piacenza RP',
-        avatar_url: 'https://via.placeholder.com/100/e74c3c/FFFFFF?text=!',
+        avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
         embeds: [embed],
-        components: [
+        components: [  // ← AGGIUNGI QUESTO!
             {
                 type: 1,
                 components: [
                     {
                         type: 2,
                         style: 5,
-                        label: '🔗 Apri Segnalazione',
+                        label: '🔍 Apri Segnalazione',
                         url: `${window.location.origin}/staff.html?report=${data.id}`
                     }
                 ]
@@ -232,10 +307,21 @@ async function sendDiscordWebhook(data) {
     });
     
     if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Errore webhook:', errorText);
         throw new Error('Errore invio webhook');
     }
     
     console.log('✅ Webhook inviato con successo');
+}
+
+// ==================== UTILITY ====================
+function updateLoadingMessage(message) {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        const messageEl = overlay.querySelector('p');
+        if (messageEl) messageEl.textContent = message;
+    }
 }
 
 // ==================== NOTIFICHE ====================
@@ -385,4 +471,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('✅ Sistema segnalazioni caricato correttamente!');
+console.log('✅ Sistema segnalazioni con Imgbb caricato correttamente!');
