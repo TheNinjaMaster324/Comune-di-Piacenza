@@ -285,7 +285,7 @@ async function sendDiscordWebhook(data) {
         username: '🚨 Segnalazioni - Piacenza RP',
         avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
         embeds: [embed],
-        components: [  // ← AGGIUNGI QUESTO!
+        components: [
             {
                 type: 1,
                 components: [
@@ -293,7 +293,7 @@ async function sendDiscordWebhook(data) {
                         type: 2,
                         style: 5,
                         label: '🔍 Apri Segnalazione',
-                        url: `${window.location.origin}/staff.html?report=${data.id}`
+                        url: `https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id}`
                     }
                 ]
             }
