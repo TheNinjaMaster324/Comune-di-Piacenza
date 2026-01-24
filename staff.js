@@ -46,8 +46,6 @@ async function sendStaffActionWebhook(action, report, staffUsername, note = '') 
     }
 
     const payload = {
-    username: '🚨 Segnalazioni - Piacenza RP',
-    avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
     embeds: [embed],
     components: [
         {
