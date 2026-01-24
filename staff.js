@@ -57,7 +57,7 @@ async function sendStaffActionWebhook(action, report, staffUsername, note = '') 
                     type: 2,
                     style: 5,
                     label: '🔍 Visualizza Segnalazione',
-                    url: `${window.location.origin}/staff.html?report=${report.id}`
+                    url: `https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${report.id}`
                 }
             ]
         }
