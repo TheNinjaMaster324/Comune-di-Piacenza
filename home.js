@@ -1,4 +1,58 @@
 // VERIFICA LOGIN ALL'AVVIO
+// ==================== CUSTOM ALERT SYSTEM ====================
+
+function showCustomAlert(type, title, message) {
+    const alertOverlay = document.getElementById('customAlert');
+    const alertBox = alertOverlay.querySelector('.custom-alert-box');
+    const alertTitle = document.getElementById('alertTitle');
+    const alertMessage = document.getElementById('alertMessage');
+    const alertDate = document.getElementById('alertDate');
+    const alertIcon = document.getElementById('alertIcon');
+    
+    // Rimuovi classi precedenti
+    alertBox.classList.remove('warning', 'error', 'success', 'info', 'submission');
+    alertBox.classList.add(type);
+    
+    // Icone
+    const icons = {
+        'warning': '⚠️',
+        'error': '❌',
+        'success': '✅',
+        'info': 'ℹ️',
+        'submission': '📋'
+    };
+    
+    alertIcon.textContent = icons[type] || '⚠️';
+    alertTitle.textContent = title;
+    alertMessage.textContent = message;
+    
+    // Data e ora
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    alertDate.textContent = `Data: ${dateStr}, ${timeStr}`;
+    
+    // Mostra alert
+    alertOverlay.classList.add('show');
+}
+
+function closeCustomAlert() {
+    const alertOverlay = document.getElementById('customAlert');
+    alertOverlay.classList.remove('show');
+}
+
+// Chiudi con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeCustomAlert();
+});
+
+// Chiudi cliccando fuori
+document.getElementById('customAlert')?.addEventListener('click', function(e) {
+    if (e.target === this) closeCustomAlert();
+});
+
+// ==================== FINE CUSTOM ALERT ====================
+
 window.addEventListener('load', function() {
     const isLoggedIn = sessionStorage.getItem('logged');
     
@@ -122,18 +176,83 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 });
 
 // Gestione form contatti
-document.getElementById('contactForm').addEventListener('submit', function(e) {
+// ==================== GESTIONE FORM CONTATTI → DISCORD WEBHOOK ====================
+document.getElementById('contactForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const name = document.getElementById('contactName').value;
-    const email = document.getElementById('contactEmail').value;
-    const message = document.getElementById('contactMessage').value;
+    const name = document.getElementById('contactName').value.trim();
+    const email = document.getElementById('contactEmail').value.trim();
+    const message = document.getElementById('contactMessage').value.trim();
     
-    console.log('📧 Messaggio inviato:', { name, email, message });
+    // Validazione
+    if (!name || !email || !message) {
+        alert('⚠️ Compila tutti i campi!');
+        return;
+    }
     
-    alert('✅ Messaggio inviato con successo!\n\nGrazie per averci contattato, ' + name + '!\nRiceverai una risposta entro 24-48 ore.');
+    // Webhook Discord
+    const webhookUrl = 'https://discord.com/api/webhooks/1464363269593497663/n8ZgJ96CoxaXoZ-ujq2yYo-ml2xkXO5h9dGx9K2onmkG3NTVDUopGwgWaVE_3bWkbiNy';
     
-    this.reset();
+    // Embed per Discord
+    const embed = {
+        title: '📧 Nuovo Messaggio di Contatto',
+        description: 'Un utente ha inviato un messaggio dal sito',
+        color: 0x667eea,
+        fields: [
+            {
+                name: '👤 Nome',
+                value: name,
+                inline: true
+            },
+            {
+                name: '📧 Email',
+                value: email,
+                inline: true
+            },
+            {
+                name: '\u200B',
+                value: '\u200B',
+                inline: false
+            },
+            {
+                name: '💬 Messaggio',
+                value: message.length > 1024 ? message.substring(0, 1021) + '...' : message,
+                inline: false
+            }
+        ],
+        footer: {
+            text: 'Comune di Piacenza RP'
+        },
+        timestamp: new Date().toISOString()
+    };
+    
+    try {
+        console.log('📤 Invio messaggio al webhook Discord...');
+        
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: 'Contatti - Piacenza RP',
+                avatar_url: 'https://via.placeholder.com/100',
+                embeds: [embed]
+            })
+        });
+        
+        if (response.ok) {
+            console.log('✅ Messaggio inviato con successo al webhook!');
+            alert('✅ Messaggio inviato con successo!\n\nGrazie per averci contattato, ' + name + '!\nRiceverai una risposta entro 24-48 ore.');
+            this.reset();
+        } else {
+            throw new Error('Errore risposta webhook: ' + response.status);
+        }
+        
+    } catch (error) {
+        console.error('❌ Errore invio webhook:', error);
+        alert('❌ Errore invio messaggio!\n\nPer favore contattaci direttamente su Discord:\nhttps://discord.gg/PjxsnbDs');
+    }
 });
 
 // ==================== CANDIDATURA FAZIONE ====================

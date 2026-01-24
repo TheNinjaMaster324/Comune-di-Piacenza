@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pannello Staff - Comune di Piacenza RP</title>
+    <link rel="stylesheet" href="staff.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Pannello Amministrazione</h1>
+            <p>Benvenuto, <strong id="adminName">Admin</strong></p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('dashboard')">📊 Dashboard</div>
+            <div class="tab" onclick="showTab('users')">👥 Gestione Utenti</div>
+            <div class="tab" onclick="showTab('announcements')">📢 Annunci</div>
+            <div class="tab" onclick="showTab('logs')">📋 Log Attività</div>
+            <div class="tab" onclick="showTab('settings')">⚙️ Impostazioni</div>
+            <div class="tab" onclick="showTab('export')">💾 Backup & Export</div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="icon">👥</span>
+                    <h3>Utenti Registrati</h3>
+                    <div class="value" id="totalUsers">0</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <span class="icon">🚫</span>
+                    <h3>Utenti Bannati</h3>
+                    <div class="value" id="bannedUsers">0</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">
+                    <span class="icon">📋</span>
+                    <h3>Candidature Totali</h3>
+                    <div class="value" id="totalApplications">0</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">
+                    <span class="icon">✅</span>
+                    <h3>Candidature Aperte</h3>
+                    <div class="value" id="openApplications">0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📈 Attività Recente</h2>
+                <div id="recentActivity">
+                    <p style="color: #888;">Caricamento attività...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- GESTIONE UTENTI -->
+        <div id="users" class="tab-content">
+            <div class="card">
+                <h2>👥 Gestione Utenti</h2>
+                
+                <div class="search-box">
+                    <input type="text" id="userSearch" placeholder="🔍 Cerca utente per username o email..." onkeyup="filterUsers()">
+                </div>
+
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterByStatus('all')">Tutti</button>
+                    <button class="filter-btn" onclick="filterByStatus('active')">Attivi</button>
+                    <button class="filter-btn" onclick="filterByStatus('banned')">Bannati</button>
+                </div>
+
+                <table class="user-table" id="userTable">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Stato</th>
+                            <th>Data Registrazione</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <!-- Popolato da JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ANNUNCI -->
+        <div id="announcements" class="tab-content">
+            <div class="card">
+                <h2>📢 Crea Nuovo Annuncio</h2>
+                <form id="announcementForm">
+                    <div class="input-group">
+                        <label>Titolo Annuncio</label>
+                        <input type="text" id="announcementTitle" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Messaggio</label>
+                        <textarea id="announcementMessage" rows="6" required></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Tipo</label>
+                        <select id="announcementType">
+                            <option value="info">ℹ️ Informazione</option>
+                            <option value="warning">⚠️ Avviso</option>
+                            <option value="event">🎉 Evento</option>
+                            <option value="update">🔄 Aggiornamento</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">📤 Pubblica Annuncio</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>📋 Annunci Pubblicati</h2>
+                <div id="announcementsList"></div>
+            </div>
+        </div>
+
+        <!-- LOG ATTIVITÀ -->
+        <div id="logs" class="tab-content">
+            <div class="card">
+                <h2>📋 Log Attività</h2>
+                <div id="logsList"></div>
+            </div>
+        </div>
+
+        <!-- IMPOSTAZIONI -->
+        <div id="settings" class="tab-content">
+            <div class="card">
+                <h2>⚙️ Impostazioni Globali</h2>
+                <form id="settingsForm">
+                    <div class="input-group">
+                        <label>Nome Server</label>
+                        <input type="text" id="serverName" value="Comune di Piacenza RP">
+                    </div>
+                    <div class="input-group">
+                        <label>Email Supporto</label>
+                        <input type="email" id="supportEmail" value="support@piacenzarp.it">
+                    </div>
+                    <div class="input-group">
+                        <label>Webhook Discord Globale</label>
+                        <input type="url" id="globalWebhook" placeholder="https://discord.com/api/webhooks/...">
+                    </div>
+                    <div class="input-group">
+                        <label>Messaggio di Benvenuto</label>
+                        <textarea id="welcomeMessage" rows="4">Benvenuto su Comune di Piacenza Roleplay!</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success">💾 Salva Impostazioni</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- BACKUP & EXPORT -->
+        <div id="export" class="tab-content">
+            <div class="card">
+                <h2>💾 Backup & Export Dati</h2>
+                <p style="color: #666; margin-bottom: 20px;">Scarica i dati del sistema in vari formati</p>
+                
+                <button class="btn btn-primary" onclick="exportUsers()">📥 Export Utenti (JSON)</button>
+                <button class="btn btn-primary" onclick="exportUsersCSV()">📊 Export Utenti (CSV)</button>
+                <button class="btn btn-primary" onclick="exportAllData()">💾 Backup Completo</button>
+                <button class="btn btn-danger" onclick="clearAllData()" style="margin-left: 20px;">🗑️ Reset Dati (ATTENZIONE!)</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="staff.js"></script>
+</body>
+</html>

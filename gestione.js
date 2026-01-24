@@ -102,7 +102,7 @@ function sendDiscordWebhook(type, data) {
     fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'Comune di Piacenza RP', avatar_url: 'https://via.placeholder.com/100', embeds: [embed] })
+        body: JSON.stringify({ username: 'Comune di Piacenza', avatar_url: 'https://via.placeholder.com/100', embeds: [embed] })
     }).catch(err => console.error('❌ Errore webhook:', err));
 }
 
@@ -423,7 +423,7 @@ function sendArchiveWebhook(applications) {
                 { name: '💬 Discord', value: app.discord, inline: true },
                 { name: '📧 Email', value: app.email, inline: true },
                 { name: '📊 Punteggio', value: String(app.totalScore || 0), inline: true },
-                { name: '✅ Risultato', value: app.result === 'passed' ? '✅ IDONEO' : app.result === 'failed' ? '❌ NON IDONEO' : '⏳ In attesa', inline: true },
+                { name: '📃 Risultato', value: app.result === 'passed' ? '✅ IDONEO' : app.result === 'failed' ? '❌ NON IDONEO' : '⏳ In attesa', inline: true },
                 { name: '📅 Data', value: new Date(app.date).toLocaleDateString('it-IT'), inline: true },
                 { name: '📋 Risposte', value: `[Clicca qui](${answerUrl})`, inline: false }
             ],
