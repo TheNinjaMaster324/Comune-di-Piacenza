@@ -1007,26 +1007,6 @@ function sendWebhook(type, data) {
     let embed = {};
     let content = ''; // ← NUOVO
     
-    if (type === 'announcement') {
-        const typeEmojis = { 'info': 'ℹ️', 'warning': '⚠️', 'event': '🎉', 'update': '🔄' };
-        embed = {
-            title: `${typeEmojis[data.type] || '📢'} Nuovo Annuncio: ${data.title}`,
-            description: data.message,
-            color: 0x667eea,
-            timestamp: new Date().toISOString(),
-            footer: { text: `Pubblicato da ${data.author}` }
-        };
-        
-        // ✅ AGGIUNGI IL PING
-        if (data.ping === '@everyone') {
-            content = '@everyone';
-        } else if (data.ping === '@here') {
-            content = '@here';
-        } else if (data.ping === 'both') {
-            content = '@everyone @here';
-        }
-    }
-    
     const payload = {
         username: 'Annunci - Piacenza RP',
         content: content, // ← NUOVO
