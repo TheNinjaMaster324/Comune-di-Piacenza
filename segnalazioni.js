@@ -280,24 +280,17 @@ async function sendDiscordWebhook(data) {
             inline: false
         });
     }
+
+    embed.fields.push({
+    name: '🔗 Gestisci Segnalazione',
+    value: `[👉 Clicca qui per aprire nel pannello staff](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
+    inline: false
+    });
     
     const payload = {
         username: '🚨 Segnalazioni - Piacenza RP',
         avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
-        embeds: [embed],
-        components: [
-            {
-                type: 1,
-                components: [
-                    {
-                        type: 2,
-                        style: 5,
-                        label: '🔍 Apri Segnalazione',
-                        url: `https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id}`
-                    }
-                ]
-            }
-        ]
+        embeds: [embed]
     };
     
     const response = await fetch(WEBHOOK_SEGNALAZIONI, {
