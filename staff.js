@@ -321,7 +321,7 @@ function createReportCard(report) {
         }
         return `<p style="color: #888;">Nessuna prova disponibile</p>`;
     })()}
-</div>
+    </div>
                 
                 ${report.openedBy ? `
                     <div style="margin-bottom: 20px;">
