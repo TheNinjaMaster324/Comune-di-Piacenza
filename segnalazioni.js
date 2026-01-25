@@ -78,19 +78,27 @@ async function sendStaffActionWebhook(action, report, staffUsername, note = '') 
 window.addEventListener('load', function() {
     currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     
-    // ✅ CONTROLLO: Verifica solo se l'utente è loggato (NON se è admin)
-    if (!currentUser.username) {
-        alert('⚠️ Devi essere loggato per accedere a questa pagina!');
-        window.location.href = 'index.html';
+    if (!currentUser.isAdmin) {
+        alert('⚠️ Accesso negato! Solo admin.');
+        window.location.href = 'home.html';
         return;
     }
+
+    document.getElementById('adminName').textContent = currentUser.username;
     
-    // Precompila i campi del form con i dati dell'utente loggato
-    const reporterUsername = document.getElementById('reporterUsername');
-    const reporterEmail = document.getElementById('reporterEmail');
+    const urlParams = new URLSearchParams(window.location.search);
+    const reportId = urlParams.get('report');
     
-    if (reporterUsername) reporterUsername.value = currentUser.username || '';
-    if (reporterEmail) reporterEmail.value = currentUser.email || '';
+    loadDashboard();
+    loadUsers();
+    loadReports();
+    loadAnnouncements();
+    loadLogs();
+    loadSettings();
+    
+    if (reportId) {
+        setTimeout(() => navigateToReportFromUrl(parseInt(reportId)), 500);
+    }
 });
 
 function navigateToReportFromUrl(reportId) {
@@ -164,51 +172,46 @@ function loadDashboard() {
     const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
     const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
     
-    const totalUsers = document.getElementById('totalUsers');
-    const bannedUsers = document.getElementById('bannedUsers');
-    const totalReports = document.getElementById('totalReports');
-    const totalApplications = document.getElementById('totalApplications');
-    const activityDiv = document.getElementById('recentActivity');
-    
-    if (totalUsers) totalUsers.textContent = users.length;
+    document.getElementById('totalUsers').textContent = users.length;
     
     const activeReports = reports.filter(r => r.status !== 'archived' && r.status !== 'rejected');
     const reportedUsernames = [...new Set(activeReports.map(r => r.reported.username))];
-    if (bannedUsers) bannedUsers.textContent = reportedUsernames.length;
+    document.getElementById('bannedUsers').textContent = reportedUsernames.length;
     
     const openReports = reports.filter(r => r.status === 'in_progress').length;
-    if (totalReports) totalReports.textContent = openReports;
+    document.getElementById('totalReports').textContent = openReports;
     
-    if (totalApplications) totalApplications.textContent = reports.length;
+    document.getElementById('totalApplications').textContent = reports.length;
     
-    if (activityDiv) {
-        const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-        const recentLogs = logs.slice(-10).reverse();
-        
-        if (recentLogs.length === 0) {
-            activityDiv.innerHTML = `
-                <div class="log-item" style="text-align: center; padding: 30px; color: #888;">
-                    <p style="font-size: 16px;">📋 Nessuna attività registrata</p>
-                </div>
-            `;
-        } else {
-            activityDiv.innerHTML = recentLogs.map(log => `
-                <div class="log-item">
-                    <div class="log-time">${new Date(log.date).toLocaleString('it-IT')}</div>
-                    <div class="log-action"><strong>${log.admin}:</strong> ${log.action}</div>
-                </div>
-            `).join('');
-        }
+    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+    const recentLogs = logs.slice(-10).reverse();
+    
+    const activityDiv = document.getElementById('recentActivity');
+    
+    if (recentLogs.length === 0) {
+        activityDiv.innerHTML = `
+            <div class="log-item" style="text-align: center; padding: 30px; color: #888;">
+                <p style="font-size: 16px;">📋 Nessuna attività registrata</p>
+            </div>
+        `;
+    } else {
+        activityDiv.innerHTML = recentLogs.map(log => `
+            <div class="log-item">
+                <div class="log-time">${new Date(log.date).toLocaleString('it-IT')}</div>
+                <div class="log-action"><strong>${log.admin}:</strong> ${log.action}</div>
+            </div>
+        `).join('');
     }
 }
 
-// ==================== GESTIONE SEGNALAZIONI ====================
+// ==================== GESTIONE SEGNALAZIONI - VERSIONE CORRETTA ====================
 function loadReports() {
     const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
     const list = document.getElementById('reportsList');
     
     if (!list) return;
     
+    // ✅ Salva quali segnalazioni hanno i dettagli aperti
     const openReports = new Set();
     document.querySelectorAll('.report-details[style*="display: block"]').forEach(el => {
         const id = el.id.replace('details-', '');
@@ -229,6 +232,7 @@ function loadReports() {
     
     list.innerHTML = filtered.map(report => createReportCard(report)).join('');
     
+    // ✅ Riapri le segnalazioni che erano aperte
     openReports.forEach(id => {
         const details = document.getElementById(`details-${id}`);
         if (details) {
@@ -379,6 +383,7 @@ function toggleReportDetails(reportId) {
     }
 }
 
+// ✅ NUOVA FUNZIONE: AGGIORNA SINGOLA CARD
 function updateSingleReportCard(reportId) {
     const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
     const report = reports.find(r => r.id === reportId);
@@ -549,10 +554,7 @@ function loadUsers() {
 
 function renderUsers() {
     const tbody = document.getElementById('userTableBody');
-    if (!tbody) return;
-    
-    const searchInput = document.getElementById('userSearch');
-    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    const searchTerm = document.getElementById('userSearch').value.toLowerCase();
     
     let filtered = allUsers.filter(user => {
         const matchesSearch = user.username.toLowerCase().includes(searchTerm) || 
@@ -798,204 +800,4 @@ function toggleBan(username) {
     loadDashboard();
 }
 
-function addLog(action) {
-    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-    logs.push({
-        date: new Date().toISOString(),
-        action: action,
-        admin: currentUser.username || 'Admin'
-    });
-    localStorage.setItem('adminLogs', JSON.stringify(logs));
-}
-
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.animation = 'slideIn 0.3s ease reverse';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
-function showConfirmDialog(title, message, onConfirm) {
-    const overlay = document.createElement('div');
-    overlay.id = 'confirmDialog';
-    overlay.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);
-        z-index: 10000; display: flex; align-items: center; justify-content: center;
-        animation: fadeIn 0.3s ease;
-    `;
-    
-    overlay.innerHTML = `
-        <div style="background: white; border-radius: 20px; padding: 40px; max-width: 500px; text-align: center; animation: scaleIn 0.3s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-            <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
-            <h3 style="color: #333; margin-bottom: 15px; font-size: 24px;">${title}</h3>
-            <p style="color: #666; margin-bottom: 30px; line-height: 1.6; font-size: 16px;">${message}</p>
-            <div style="display: flex; gap: 15px; justify-content: center;">
-                <button id="confirmBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px;">Ok</button>
-                <button id="cancelBtn" style="background: #e0e0e0; color: #333; border: none; padding: 12px 30px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px;">Annulla</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(overlay);
-    
-    document.getElementById('confirmBtn').onclick = () => {
-        overlay.style.animation = 'fadeOut 0.2s ease';
-        setTimeout(() => { overlay.remove(); onConfirm(); }, 200);
-    };
-    
-    document.getElementById('cancelBtn').onclick = () => {
-        overlay.style.animation = 'fadeOut 0.2s ease';
-        setTimeout(() => overlay.remove(), 200);
-    };
-}
-
-function sendWebhook(type, data) {
-    const settings = JSON.parse(localStorage.getItem('globalSettings') || '{}');
-    const webhookUrl = settings.globalWebhook;
-    if (!webhookUrl) return;
-    
-    let embed = {};
-    if (type === 'ban') {
-        embed = {
-            title: data.banned ? '🚫 Utente Bannato' : '✅ Ban Rimosso',
-            color: data.banned ? 0xe74c3c : 0x27ae60,
-            fields: [
-                { name: 'Username', value: data.username, inline: true },
-                { name: 'Email', value: data.email, inline: true }
-            ],
-            timestamp: new Date().toISOString()
-        };
-    }
-    
-    fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ embeds: [embed] })
-    }).catch(err => console.error('Errore webhook:', err));
-}
-
-function sendReportWebhook(action, report) {
-    const settings = JSON.parse(localStorage.getItem('globalSettings') || '{}');
-    const webhookUrl = settings.globalWebhook;
-    if (!webhookUrl) return;
-    
-    const actionConfig = {
-        open: { title: '🔓 Segnalazione Aperta', color: 0x3498db },
-        resolve: { title: '✅ Segnalazione Chiusa', color: 0x27ae60 },
-        reject: { title: '❌ Segnalazione Respinta', color: 0xe74c3c },
-        archive: { title: '📁 Segnalazione Archiviata', color: 0x95a5a6 },
-        reopen: { title: '🔄 Segnalazione Riaperta', color: 0xf39c12 }
-    };
-    
-    const config = actionConfig[action];
-    const embed = {
-        title: config.title,
-        color: config.color,
-        fields: [
-            { name: 'ID', value: `#${report.id}`, inline: true },
-            { name: 'Utente', value: report.reported.username, inline: true },
-            { name: 'Staff', value: currentUser.username, inline: true }
-        ],
-        timestamp: new Date().toISOString()
-    };
-    
-    fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ embeds: [embed] })
-    }).catch(err => console.error('Errore webhook:', err));
-}
-
-function openImageModal(reportId, imageIndex) {
-    const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
-    const report = reports.find(r => r.id === reportId);
-    
-    if (!report || !report.evidenceFiles || !report.evidenceFiles[imageIndex]) return;
-    
-    const modal = document.createElement('div');
-    modal.id = 'imageModal';
-    modal.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.95); z-index: 10002;
-        display: flex; align-items: center; justify-content: center;
-        animation: fadeIn 0.3s ease;
-    `;
-    
-    const currentFile = report.evidenceFiles[imageIndex];
-    const totalFiles = report.evidenceFiles.length;
-    
-    modal.innerHTML = `
-        <div style="max-width: 90%; max-height: 90vh; position: relative;">
-            <button onclick="document.getElementById('imageModal').remove()" style="position: absolute; top: -40px; right: 0; background: #e74c3c; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 24px;">×</button>
-            <div style="text-align: center; color: white; margin-bottom: 10px;">
-                <strong>${currentFile.name}</strong> (${imageIndex + 1} di ${totalFiles})
-            </div>
-            <img src="${currentFile.data}" style="max-width: 100%; max-height: 80vh; border-radius: 10px;" alt="${currentFile.name}">
-            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
-                ${imageIndex > 0 ? `<button onclick="changeImage(${reportId}, ${imageIndex - 1})" style="background: #667eea; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer;">← Precedente</button>` : ''}
-                ${imageIndex < totalFiles - 1 ? `<button onclick="changeImage(${reportId}, ${imageIndex + 1})" style="background: #667eea; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer;">Successivo →</button>` : ''}
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-function openVideoModal(reportId, videoIndex) {
-    const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
-    const report = reports.find(r => r.id === reportId);
-    
-    if (!report || !report.evidenceFiles || !report.evidenceFiles[videoIndex]) return;
-    
-    const modal = document.createElement('div');
-    modal.id = 'imageModal';
-    modal.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.95); z-index: 10002;
-        display: flex; align-items: center; justify-content: center;
-        animation: fadeIn 0.3s ease;
-    `;
-    
-    const currentFile = report.evidenceFiles[videoIndex];
-    const totalFiles = report.evidenceFiles.length;
-    
-    modal.innerHTML = `
-        <div style="max-width: 90%; max-height: 90vh; position: relative;">
-            <button onclick="document.getElementById('imageModal').remove()" style="position: absolute; top: -40px; right: 0; background: #e74c3c; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 24px;">×</button>
-            <div style="text-align: center; color: white; margin-bottom: 10px;">
-                <strong>${currentFile.name}</strong> (${videoIndex + 1} di ${totalFiles})
-            </div>
-            <video controls autoplay style="max-width: 100%; max-height: 80vh; border-radius: 10px;">
-                <source src="${currentFile.data}" type="${currentFile.type}">
-            </video>
-            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
-                ${videoIndex > 0 ? `<button onclick="changeImage(${reportId}, ${videoIndex - 1})" style="background: #667eea; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer;">← Precedente</button>` : ''}
-                ${videoIndex < totalFiles - 1 ? `<button onclick="changeImage(${reportId}, ${videoIndex + 1})" style="background: #667eea; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer;">Successivo →</button>` : ''}
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-function changeImage(reportId, newIndex) {
-    const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
-    const report = reports.find(r => r.id === reportId);
-    const file = report.evidenceFiles[newIndex];
-    
-    document.getElementById('imageModal').remove();
-    
-    if (file.isVideo) {
-        openVideoModal(reportId, newIndex);
-    } else {
-        openImageModal(reportId, newIndex);
-    }
-}
-
-console.log('✅ segnalazioni.js caricato correttamente');
+// CONTINUA NELLA PROSSIMA PARTE - Scrivi "continua" per le altre funzioni
