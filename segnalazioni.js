@@ -1,5 +1,6 @@
 // ==================== CONFIGURAZIONE ====================
 const WEBHOOK_SEGNALAZIONI = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
+const IMGBB_API_KEY = '5cbd206261a1b8340b7a826e97316a64'; 
 
 // ==================== VERIFICA LOGIN ====================
 window.addEventListener('load', function() {
@@ -28,7 +29,7 @@ document.getElementById('evidence').addEventListener('change', function(e) {
             return;
         }
         
-        // Controlla dimensione (max 10MB)
+        // Controlla dimensione (max 10MB per Imgur)
         if (file.size > 10 * 1024 * 1024) {
             showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 10MB!`);
             return;
@@ -91,6 +92,37 @@ document.getElementById('reporterDiscord').addEventListener('blur', function() {
     }
 });
 
+// ==================== UPLOAD SU IMGUR ====================
+async function uploadToImgBB(file) {
+    try {
+        const base64Data = file.data.split(',')[1];
+        
+        const formData = new FormData();
+        formData.append('key', IMGBB_API_KEY);
+        formData.append('image', base64Data);
+        formData.append('name', file.name);
+        
+        const response = await fetch('https://api.imgbb.com/1/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Errore upload ImgBB');
+        }
+        
+        const data = await response.json();
+        return {
+            url: data.data.url,
+            deleteUrl: data.data.delete_url,
+            name: file.name
+        };
+    } catch (error) {
+        console.error('Errore upload:', error);
+        throw error;
+    }
+}
+
 // ==================== SUBMIT DEL FORM ====================
 document.getElementById('reportForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -99,41 +131,72 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         showCustomNotification('error', '❌ Nessun File', 'Devi caricare almeno un file come prova!');
         return;
     }
+
     
-    showLoadingOverlay('📤 Invio segnalazione in corso...');
-    
-    const reportData = {
-        id: Date.now(),
-        reporter: {
-            username: document.getElementById('reporterUsername').value.trim(),
-            discord: document.getElementById('reporterDiscord').value.trim(),
-            email: document.getElementById('reporterEmail').value.trim()
-        },
-        reported: {
-            username: document.getElementById('reportedUsername').value.trim(),
-            discord: document.getElementById('reportedDiscord').value.trim() || 'Non fornito'
-        },
-        violationType: document.getElementById('violationType').value,
-        description: document.getElementById('description').value.trim(),
-        incidentDate: document.getElementById('incidentDate').value,
-        evidenceCount: uploadedFiles.length,
-        evidenceFiles: uploadedFiles,
-        submittedDate: new Date().toISOString(),
-        status: 'pending',
-        openedBy: null
-    };
-    
-    if (reportData.reporter.username === reportData.reported.username) {
-        hideLoadingOverlay();
-        showCustomNotification('error', '❌ Errore', 'Non puoi segnalare te stesso!');
-        return;
-    }
+    showLoadingOverlay('📤 Caricamento prove su Imgur...');
     
     try {
+        // Upload di tutte le immagini su Imgur
+        const uploadedUrls = [];
+        for (let i = 0; i < uploadedFiles.length; i++) {
+            const file = uploadedFiles[i];
+            
+            // Imgur supporta solo immagini, non video
+            if (file.isVideo) {
+                showCustomNotification('warning', '⚠️ Video Ignorato', `${file.name} non può essere caricato (Imgur supporta solo immagini)`);
+                continue;
+            }
+            
+            updateLoadingMessage(`📤 Caricamento ${i + 1}/${uploadedFiles.length}...`);
+            
+            const imgurData = await uploadToImgur(file);
+            uploadedUrls.push(imgurData);
+            
+            // Piccolo delay per evitare rate limiting
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        if (uploadedUrls.length === 0) {
+            hideLoadingOverlay();
+            showCustomNotification('error', '❌ Nessuna Immagine', 'Nessuna immagine è stata caricata con successo!');
+            return;
+        }
+        
+        updateLoadingMessage('📤 Invio segnalazione...');
+        
+        const reportData = {
+            id: Date.now(),
+            reporter: {
+                username: document.getElementById('reporterUsername').value.trim(),
+                discord: document.getElementById('reporterDiscord').value.trim(),
+                email: document.getElementById('reporterEmail').value.trim()
+            },
+            reported: {
+                username: document.getElementById('reportedUsername').value.trim(),
+                discord: document.getElementById('reportedDiscord').value.trim() || 'Non fornito'
+            },
+            violationType: document.getElementById('violationType').value,
+            description: document.getElementById('description').value.trim(),
+            incidentDate: document.getElementById('incidentDate').value,
+            evidenceCount: uploadedUrls.length,
+            evidenceUrls: uploadedUrls,
+            submittedDate: new Date().toISOString(),
+            status: 'pending',
+            openedBy: null
+        };
+        
+        if (reportData.reporter.username === reportData.reported.username) {
+            hideLoadingOverlay();
+            showCustomNotification('error', '❌ Errore', 'Non puoi segnalare te stesso!');
+            return;
+        }
+        
+        // Salva nel localStorage
         const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
         reports.push(reportData);
         localStorage.setItem('userReports', JSON.stringify(reports));
         
+        // Invia webhook Discord
         await sendDiscordWebhook(reportData);
         
         hideLoadingOverlay();
@@ -146,25 +209,12 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     } catch (error) {
         hideLoadingOverlay();
         console.error('Errore:', error);
-        showCustomNotification('error', '❌ Errore', 'Si è verificato un errore. Riprova più tardi.');
+        showCustomNotification('error', '❌ Errore', 'Si è verificato un errore durante il caricamento. Riprova più tardi.');
     }
 });
 
-// ==================== CONVERTI FILE IN BASE64 ====================
-function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-
 // ==================== WEBHOOK DISCORD ====================
 async function sendDiscordWebhook(data) {
-    const imageCount = data.evidenceFiles.filter(f => !f.isVideo).length;
-    const videoCount = data.evidenceFiles.filter(f => f.isVideo).length;
-    
     const embed = {
         title: '🚨 Nuova Segnalazione Ricevuta',
         description: 'È stata ricevuta una nuova segnalazione da un utente',
@@ -182,7 +232,7 @@ async function sendDiscordWebhook(data) {
             },
             { name: '\u200B', value: '\u200B', inline: false },
             { name: '⚠️ Tipo Violazione', value: `**${data.violationType}**`, inline: true },
-            { name: '📎 Prove Allegate', value: `${imageCount} immagini, ${videoCount} video`, inline: true },
+            { name: '📎 Prove Allegate', value: `${data.evidenceCount} immagini`, inline: true },
             { name: '\u200B', value: '\u200B', inline: false },
             { 
                 name: '📝 Descrizione Dettagliata', 
@@ -207,29 +257,40 @@ async function sendDiscordWebhook(data) {
             }
         ],
         footer: { 
-            text: 'Sistema Segnalazioni - Comune di Piacenza RP | Gestisci nel pannello staff',
-            icon_url: 'https://via.placeholder.com/100/e74c3c/FFFFFF?text=!'
+            text: 'Sistema Segnalazioni - Comune di Piacenza RP',
+            icon_url: 'https://cdn.discordapp.com/embed/avatars/0.png'
         },
         timestamp: new Date().toISOString()
     };
     
-    const firstImage = data.evidenceFiles.find(f => !f.isVideo);
-    if (firstImage) {
-        embed.thumbnail = { url: firstImage.data };
+    // Aggiungi la prima immagine come thumbnail
+    if (data.evidenceUrls && data.evidenceUrls.length > 0) {
+        embed.thumbnail = { url: data.evidenceUrls[0].url };
+    }
+    
+    // Aggiungi tutte le immagini come field con link
+    if (data.evidenceUrls && data.evidenceUrls.length > 0) {
+        const imageLinks = data.evidenceUrls.map((img, i) => 
+            `[🖼️ Immagine ${i + 1}](${img.url})`
+        ).join(' • ');
+        
+        embed.fields.push({
+            name: '🔗 Link alle Prove',
+            value: imageLinks,
+            inline: false
+        });
     }
     
     const payload = {
-        username: '🚨 Segnalazioni - Piacenza RP',
-        avatar_url: 'https://via.placeholder.com/100/e74c3c/FFFFFF?text=!',
         embeds: [embed],
-        components: [
+        components: [  // ← AGGIUNGI QUESTO!
             {
                 type: 1,
                 components: [
                     {
                         type: 2,
                         style: 5,
-                        label: '🔗 Apri Segnalazione',
+                        label: '🔍 Apri Segnalazione',
                         url: `${window.location.origin}/staff.html?report=${data.id}`
                     }
                 ]
@@ -244,10 +305,21 @@ async function sendDiscordWebhook(data) {
     });
     
     if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Errore webhook:', errorText);
         throw new Error('Errore invio webhook');
     }
     
     console.log('✅ Webhook inviato con successo');
+}
+
+// ==================== UTILITY ====================
+function updateLoadingMessage(message) {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        const messageEl = overlay.querySelector('p');
+        if (messageEl) messageEl.textContent = message;
+    }
 }
 
 // ==================== NOTIFICHE ====================
@@ -397,4 +469,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('✅ Sistema segnalazioni caricato correttamente!');
+console.log('✅ Sistema segnalazioni con ImgBB caricato correttamente!');
