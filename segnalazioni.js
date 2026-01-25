@@ -288,9 +288,22 @@ async function sendDiscordWebhook(data) {
     });
     
     const payload = {
-        username: '🚨 Segnalazioni - Piacenza RP',
-        avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
-        embeds: [embed]
+    username: '🚨 Segnalazioni - Piacenza RP',
+    avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
+    embeds: [embed],
+    components: [  // ← RIATTIVA QUESTO!
+        {
+            type: 1,
+            components: [
+                    {
+                        type: 2,
+                        style: 5,
+                        label: '🔍 Apri Segnalazione',
+                        url: `https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id}`
+                    }
+                ]
+            }
+        ]
     };
     
     const response = await fetch(WEBHOOK_SEGNALAZIONI, {
