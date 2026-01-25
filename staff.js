@@ -1081,6 +1081,9 @@ function sendReportWebhook(action, report) {
     const payload = {
         username: '🚨 Sistema Segnalazioni',
         embeds: [embed],
+        allowed_mentions: {  // ← AGGIUNGI QUESTO!
+        parse: data.ping === 'none' ? [] : ['everyone', 'roles', 'users', 'here', 'everyone' + 'here']
+        },
         components: [
             {
                 type: 1,
