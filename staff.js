@@ -1078,26 +1078,34 @@ function sendReportWebhook(action, report) {
         embed.thumbnail = { url: report.evidenceFiles[0].data };
     }
     
-    const payload = {
-        username: '🚨 Sistema Segnalazioni',
-        embeds: [embed],
-        allowed_mentions: {  // ← AGGIUNGI QUESTO!
-        parse: data.ping === 'none' ? [] : ['everyone', 'roles', 'users', 'here', 'everyone' + 'here']
-        },
-        components: [
-            {
-                type: 1,
-                components: [
-                    {
-                        type: 2,
-                        style: 5,
-                        label: '🔗 Visualizza Segnalazione',
-                        url: `${window.location.origin}/staff.html?report=${report.id}`
-                    }
-                ]
-            }
-        ]
+    if (type === 'announcement') {
+    const typeEmojis = { 'info': 'ℹ️', 'warning': '⚠️', 'event': '🎉', 'update': '🔄' };
+    embed = {
+        title: `${typeEmojis[data.type] || '📢'} Nuovo Annuncio: ${data.title}`,
+        description: data.message,
+        color: 0x667eea,
+        timestamp: new Date().toISOString(),
+        footer: { text: `Pubblicato da ${data.author}` }
     };
+    
+    // Gestisci il ping
+    if (data.ping === '@everyone') {
+        content = '@everyone';
+    } else if (data.ping === '@here') {
+        content = '@here';
+    } else if (data.ping === 'both') {
+        content = '@everyone @here';
+    }
+    }
+
+const payload = {
+    username: 'Annunci - Piacenza RP',
+    content: content || undefined,
+    embeds: [embed],
+    allowed_mentions: {  // ← QUESTO È FONDAMENTALE!
+        parse: type === 'announcement' && content ? ['everyone', 'roles'] : []
+    }
+};
     
     fetch(webhookUrl, {
         method: 'POST',
