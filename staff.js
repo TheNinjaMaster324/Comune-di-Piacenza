@@ -285,30 +285,43 @@ function createReportCard(report) {
                     <p>${new Date(report.incidentDate).toLocaleString('it-IT')}</p>
                 </div>
                 
-                <div style="margin-bottom: 20px;">
-                    <h4 style="color: #333; margin-bottom: 10px;">📎 Prove</h4>
-                    ${report.evidenceFiles && report.evidenceFiles.length > 0 ? `
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px;">
-                            ${report.evidenceFiles.map((file, index) => file.isVideo ? `
-                                <div style="position: relative; border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; cursor: pointer; background: #000;" onclick="event.stopPropagation(); openVideoModal(${report.id}, ${index})">
-                                    <div style="width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px;">
-                                        🎥
-                                    </div>
-                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px; text-align: center; font-size: 11px;">
-                                        ${file.name}
-                                    </div>
-                                </div>
-                            ` : `
-                                <div style="position: relative; border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; cursor: pointer;" onclick="event.stopPropagation(); openImageModal(${report.id}, ${index})">
-                                    <img src="${file.data}" style="width: 100%; height: 150px; object-fit: cover;" alt="Prova ${index + 1}">
-                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 5px; text-align: center; font-size: 11px;">
-                                        ${file.name}
-                                    </div>
-                                </div>
-                            `).join('')}
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #333; margin-bottom: 10px;">📎 Prove</h4>
+            ${(() => {
+            // Prima controlla evidenceFiles (base64)
+            if (report.evidenceFiles && report.evidenceFiles.length > 0) {
+                return `
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px;">
+                ${report.evidenceFiles.map((file, index) => file.isVideo ? `
+                    <div style="position: relative; border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; cursor: pointer; background: #000;" onclick="event.stopPropagation(); openVideoModal(${report.id}, ${index})">
+                        <div style="width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px;">🎥</div>
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px; text-align: center; font-size: 11px;">${file.name}</div>
                         </div>
-                    ` : `<p>${report.evidenceCount} file allegati (non disponibili in anteprima)</p>`}
+                        ` : `
+                        <div style="position: relative; border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; cursor: pointer;" onclick="event.stopPropagation(); openImageModal(${report.id}, ${index})">
+                            <img src="${file.data}" style="width: 100%; height: 150px; object-fit: cover;" alt="Prova ${index + 1}">
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 5px; text-align: center; font-size: 11px;">${file.name}</div>
+                        </div>
+                `).join('')}
+            </div>
+            `;
+        }
+        // Poi controlla evidenceUrls (ImgBB)
+        if (report.evidenceUrls && report.evidenceUrls.length > 0) {
+            return `
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px;">
+                    ${report.evidenceUrls.map((img, index) => `
+                        <a href="${img.url}" target="_blank" style="position: relative; border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; display: block;">
+                            <img src="${img.url}" style="width: 100%; height: 150px; object-fit: cover;" alt="Prova ${index + 1}">
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 5px; text-align: center; font-size: 11px;">Immagine ${index + 1}</div>
+                        </a>
+                    `).join('')}
                 </div>
+            `;
+        }
+        return `<p style="color: #888;">Nessuna prova disponibile</p>`;
+    })()}
+</div>
                 
                 ${report.openedBy ? `
                     <div style="margin-bottom: 20px;">
@@ -325,6 +338,7 @@ function createReportCard(report) {
                     
                     ${report.status === 'in_progress' ? `
                         <button class="btn btn-success" onclick="resolveReport(${report.id})">✅ Chiudi Segnalazione</button>
+                        <button class="btn btn-primary" onclick="archiveReport(${report.id})">📁 Archivia</button>
                     ` : ''}
                     
                     ${report.status === 'resolved' ? `
@@ -777,12 +791,14 @@ document.getElementById('announcementForm').addEventListener('submit', function(
     const title = document.getElementById('announcementTitle').value;
     const message = document.getElementById('announcementMessage').value;
     const type = document.getElementById('announcementType').value;
+    const ping = document.getElementById('announcementPing').value; // ← NUOVO
     
     const announcement = {
         id: Date.now(),
         title,
         message,
         type,
+        ping, // ← NUOVO
         date: new Date().toISOString(),
         author: currentUser.username
     };
@@ -989,20 +1005,9 @@ function sendWebhook(type, data) {
     if (!webhookUrl) return;
     
     let embed = {};
+    let content = ''; // ← NUOVO
     
-    if (type === 'ban') {
-        embed = {
-            title: data.banned ? '🚫 Utente Bannato dal Sito' : '✅ Ban Rimosso',
-            color: data.banned ? 0xe74c3c : 0x27ae60,
-            fields: [
-                { name: '👤 Username', value: data.username, inline: true },
-                { name: '📧 Email', value: data.email, inline: true },
-                { name: '💬 Discord', value: data.discord || 'N/A', inline: true }
-            ],
-            timestamp: new Date().toISOString(),
-            footer: { text: `Azione eseguita da ${currentUser.username}` }
-        };
-    } else if (type === 'announcement') {
+    if (type === 'announcement') {
         const typeEmojis = { 'info': 'ℹ️', 'warning': '⚠️', 'event': '🎉', 'update': '🔄' };
         embed = {
             title: `${typeEmojis[data.type] || '📢'} Nuovo Annuncio: ${data.title}`,
@@ -1011,12 +1016,27 @@ function sendWebhook(type, data) {
             timestamp: new Date().toISOString(),
             footer: { text: `Pubblicato da ${data.author}` }
         };
+        
+        // ✅ AGGIUNGI IL PING
+        if (data.ping === '@everyone') {
+            content = '@everyone';
+        } else if (data.ping === '@here') {
+            content = '@here';
+        } else if (data.ping === 'both') {
+            content = '@everyone @here';
+        }
     }
+    
+    const payload = {
+        username: 'Annunci - Piacenza RP',
+        content: content, // ← NUOVO
+        embeds: [embed]
+    };
     
     fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'Annunci - Piacenza RP', embeds: [embed] })
+        body: JSON.stringify(payload)
     }).catch(err => console.error('Errore webhook:', err));
 }
 
