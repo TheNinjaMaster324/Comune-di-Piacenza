@@ -93,28 +93,32 @@ document.getElementById('reporterDiscord').addEventListener('blur', function() {
 });
 
 // ==================== UPLOAD SU IMGUR ====================
-async function uploadToImgBB(file) {
+
+async function uploadToImgur(file) {
     try {
         const base64Data = file.data.split(',')[1];
         
-        const formData = new FormData();
-        formData.append('key', IMGBB_API_KEY);
-        formData.append('image', base64Data);
-        formData.append('name', file.name);
-        
-        const response = await fetch('https://api.imgbb.com/1/upload', {
+        const response = await fetch('https://api.imgur.com/3/image', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Authorization': 'Client-ID beb148a0bb5f842', // Client ID pubblico di Imgur
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                image: base64Data,
+                type: 'base64',
+                name: file.name
+            })
         });
         
         if (!response.ok) {
-            throw new Error('Errore upload ImgBB');
+            throw new Error('Errore upload Imgur');
         }
         
         const data = await response.json();
         return {
-            url: data.data.url,
-            deleteUrl: data.data.delete_url,
+            url: data.data.link,
+            deleteHash: data.data.deletehash,
             name: file.name
         };
     } catch (error) {
@@ -149,7 +153,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             
             updateLoadingMessage(`📤 Caricamento ${i + 1}/${uploadedFiles.length}...`);
             
-            const imgurData = await uploadToImgur(file);
+            const imgurData = await uploadToImgBB(file);
             uploadedUrls.push(imgurData);
             
             // Piccolo delay per evitare rate limiting
