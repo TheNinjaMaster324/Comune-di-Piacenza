@@ -94,6 +94,7 @@ document.getElementById('reporterDiscord').addEventListener('blur', function() {
 
 // ==================== UPLOAD SU IMGUR ====================
 
+// ==================== UPLOAD SU IMGUR (ALTERNATIVA) ====================
 async function uploadToImgur(file) {
     try {
         const base64Data = file.data.split(',')[1];
@@ -101,7 +102,7 @@ async function uploadToImgur(file) {
         const response = await fetch('https://api.imgur.com/3/image', {
             method: 'POST',
             headers: {
-                'Authorization': 'Client-ID beb148a0bb5f842', // Client ID pubblico di Imgur
+                'Authorization': 'Client-ID beb148a0bb5f842',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -112,6 +113,8 @@ async function uploadToImgur(file) {
         });
         
         if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Errore Imgur:', errorData);
             throw new Error('Errore upload Imgur');
         }
         
@@ -122,7 +125,7 @@ async function uploadToImgur(file) {
             name: file.name
         };
     } catch (error) {
-        console.error('Errore upload:', error);
+        console.error('Errore upload Imgur:', error);
         throw error;
     }
 }
