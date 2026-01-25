@@ -78,27 +78,16 @@ async function sendStaffActionWebhook(action, report, staffUsername, note = '') 
 window.addEventListener('load', function() {
     currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     
-    if (!currentUser.isAdmin) {
-        alert('⚠️ Accesso negato! Solo admin.');
-        window.location.href = 'home.html';
+    // ✅ CONTROLLO: Verifica solo se l'utente è loggato (NON se è admin)
+    if (!currentUser.username) {
+        alert('⚠️ Devi essere loggato per accedere a questa pagina!');
+        window.location.href = 'index.html';
         return;
     }
-
-    document.getElementById('adminName').textContent = currentUser.username;
     
-    const urlParams = new URLSearchParams(window.location.search);
-    const reportId = urlParams.get('report');
-    
-    loadDashboard();
-    loadUsers();
-    loadReports();
-    loadAnnouncements();
-    loadLogs();
-    loadSettings();
-    
-    if (reportId) {
-        setTimeout(() => navigateToReportFromUrl(parseInt(reportId)), 500);
-    }
+    // Precompila i campi del form con i dati dell'utente loggato
+    document.getElementById('reporterUsername').value = currentUser.username || '';
+    document.getElementById('reporterEmail').value = currentUser.email || '';
 });
 
 function navigateToReportFromUrl(reportId) {
