@@ -134,35 +134,47 @@
 
         <!-- ANNUNCI -->
         <div id="announcements" class="tab-content">
-            <div class="card">
-                <h2>📢 Crea Nuovo Annuncio</h2>
-                <form id="announcementForm">
-                    <div class="input-group">
-                        <label>Titolo Annuncio</label>
-                        <input type="text" id="announcementTitle" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Messaggio</label>
-                        <textarea id="announcementMessage" rows="6" required></textarea>
-                    </div>
-                    <div class="input-group">
-                        <label>Tipo</label>
-                        <select id="announcementType">
-                            <option value="info">ℹ️ Informazione</option>
-                            <option value="warning">⚠️ Avviso</option>
-                            <option value="event">🎉 Evento</option>
-                            <option value="update">🔄 Aggiornamento</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">📤 Pubblica Annuncio</button>
-                </form>
+    <div class="card">
+        <h2>📢 Crea Nuovo Annuncio</h2>
+        <form id="announcementForm">
+            <div class="input-group">
+                <label>Titolo Annuncio</label>
+                <input type="text" id="announcementTitle" required>
             </div>
+            <div class="input-group">
+                <label>Messaggio</label>
+                <textarea id="announcementMessage" rows="6" required></textarea>
+            </div>
+            <div class="input-group">
+                <label>Tipo</label>
+                <select id="announcementType">
+                    <option value="info">ℹ️ Informazione</option>
+                    <option value="warning">⚠️ Avviso</option>
+                    <option value="event">🎉 Evento</option>
+                    <option value="update">🔄 Aggiornamento</option>
+                </select>
+            </div>
+            
+            <!-- ✅ CAMPO PING AGGIUNTO QUI -->
+            <div class="input-group">
+                <label>Ping Discord</label>
+                <select id="announcementPing">
+                    <option value="none">🔇 Nessuno</option>
+                    <option value="@everyone">📢 @everyone</option>
+                    <option value="@here">👥 @here</option>
+                    <option value="both">🔔 @everyone + @here</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">📤 Pubblica Annuncio</button>
+        </form>
+    </div>
 
-            <div class="card">
-                <h2>📋 Annunci Pubblicati</h2>
-                <div id="announcementsList"></div>
-            </div>
-        </div>
+    <div class="card">
+        <h2>📋 Annunci Pubblicati</h2>
+        <div id="announcementsList"></div>
+    </div>
+    </div>
 
         <!-- LOG ATTIVITÀ -->
         <div id="logs" class="tab-content">
