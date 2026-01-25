@@ -5,8 +5,8 @@ const AUTHORIZED_INSTITUTIONAL = {
     'Guardia di Finanza': { email: 'gdf@piacenzarp.it', password: 'GDF2025', ids: ['GDF001', 'GDF002'] },
     'Polizia Penitenziaria': { email: 'penitenziaria@piacenzarp.it', password: 'PP2025', ids: ['PP0001', 'PP0002'] },
     'Polizia Locale': { email: 'locale@piacenzarp.it', password: 'PL2025', ids: ['PL0001', 'PL0002'] },
-    'Croce Rossa Italiana': { email: 'cri@piacenzarp.it', password: 'CRI2025', ids: ['CRI001', 'CRI002'] },
-    'Croce Verde': { email: 'croceverde@piacenzarp.it', password: 'CV2025', ids: ['CV0001', 'CV0002'] },
+    'Croce Rossa Italiana': { email: 'gaiacrocerossaitaliana@gmail.com', password: 'GaiaCRI_2025', ids: ['CRI001', 'CRI002'] },
+    'Croce Verde': { email: 'croceverde.collefiorito@gmail.com', password: 'Croceverde.it', ids: ['CV0001', 'CV0002'] },
     'Vigili del Fuoco': { email: 'vvf@piacenzarp.it', password: 'VVF2025', ids: ['VVF001', 'VVF002'] },
     'ACI': { email: 'aci@piacenzarp.it', password: 'ACI2025', ids: ['ACI001', 'ACI002'] }
 };
