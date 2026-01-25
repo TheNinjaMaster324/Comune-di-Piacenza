@@ -58,8 +58,7 @@ function sendDiscordWebhook(type, data) {
     const faction = user.faction;
     const webhooks = JSON.parse(localStorage.getItem(`webhooks_${faction}`) || '{}');
     let webhookUrl = '', embed = {};
-    const concorsoUrl = window.location.origin + '/home.html#fazioni';
-    
+    const concorsoUrl = 'https://theninjamaster324.github.io/Comune-di-Piacenza/home.html#fazioni';    
     if (type === 'open') {
         webhookUrl = webhooks.management || '';
         embed = {
