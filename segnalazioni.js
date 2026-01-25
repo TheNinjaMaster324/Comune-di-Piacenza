@@ -288,8 +288,6 @@ async function sendDiscordWebhook(data) {
     });
     
     const payload = {
-    username: '🚨 Segnalazioni - Piacenza RP',
-    avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
     embeds: [embed],
     components: [  // ← RIATTIVA QUESTO!
         {
