@@ -288,7 +288,7 @@ async function sendDiscordWebhook(data) {
     
     const payload = {
         embeds: [embed],
-        components: [  // ← AGGIUNGI QUESTO!
+        components: [
             {
                 type: 1,
                 components: [
