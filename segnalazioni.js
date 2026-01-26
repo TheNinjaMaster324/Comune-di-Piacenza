@@ -271,43 +271,29 @@ async function sendDiscordWebhook(data) {
     // Aggiungi la prima immagine come thumbnail
     if (data.evidenceUrls && data.evidenceUrls.length > 0) {
         embed.thumbnail = { url: data.evidenceUrls[0].url };
+        
+        // Aggiungi tutte le immagini come field con link
+        const imageLinks = data.evidenceUrls.map((img, i) => 
+            `[🖼️ Immagine ${i + 1}](${img.url})`
+        ).join(' • ');
+        
+        embed.fields.push({
+            name: '🔗 Link alle Prove',
+            value: imageLinks,
+            inline: false
+        });
+        
+        // ✅ LINK ALLA SEGNALAZIONE NEL PANNELLO STAFF
+        embed.fields.push({
+            name: '👮 Pannello Staff',
+            value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
+            inline: false
+        });
     }
     
-    // Aggiungi tutte le immagini come field con link
-    if (data.evidenceUrls && data.evidenceUrls.length > 0) {
-    const imageLinks = data.evidenceUrls.map((img, i) => 
-        `[🖼️ Immagine ${i + 1}](${img.url})`
-    ).join(' • ');
-    
-    embed.fields.push({
-        name: '🔗 Link alle Prove',
-        value: imageLinks,
-        inline: false
-    });
-    
-    // ✅ AGGIUNGI QUESTO CAMPO CON IL LINK ALLA SEGNALAZIONE
-    embed.fields.push({
-        name: '👮 Pannello Staff',
-        value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
-        inline: false
-    });
-}
-    
+    // ❌ RIMOSSO components perché non funziona con webhook
     const payload = {
-        embeds: [embed],
-        components: [
-            {
-                type: 1,
-                components: [
-                    {
-                        type: 2,
-                        style: 5,
-                        label: '🔍 Apri Segnalazione',
-                        url: `https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id}`
-                    }
-                ]
-            }
-        ]
+        embeds: [embed]
     };
     
     const response = await fetch(WEBHOOK_SEGNALAZIONI, {
