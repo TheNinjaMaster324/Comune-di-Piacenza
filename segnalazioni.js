@@ -13,7 +13,85 @@ window.addEventListener('load', function() {
         document.getElementById('reporterUsername').value = user.username || '';
         document.getElementById('reporterEmail').value = user.email || '';
     }
+    
+    // Inizializza il pulsante file personalizzato
+    initCustomFileButton();
 });
+
+// ==================== PULSANTE FILE PERSONALIZZATO ====================
+function initCustomFileButton() {
+    const fileInput = document.getElementById('evidence');
+    if (!fileInput) return;
+    
+    // Nascondi l'input originale
+    fileInput.style.display = 'none';
+    
+    // Crea un pulsante personalizzato
+    const customButton = document.createElement('div');
+    customButton.id = 'customFileButton';
+    customButton.style.cssText = `
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        user-select: none;
+    `;
+    customButton.innerHTML = `
+        <span style="font-size: 20px;">📎</span>
+        <span id="fileButtonText">Scegli File (Immagini/Video)</span>
+        <span id="fileButtonBadge" style="
+            background: rgba(255,255,255,0.3);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            display: none;
+        ">0 file</span>
+    `;
+    
+    // Hover effect
+    customButton.addEventListener('mouseenter', () => {
+        customButton.style.transform = 'translateY(-2px)';
+        customButton.style.boxShadow = '0 6px 20px rgba(52, 152, 219, 0.4)';
+    });
+    customButton.addEventListener('mouseleave', () => {
+        customButton.style.transform = 'translateY(0)';
+        customButton.style.boxShadow = '0 4px 15px rgba(52, 152, 219, 0.3)';
+    });
+    
+    // Click apre il file picker
+    customButton.addEventListener('click', () => {
+        fileInput.click();
+    });
+    
+    // Inserisci il pulsante dopo l'input nascosto
+    fileInput.parentNode.insertBefore(customButton, fileInput.nextSibling);
+}
+
+function updateCustomFileButton() {
+    const buttonText = document.getElementById('fileButtonText');
+    const buttonBadge = document.getElementById('fileButtonBadge');
+    
+    if (!buttonText || !buttonBadge) return;
+    
+    if (uploadedFiles.length === 0) {
+        buttonText.textContent = 'Scegli File (Immagini/Video)';
+        buttonBadge.style.display = 'none';
+    } else {
+        buttonText.textContent = 'Aggiungi Altri File';
+        buttonBadge.style.display = 'inline-block';
+        buttonBadge.textContent = `${uploadedFiles.length} file pronti`;
+        buttonBadge.style.background = '#27ae60';
+        buttonBadge.style.animation = 'pulse 0.3s ease';
+    }
+}
 
 // ==================== GESTIONE FILE MULTIPLI ====================
 let uploadedFiles = [];
@@ -66,7 +144,7 @@ function updateFileList() {
     
     if (uploadedFiles.length === 0) {
         fileList.innerHTML = '<p style="color: #888; font-size: 14px; margin-top: 10px;">Nessun file selezionato</p>';
-        updateInputLabel();
+        updateCustomFileButton();
         return;
     }
     
@@ -88,41 +166,12 @@ function updateFileList() {
         </div>
     `;
     
-    updateInputLabel();
+    updateCustomFileButton();
 }
 
 function updateInputLabel() {
-    const input = document.getElementById('evidence');
-    const label = document.querySelector('label[for="evidence"]');
-    
-    if (!label) return;
-    
-    if (uploadedFiles.length > 0) {
-        // Crea un badge personalizzato
-        const existingBadge = label.querySelector('.file-count-badge');
-        if (existingBadge) {
-            existingBadge.textContent = `${uploadedFiles.length} file pronti`;
-        } else {
-            const badge = document.createElement('span');
-            badge.className = 'file-count-badge';
-            badge.style.cssText = `
-                background: #27ae60;
-                color: white;
-                padding: 4px 10px;
-                border-radius: 12px;
-                font-size: 12px;
-                font-weight: 600;
-                margin-left: 10px;
-            `;
-            badge.textContent = `${uploadedFiles.length} file pronti`;
-            label.appendChild(badge);
-        }
-    } else {
-        const existingBadge = label.querySelector('.file-count-badge');
-        if (existingBadge) {
-            existingBadge.remove();
-        }
-    }
+    // Funzione mantenuta per compatibilità ma non più usata
+    updateCustomFileButton();
 }
 
 function removeFile(index) {
@@ -536,6 +585,11 @@ style.textContent = `
     @keyframes bounce {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-20px); }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
     }
 `;
 document.head.appendChild(style);
