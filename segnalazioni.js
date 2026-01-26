@@ -162,6 +162,7 @@ async function uploadToStreamable(file) {
 }
 // ==================== SUBMIT DEL FORM ====================
 // ==================== SUBMIT DEL FORM ====================
+d// ==================== SUBMIT DEL FORM ====================
 document.getElementById('reportForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -189,19 +190,16 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             await new Promise(resolve => setTimeout(resolve, 500));
         }
         
-        // Upload video su Streamable
-        const uploadedVideoUrls = [];
-        for (let i = 0; i < videos.length; i++) {
-            const video = videos[i];
-            updateLoadingMessage(`📤 Caricamento video ${i + 1}/${videos.length}...`);
-            
-            const videoData = await uploadToStreamable(video);
-            uploadedVideoUrls.push(videoData);
-            
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+        // Salva video in base64 (per il pannello staff)
+        const videoFiles = videos.map(v => ({
+            name: v.name,
+            type: v.type,
+            size: v.size,
+            data: v.data,
+            isVideo: true
+        }));
         
-        if (uploadedImageUrls.length === 0 && uploadedVideoUrls.length === 0) {
+        if (uploadedImageUrls.length === 0 && videoFiles.length === 0) {
             hideLoadingOverlay();
             showCustomNotification('error', '❌ Nessun File', 'Nessun file è stato caricato con successo!');
             return;
@@ -223,8 +221,8 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             violationType: document.getElementById('violationType').value,
             description: document.getElementById('description').value.trim(),
             incidentDate: document.getElementById('incidentDate').value,
-            evidenceUrls: uploadedImageUrls, // Immagini
-            videoUrls: uploadedVideoUrls, // Video con link
+            evidenceUrls: uploadedImageUrls, // Immagini (con link)
+            evidenceFiles: videoFiles, // Video (salvati in base64)
             submittedDate: new Date().toISOString(),
             status: 'pending',
             openedBy: null
@@ -261,7 +259,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
 // ==================== WEBHOOK DISCORD ====================
 async function sendDiscordWebhook(data) {
     const imageCount = data.evidenceUrls?.length || 0;
-    const videoCount = data.videoUrls?.length || 0;
+    const videoCount = data.evidenceFiles?.length || 0;
     
     const embed = {
         title: '🚨 Nuova Segnalazione Ricevuta',
@@ -333,15 +331,13 @@ async function sendDiscordWebhook(data) {
         });
     }
     
-    // ✅ Link ai video
-    if (data.videoUrls && data.videoUrls.length > 0) {
-        const videoLinks = data.videoUrls.map((vid, i) => 
-            `[🎥 Video ${i + 1}](${vid.url})`
-        ).join(' • ');
+    // Nota sui video (salvati localmente)
+    if (data.evidenceFiles && data.evidenceFiles.length > 0) {
+        const videoList = data.evidenceFiles.map((v, i) => `🎥 ${v.name}`).join('\n');
         
         embed.fields.push({
-            name: '🔗 Link ai Video',
-            value: videoLinks,
+            name: '🎥 Video Allegati (disponibili nel pannello staff)',
+            value: videoList.length > 1024 ? videoList.substring(0, 1021) + '...' : videoList,
             inline: false
         });
     }
