@@ -21,6 +21,10 @@ let uploadedFiles = [];
 document.getElementById('evidence').addEventListener('change', function(e) {
     const files = Array.from(e.target.files);
     
+    if (files.length === 0) return;
+    
+    let addedCount = 0;
+    
     files.forEach(file => {
         // Controlla tipo file
         if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
@@ -42,11 +46,19 @@ document.getElementById('evidence').addEventListener('change', function(e) {
             isVideo: file.type.startsWith('video/')
         });
         
-        updateFileList();
+        addedCount++;
     });
     
-    // Reset input
+    if (addedCount > 0) {
+        showCustomNotification('success', '✅ File Aggiunti', `${addedCount} file aggiunti alla lista!`);
+        updateFileList();
+    }
+    
+    // Reset input per permettere di caricare lo stesso file di nuovo
     e.target.value = '';
+    
+    // Aggiorna il label dell'input
+    updateInputLabel();
 });
 
 function updateFileList() {
@@ -54,6 +66,7 @@ function updateFileList() {
     
     if (uploadedFiles.length === 0) {
         fileList.innerHTML = '<p style="color: #888; font-size: 14px; margin-top: 10px;">Nessun file selezionato</p>';
+        updateInputLabel();
         return;
     }
     
@@ -74,11 +87,48 @@ function updateFileList() {
             `).join('')}
         </div>
     `;
+    
+    updateInputLabel();
+}
+
+function updateInputLabel() {
+    const input = document.getElementById('evidence');
+    const label = document.querySelector('label[for="evidence"]');
+    
+    if (!label) return;
+    
+    if (uploadedFiles.length > 0) {
+        // Crea un badge personalizzato
+        const existingBadge = label.querySelector('.file-count-badge');
+        if (existingBadge) {
+            existingBadge.textContent = `${uploadedFiles.length} file pronti`;
+        } else {
+            const badge = document.createElement('span');
+            badge.className = 'file-count-badge';
+            badge.style.cssText = `
+                background: #27ae60;
+                color: white;
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+                margin-left: 10px;
+            `;
+            badge.textContent = `${uploadedFiles.length} file pronti`;
+            label.appendChild(badge);
+        }
+    } else {
+        const existingBadge = label.querySelector('.file-count-badge');
+        if (existingBadge) {
+            existingBadge.remove();
+        }
+    }
 }
 
 function removeFile(index) {
     uploadedFiles.splice(index, 1);
     updateFileList();
+    showCustomNotification('success', '🗑️ File Rimosso', 'Il file è stato rimosso dalla lista.');
 }
 
 // ==================== VALIDAZIONE ====================
