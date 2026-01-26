@@ -296,7 +296,7 @@ async function sendDiscordWebhook(data) {
                         type: 2,
                         style: 5,
                         label: '🔍 Apri Segnalazione',
-                        url: `${window.location.origin}/staff.html?report=${data.id}`
+                        url: `https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id}`
                     }
                 ]
             }
