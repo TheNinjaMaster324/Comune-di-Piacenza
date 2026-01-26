@@ -1,6 +1,5 @@
 // ==================== CONFIGURAZIONE ====================
 const WEBHOOK_SEGNALAZIONI = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
-const IMGBB_API_KEY = '5cbd206261a1b8340b7a826e97316a64'; 
 
 // ==================== VERIFICA LOGIN ====================
 window.addEventListener('load', function() {
@@ -29,28 +28,25 @@ document.getElementById('evidence').addEventListener('change', function(e) {
             return;
         }
         
-        // Controlla dimensione
-        const maxSize = file.type.startsWith('video/') ? 50 * 1024 * 1024 : 10 * 1024 * 1024; // 50MB video, 10MB immagini
-        if (file.size > maxSize) {
-            showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera il limite consentito!`);
+        // Controlla dimensione (200MB max per Catbox)
+        if (file.size > 200 * 1024 * 1024) {
+            showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 200MB!`);
             return;
         }
         
-        // Leggi il file come base64
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            uploadedFiles.push({
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                data: event.target.result,
-                isVideo: file.type.startsWith('video/')
-            });
-            
-            updateFileList();
-        };
-        reader.readAsDataURL(file);
+        uploadedFiles.push({
+            file: file,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            isVideo: file.type.startsWith('video/')
+        });
+        
+        updateFileList();
     });
+    
+    // Reset input
+    e.target.value = '';
 });
 
 function updateFileList() {
@@ -70,7 +66,7 @@ function updateFileList() {
                         <span style="font-size: 24px;">${file.isVideo ? '🎥' : '🖼️'}</span>
                         <div>
                             <div style="font-size: 14px; color: #333; font-weight: 500;">${file.name}</div>
-                            <div style="font-size: 12px; color: #888;">${(file.size / 1024 / 1024).toFixed(2)} MB ${file.isVideo ? '(salvato localmente)' : ''}</div>
+                            <div style="font-size: 12px; color: #888;">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
                         </div>
                     </div>
                     <button type="button" onclick="removeFile(${index})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">🗑️ Rimuovi</button>
@@ -88,46 +84,40 @@ function removeFile(index) {
 // ==================== VALIDAZIONE ====================
 document.getElementById('reporterDiscord').addEventListener('blur', function() {
     const value = this.value.trim();
-    if (value && !value.includes('#')) {
-        showCustomNotification('warning', '⚠️ Formato Discord', 'Ricorda di includere il tag (es: username#1234)');
+    if (value && !value.includes('#') && !value.match(/^[a-z0-9_.]+$/)) {
+        showCustomNotification('warning', '⚠️ Formato Discord', 'Formato Discord non valido (es: username#1234 o username)');
     }
 });
 
-// ==================== UPLOAD SU IMGBB (SOLO IMMAGINI) ====================
-async function uploadToImgBB(file) {
+// ==================== UPLOAD SU CATBOX.MOE ====================
+async function uploadToCatbox(fileObj) {
     try {
-        const base64Data = file.data.split(',')[1];
-        
         const formData = new FormData();
-        formData.append('key', IMGBB_API_KEY);
-        formData.append('image', base64Data);
-        formData.append('name', file.name);
+        formData.append('reqtype', 'fileupload');
+        formData.append('fileToUpload', fileObj.file);
         
-        const response = await fetch('https://api.imgbb.com/1/upload', {
+        const response = await fetch('https://catbox.moe/user/api.php', {
             method: 'POST',
             body: formData
         });
         
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Errore ImgBB:', errorData);
-            throw new Error(`Errore upload: ${errorData.error?.message || 'Errore sconosciuto'}`);
+            throw new Error('Errore upload Catbox');
         }
         
-        const data = await response.json();
+        const url = await response.text();
         
-        if (!data.success) {
-            throw new Error('Upload fallito');
+        if (!url.startsWith('https://files.catbox.moe/')) {
+            throw new Error('URL non valido');
         }
         
         return {
-            url: data.data.url,
-            displayUrl: data.data.display_url,
-            deleteUrl: data.data.delete_url,
-            name: file.name
+            url: url.trim(),
+            name: fileObj.name,
+            isVideo: fileObj.isVideo
         };
     } catch (error) {
-        console.error('Errore upload ImgBB:', error);
+        console.error('Errore upload Catbox:', error);
         throw error;
     }
 }
@@ -141,41 +131,42 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         return;
     }
     
-    showLoadingOverlay('📤 Preparazione files...');
+    const reporterUsername = document.getElementById('reporterUsername').value.trim();
+    const reportedUsername = document.getElementById('reportedUsername').value.trim();
+    
+    if (reporterUsername === reportedUsername) {
+        showCustomNotification('error', '❌ Errore', 'Non puoi segnalare te stesso!');
+        return;
+    }
+    
+    showLoadingOverlay('📤 Caricamento prove online...');
     
     try {
-        // Separa immagini e video
-        const images = uploadedFiles.filter(f => !f.isVideo);
-        const videos = uploadedFiles.filter(f => f.isVideo);
+        // Upload TUTTI i file su Catbox
+        const uploadedMediaUrls = [];
         
-        // Upload solo immagini su ImgBB
-        const uploadedImageUrls = [];
-        for (let i = 0; i < images.length; i++) {
-            const file = images[i];
-            updateLoadingMessage(`📤 Caricamento immagine ${i + 1}/${images.length}...`);
+        for (let i = 0; i < uploadedFiles.length; i++) {
+            const file = uploadedFiles[i];
+            const fileType = file.isVideo ? 'video' : 'immagine';
+            updateLoadingMessage(`📤 Caricamento ${fileType} ${i + 1}/${uploadedFiles.length}...`);
             
             try {
-                const imgData = await uploadToImgBB(file);
-                uploadedImageUrls.push(imgData);
-                await new Promise(resolve => setTimeout(resolve, 500));
+                const mediaData = await uploadToCatbox(file);
+                uploadedMediaUrls.push(mediaData);
+                
+                console.log(`✅ Caricato: ${file.name} -> ${mediaData.url}`);
+                
+                // Pausa per evitare rate limit
+                await new Promise(resolve => setTimeout(resolve, 1000));
             } catch (uploadError) {
-                console.error(`Errore upload ${file.name}:`, uploadError);
+                console.error(`❌ Errore upload ${file.name}:`, uploadError);
                 showCustomNotification('warning', '⚠️ Avviso', `Impossibile caricare ${file.name}`);
             }
         }
         
-        // Salva video in base64 localmente
-        const videoFiles = videos.map(v => ({
-            name: v.name,
-            type: v.type,
-            size: v.size,
-            data: v.data,
-            isVideo: true
-        }));
-        
-        if (uploadedImageUrls.length === 0 && videoFiles.length === 0) {
+        if (uploadedMediaUrls.length === 0) {
             hideLoadingOverlay();
-            showCustomNotification('error', '❌ Errore', 'Nessun file è stato elaborato con successo!');
+            showCustomNotification('error', '❌ Errore', 'Nessun file è stato caricato con successo! Riprova.');
             return;
         }
         
@@ -184,34 +175,29 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         const reportData = {
             id: Date.now(),
             reporter: {
-                username: document.getElementById('reporterUsername').value.trim(),
+                username: reporterUsername,
                 discord: document.getElementById('reporterDiscord').value.trim(),
                 email: document.getElementById('reporterEmail').value.trim()
             },
             reported: {
-                username: document.getElementById('reportedUsername').value.trim(),
+                username: reportedUsername,
                 discord: document.getElementById('reportedDiscord').value.trim() || 'Non fornito'
             },
             violationType: document.getElementById('violationType').value,
             description: document.getElementById('description').value.trim(),
             incidentDate: document.getElementById('incidentDate').value,
-            evidenceUrls: uploadedImageUrls, // Solo immagini (con link)
-            evidenceFiles: videoFiles, // Video (base64 locale)
+            evidenceUrls: uploadedMediaUrls, // Tutti i media (immagini + video)
             submittedDate: new Date().toISOString(),
             status: 'pending',
             openedBy: null
         };
         
-        if (reportData.reporter.username === reportData.reported.username) {
-            hideLoadingOverlay();
-            showCustomNotification('error', '❌ Errore', 'Non puoi segnalare te stesso!');
-            return;
-        }
-        
         // Salva nel localStorage
         const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
         reports.push(reportData);
         localStorage.setItem('userReports', JSON.stringify(reports));
+        
+        console.log('📦 Segnalazione salvata:', reportData);
         
         // Invia webhook Discord
         await sendDiscordWebhook(reportData);
@@ -225,15 +211,15 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         
     } catch (error) {
         hideLoadingOverlay();
-        console.error('Errore:', error);
+        console.error('❌ Errore generale:', error);
         showCustomNotification('error', '❌ Errore', 'Si è verificato un errore. Riprova più tardi.');
     }
 });
 
 // ==================== WEBHOOK DISCORD ====================
 async function sendDiscordWebhook(data) {
-    const imageCount = data.evidenceUrls?.length || 0;
-    const videoCount = data.evidenceFiles?.length || 0;
+    const images = data.evidenceUrls.filter(e => !e.isVideo);
+    const videos = data.evidenceUrls.filter(e => e.isVideo);
     
     const embed = {
         title: '🚨 Nuova Segnalazione Ricevuta',
@@ -254,7 +240,7 @@ async function sendDiscordWebhook(data) {
             { name: '⚠️ Tipo Violazione', value: `**${data.violationType}**`, inline: true },
             { 
                 name: '📎 Prove Allegate', 
-                value: `${imageCount} immagini${videoCount > 0 ? ` • ${videoCount} video` : ''}`, 
+                value: `${images.length} immagini${videos.length > 0 ? ` • ${videos.length} video` : ''}`, 
                 inline: true 
             },
             { name: '\u200B', value: '\u200B', inline: false },
@@ -288,30 +274,32 @@ async function sendDiscordWebhook(data) {
     };
     
     // Thumbnail prima immagine
-    if (data.evidenceUrls && data.evidenceUrls.length > 0) {
-        embed.thumbnail = { url: data.evidenceUrls[0].url };
+    if (images.length > 0) {
+        embed.thumbnail = { url: images[0].url };
     }
     
     // Link alle immagini
-    if (data.evidenceUrls && data.evidenceUrls.length > 0) {
-        const imageLinks = data.evidenceUrls.map((img, i) => 
+    if (images.length > 0) {
+        const imageLinks = images.map((img, i) => 
             `[🖼️ Immagine ${i + 1}](${img.url})`
         ).join(' • ');
         
         embed.fields.push({
             name: '🔗 Link alle Immagini',
-            value: imageLinks,
+            value: imageLinks.length > 1024 ? imageLinks.substring(0, 1021) + '...' : imageLinks,
             inline: false
         });
     }
     
-    // Nota sui video (salvati localmente)
-    if (data.evidenceFiles && data.evidenceFiles.length > 0) {
-        const videoList = data.evidenceFiles.map((v, i) => `🎥 \`${v.name}\` (${(v.size / 1024 / 1024).toFixed(2)} MB)`).join('\n');
+    // Link ai video
+    if (videos.length > 0) {
+        const videoLinks = videos.map((vid, i) => 
+            `[🎥 Video ${i + 1}](${vid.url}) - \`${vid.name}\``
+        ).join('\n');
         
         embed.fields.push({
-            name: '🎥 Video Allegati',
-            value: `${videoList}\n\n⚠️ I video sono disponibili solo nel **Pannello Staff** (salvati localmente)`,
+            name: '🎥 Link ai Video',
+            value: videoLinks.length > 1024 ? videoLinks.substring(0, 1021) + '...' : videoLinks,
             inline: false
         });
     }
@@ -319,23 +307,28 @@ async function sendDiscordWebhook(data) {
     // Link pannello staff
     embed.fields.push({
         name: '👮 Pannello Staff',
-        value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})\n\n📹 **I video sono visibili solo dal pannello staff**`,
+        value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
         inline: false
     });
     
     const payload = { embeds: [embed] };
     
-    const response = await fetch(WEBHOOK_SEGNALAZIONI, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-    
-    if (!response.ok) {
-        throw new Error('Errore invio webhook');
+    try {
+        const response = await fetch(WEBHOOK_SEGNALAZIONI, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Errore webhook: ${response.status}`);
+        }
+        
+        console.log('✅ Webhook inviato con successo');
+    } catch (error) {
+        console.error('❌ Errore invio webhook:', error);
+        throw error;
     }
-    
-    console.log('✅ Webhook inviato');
 }
 
 // ==================== UTILITY ====================
@@ -448,7 +441,7 @@ function showSuccessAnimation() {
             <p style="font-size: 18px; opacity: 0.9;">Lo staff la esaminerà entro 48 ore</p>
             <p style="font-size: 16px; opacity: 0.8; margin-top: 10px;">Riceverai una risposta su Discord</p>
             <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px; max-width: 400px; margin: 20px auto 0;">
-                <p style="font-size: 14px; opacity: 0.9;">📹 I video sono stati salvati e saranno visibili allo staff</p>
+                <p style="font-size: 14px; opacity: 0.9;">📹 Tutti i file sono stati caricati con successo!</p>
             </div>
             <div style="margin-top: 20px; font-size: 14px; opacity: 0.7;">Reindirizzamento in corso...</div>
         </div>
@@ -497,4 +490,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('✅ Sistema segnalazioni caricato: Immagini su ImgBB, Video in localStorage');
+console.log('✅ Sistema segnalazioni con Catbox.moe caricato correttamente!');
