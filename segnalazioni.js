@@ -95,37 +95,35 @@ document.getElementById('reporterDiscord').addEventListener('blur', function() {
 // ==================== UPLOAD SU IMGUR ====================
 
 // ==================== UPLOAD SU IMGUR (ALTERNATIVA) ====================
-async function uploadToImgur(file) {
+// ==================== UPLOAD SU IMGBB ====================
+async function uploadToImgBB(file) {
     try {
         const base64Data = file.data.split(',')[1];
         
-        const response = await fetch('https://api.imgur.com/3/image', {
+        const formData = new FormData();
+        formData.append('key', IMGBB_API_KEY);
+        formData.append('image', base64Data);
+        formData.append('name', file.name);
+        
+        const response = await fetch('https://api.imgbb.com/1/upload', {
             method: 'POST',
-            headers: {
-                'Authorization': 'Client-ID beb148a0bb5f842',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                image: base64Data,
-                type: 'base64',
-                name: file.name
-            })
+            body: formData
         });
         
         if (!response.ok) {
             const errorData = await response.json();
-            console.error('Errore Imgur:', errorData);
-            throw new Error('Errore upload Imgur');
+            console.error('Errore ImgBB:', errorData);
+            throw new Error('Errore upload ImgBB');
         }
         
         const data = await response.json();
         return {
-            url: data.data.link,
-            deleteHash: data.data.deletehash,
+            url: data.data.url,
+            deleteUrl: data.data.delete_url,
             name: file.name
         };
     } catch (error) {
-        console.error('Errore upload Imgur:', error);
+        console.error('Errore upload ImgBB:', error);
         throw error;
     }
 }
