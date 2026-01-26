@@ -129,6 +129,7 @@ async function uploadToImgBB(file) {
 }
 
 // ==================== SUBMIT DEL FORM ====================
+// ==================== SUBMIT DEL FORM ====================
 document.getElementById('reportForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -136,34 +137,44 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         showCustomNotification('error', '❌ Nessun File', 'Devi caricare almeno un file come prova!');
         return;
     }
-
     
-    showLoadingOverlay('📤 Caricamento prove su Imgur...');
+    showLoadingOverlay('📤 Caricamento prove...');
     
     try {
-        // Upload di tutte le immagini su Imgur
+        // Separa immagini e video
+        const images = uploadedFiles.filter(f => !f.isVideo);
+        const videos = uploadedFiles.filter(f => f.isVideo);
+        
+        // Upload immagini su ImgBB
         const uploadedUrls = [];
-        for (let i = 0; i < uploadedFiles.length; i++) {
-            const file = uploadedFiles[i];
+        for (let i = 0; i < images.length; i++) {
+            const file = images[i];
+            updateLoadingMessage(`📤 Caricamento immagine ${i + 1}/${images.length}...`);
             
-            // Imgur supporta solo immagini, non video
-            if (file.isVideo) {
-                showCustomNotification('warning', '⚠️ Video Ignorato', `${file.name} non può essere caricato (Imgur supporta solo immagini)`);
-                continue;
-            }
+            const imgData = await uploadToImgBB(file);
+            uploadedUrls.push(imgData);
             
-            updateLoadingMessage(`📤 Caricamento ${i + 1}/${uploadedFiles.length}...`);
-            
-            const imgurData = await uploadToImgBB(file);
-            uploadedUrls.push(imgurData);
-            
-            // Piccolo delay per evitare rate limiting
             await new Promise(resolve => setTimeout(resolve, 500));
         }
         
-        if (uploadedUrls.length === 0) {
+        // Converti video in base64 (salvati direttamente)
+        const videoFiles = [];
+        for (let i = 0; i < videos.length; i++) {
+            const video = videos[i];
+            updateLoadingMessage(`📤 Elaborazione video ${i + 1}/${videos.length}...`);
+            
+            videoFiles.push({
+                name: video.name,
+                type: video.type,
+                size: video.size,
+                data: video.data,
+                isVideo: true
+            });
+        }
+        
+        if (uploadedUrls.length === 0 && videoFiles.length === 0) {
             hideLoadingOverlay();
-            showCustomNotification('error', '❌ Nessuna Immagine', 'Nessuna immagine è stata caricata con successo!');
+            showCustomNotification('error', '❌ Nessun File', 'Nessun file è stato caricato con successo!');
             return;
         }
         
@@ -184,7 +195,8 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             description: document.getElementById('description').value.trim(),
             incidentDate: document.getElementById('incidentDate').value,
             evidenceCount: uploadedUrls.length,
-            evidenceUrls: uploadedUrls,
+            evidenceUrls: uploadedUrls, // Immagini caricate su ImgBB
+            evidenceFiles: videoFiles, // Video in base64
             submittedDate: new Date().toISOString(),
             status: 'pending',
             openedBy: null
@@ -220,6 +232,10 @@ document.getElementById('reportForm').addEventListener('submit', async function(
 
 // ==================== WEBHOOK DISCORD ====================
 async function sendDiscordWebhook(data) {
+    const totalFiles = (data.evidenceUrls?.length || 0) + (data.evidenceFiles?.length || 0);
+    const imageCount = data.evidenceUrls?.length || 0;
+    const videoCount = data.evidenceFiles?.length || 0;
+    
     const embed = {
         title: '🚨 Nuova Segnalazione Ricevuta',
         description: 'È stata ricevuta una nuova segnalazione da un utente',
@@ -237,7 +253,11 @@ async function sendDiscordWebhook(data) {
             },
             { name: '\u200B', value: '\u200B', inline: false },
             { name: '⚠️ Tipo Violazione', value: `**${data.violationType}**`, inline: true },
-            { name: '📎 Prove Allegate', value: `${data.evidenceCount} immagini`, inline: true },
+            { 
+                name: '📎 Prove Allegate', 
+                value: `${imageCount} immagini${videoCount > 0 ? ` • ${videoCount} video` : ''}`, 
+                inline: true 
+            },
             { name: '\u200B', value: '\u200B', inline: false },
             { 
                 name: '📝 Descrizione Dettagliata', 
@@ -271,27 +291,37 @@ async function sendDiscordWebhook(data) {
     // Aggiungi la prima immagine come thumbnail
     if (data.evidenceUrls && data.evidenceUrls.length > 0) {
         embed.thumbnail = { url: data.evidenceUrls[0].url };
-        
-        // Aggiungi tutte le immagini come field con link
+    }
+    
+    // Aggiungi link alle immagini
+    if (data.evidenceUrls && data.evidenceUrls.length > 0) {
         const imageLinks = data.evidenceUrls.map((img, i) => 
             `[🖼️ Immagine ${i + 1}](${img.url})`
         ).join(' • ');
         
         embed.fields.push({
-            name: '🔗 Link alle Prove',
+            name: '🔗 Link alle Immagini',
             value: imageLinks,
-            inline: false
-        });
-        
-        // ✅ LINK ALLA SEGNALAZIONE NEL PANNELLO STAFF
-        embed.fields.push({
-            name: '👮 Pannello Staff',
-            value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
             inline: false
         });
     }
     
-    // ❌ RIMOSSO components perché non funziona con webhook
+    // Nota sui video (salvati in locale)
+    if (data.evidenceFiles && data.evidenceFiles.length > 0) {
+        embed.fields.push({
+            name: '🎥 Video Allegati',
+            value: `${videoCount} video disponibili nel pannello staff (salvati localmente)`,
+            inline: false
+        });
+    }
+    
+    // ✅ LINK ALLA SEGNALAZIONE NEL PANNELLO STAFF
+    embed.fields.push({
+        name: '👮 Pannello Staff',
+        value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
+        inline: false
+    });
+    
     const payload = {
         embeds: [embed]
     };
