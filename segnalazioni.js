@@ -128,6 +128,38 @@ async function uploadToImgBB(file) {
     }
 }
 
+// ==================== UPLOAD VIDEO SU STREAMABLE ====================
+async function uploadToStreamable(file) {
+    try {
+        const formData = new FormData();
+        
+        // Converti base64 in Blob
+        const response = await fetch(file.data);
+        const blob = await response.blob();
+        
+        formData.append('file', blob, file.name);
+        
+        const uploadResponse = await fetch('https://api.streamable.com/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!uploadResponse.ok) {
+            throw new Error('Errore upload Streamable');
+        }
+        
+        const data = await uploadResponse.json();
+        
+        return {
+            url: `https://streamable.com/${data.shortcode}`,
+            shortcode: data.shortcode,
+            name: file.name
+        };
+    } catch (error) {
+        console.error('Errore upload Streamable:', error);
+        throw error;
+    }
+}
 // ==================== SUBMIT DEL FORM ====================
 // ==================== SUBMIT DEL FORM ====================
 document.getElementById('reportForm').addEventListener('submit', async function(e) {
@@ -146,33 +178,30 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         const videos = uploadedFiles.filter(f => f.isVideo);
         
         // Upload immagini su ImgBB
-        const uploadedUrls = [];
+        const uploadedImageUrls = [];
         for (let i = 0; i < images.length; i++) {
             const file = images[i];
             updateLoadingMessage(`📤 Caricamento immagine ${i + 1}/${images.length}...`);
             
             const imgData = await uploadToImgBB(file);
-            uploadedUrls.push(imgData);
+            uploadedImageUrls.push(imgData);
             
             await new Promise(resolve => setTimeout(resolve, 500));
         }
         
-        // Converti video in base64 (salvati direttamente)
-        const videoFiles = [];
+        // Upload video su Streamable
+        const uploadedVideoUrls = [];
         for (let i = 0; i < videos.length; i++) {
             const video = videos[i];
-            updateLoadingMessage(`📤 Elaborazione video ${i + 1}/${videos.length}...`);
+            updateLoadingMessage(`📤 Caricamento video ${i + 1}/${videos.length}...`);
             
-            videoFiles.push({
-                name: video.name,
-                type: video.type,
-                size: video.size,
-                data: video.data,
-                isVideo: true
-            });
+            const videoData = await uploadToStreamable(video);
+            uploadedVideoUrls.push(videoData);
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
         
-        if (uploadedUrls.length === 0 && videoFiles.length === 0) {
+        if (uploadedImageUrls.length === 0 && uploadedVideoUrls.length === 0) {
             hideLoadingOverlay();
             showCustomNotification('error', '❌ Nessun File', 'Nessun file è stato caricato con successo!');
             return;
@@ -194,9 +223,8 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             violationType: document.getElementById('violationType').value,
             description: document.getElementById('description').value.trim(),
             incidentDate: document.getElementById('incidentDate').value,
-            evidenceCount: uploadedUrls.length,
-            evidenceUrls: uploadedUrls, // Immagini caricate su ImgBB
-            evidenceFiles: videoFiles, // Video in base64
+            evidenceUrls: uploadedImageUrls, // Immagini
+            videoUrls: uploadedVideoUrls, // Video con link
             submittedDate: new Date().toISOString(),
             status: 'pending',
             openedBy: null
@@ -232,9 +260,8 @@ document.getElementById('reportForm').addEventListener('submit', async function(
 
 // ==================== WEBHOOK DISCORD ====================
 async function sendDiscordWebhook(data) {
-    const totalFiles = (data.evidenceUrls?.length || 0) + (data.evidenceFiles?.length || 0);
     const imageCount = data.evidenceUrls?.length || 0;
-    const videoCount = data.evidenceFiles?.length || 0;
+    const videoCount = data.videoUrls?.length || 0;
     
     const embed = {
         title: '🚨 Nuova Segnalazione Ricevuta',
@@ -288,12 +315,12 @@ async function sendDiscordWebhook(data) {
         timestamp: new Date().toISOString()
     };
     
-    // Aggiungi la prima immagine come thumbnail
+    // Thumbnail prima immagine
     if (data.evidenceUrls && data.evidenceUrls.length > 0) {
         embed.thumbnail = { url: data.evidenceUrls[0].url };
     }
     
-    // Aggiungi link alle immagini
+    // Link alle immagini
     if (data.evidenceUrls && data.evidenceUrls.length > 0) {
         const imageLinks = data.evidenceUrls.map((img, i) => 
             `[🖼️ Immagine ${i + 1}](${img.url})`
@@ -306,25 +333,27 @@ async function sendDiscordWebhook(data) {
         });
     }
     
-    // Nota sui video (salvati in locale)
-    if (data.evidenceFiles && data.evidenceFiles.length > 0) {
+    // ✅ Link ai video
+    if (data.videoUrls && data.videoUrls.length > 0) {
+        const videoLinks = data.videoUrls.map((vid, i) => 
+            `[🎥 Video ${i + 1}](${vid.url})`
+        ).join(' • ');
+        
         embed.fields.push({
-            name: '🎥 Video Allegati',
-            value: `${videoCount} video disponibili nel pannello staff (salvati localmente)`,
+            name: '🔗 Link ai Video',
+            value: videoLinks,
             inline: false
         });
     }
     
-    // ✅ LINK ALLA SEGNALAZIONE NEL PANNELLO STAFF
+    // Link pannello staff
     embed.fields.push({
         name: '👮 Pannello Staff',
         value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
         inline: false
     });
     
-    const payload = {
-        embeds: [embed]
-    };
+    const payload = { embeds: [embed] };
     
     const response = await fetch(WEBHOOK_SEGNALAZIONI, {
         method: 'POST',
@@ -333,12 +362,10 @@ async function sendDiscordWebhook(data) {
     });
     
     if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Errore webhook:', errorText);
         throw new Error('Errore invio webhook');
     }
     
-    console.log('✅ Webhook inviato con successo');
+    console.log('✅ Webhook inviato');
 }
 
 // ==================== UTILITY ====================
