@@ -29,9 +29,10 @@ document.getElementById('evidence').addEventListener('change', function(e) {
             return;
         }
         
-        // Controlla dimensione (max 32MB per ImgBB video)
-        if (file.size > 32 * 1024 * 1024) {
-            showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 32MB!`);
+        // Controlla dimensione
+        const maxSize = file.type.startsWith('video/') ? 50 * 1024 * 1024 : 10 * 1024 * 1024; // 50MB video, 10MB immagini
+        if (file.size > maxSize) {
+            showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera il limite consentito!`);
             return;
         }
         
@@ -69,7 +70,7 @@ function updateFileList() {
                         <span style="font-size: 24px;">${file.isVideo ? '🎥' : '🖼️'}</span>
                         <div>
                             <div style="font-size: 14px; color: #333; font-weight: 500;">${file.name}</div>
-                            <div style="font-size: 12px; color: #888;">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                            <div style="font-size: 12px; color: #888;">${(file.size / 1024 / 1024).toFixed(2)} MB ${file.isVideo ? '(salvato localmente)' : ''}</div>
                         </div>
                     </div>
                     <button type="button" onclick="removeFile(${index})" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px;">🗑️ Rimuovi</button>
@@ -92,7 +93,7 @@ document.getElementById('reporterDiscord').addEventListener('blur', function() {
     }
 });
 
-// ==================== UPLOAD SU IMGBB (IMMAGINI E VIDEO) ====================
+// ==================== UPLOAD SU IMGBB (SOLO IMMAGINI) ====================
 async function uploadToImgBB(file) {
     try {
         const base64Data = file.data.split(',')[1];
@@ -110,7 +111,7 @@ async function uploadToImgBB(file) {
         if (!response.ok) {
             const errorData = await response.json();
             console.error('Errore ImgBB:', errorData);
-            throw new Error(`Errore upload ImgBB: ${errorData.error?.message || 'Errore sconosciuto'}`);
+            throw new Error(`Errore upload: ${errorData.error?.message || 'Errore sconosciuto'}`);
         }
         
         const data = await response.json();
@@ -123,8 +124,7 @@ async function uploadToImgBB(file) {
             url: data.data.url,
             displayUrl: data.data.display_url,
             deleteUrl: data.data.delete_url,
-            name: file.name,
-            isVideo: file.isVideo
+            name: file.name
         };
     } catch (error) {
         console.error('Errore upload ImgBB:', error);
@@ -141,22 +141,22 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         return;
     }
     
-    showLoadingOverlay('📤 Caricamento prove...');
+    showLoadingOverlay('📤 Preparazione files...');
     
     try {
-        // Upload TUTTI i file (immagini e video) su ImgBB
-        const uploadedMediaUrls = [];
+        // Separa immagini e video
+        const images = uploadedFiles.filter(f => !f.isVideo);
+        const videos = uploadedFiles.filter(f => f.isVideo);
         
-        for (let i = 0; i < uploadedFiles.length; i++) {
-            const file = uploadedFiles[i];
-            const fileType = file.isVideo ? 'video' : 'immagine';
-            updateLoadingMessage(`📤 Caricamento ${fileType} ${i + 1}/${uploadedFiles.length}...`);
+        // Upload solo immagini su ImgBB
+        const uploadedImageUrls = [];
+        for (let i = 0; i < images.length; i++) {
+            const file = images[i];
+            updateLoadingMessage(`📤 Caricamento immagine ${i + 1}/${images.length}...`);
             
             try {
-                const mediaData = await uploadToImgBB(file);
-                uploadedMediaUrls.push(mediaData);
-                
-                // Pausa per evitare rate limit
+                const imgData = await uploadToImgBB(file);
+                uploadedImageUrls.push(imgData);
                 await new Promise(resolve => setTimeout(resolve, 500));
             } catch (uploadError) {
                 console.error(`Errore upload ${file.name}:`, uploadError);
@@ -164,9 +164,18 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             }
         }
         
-        if (uploadedMediaUrls.length === 0) {
+        // Salva video in base64 localmente
+        const videoFiles = videos.map(v => ({
+            name: v.name,
+            type: v.type,
+            size: v.size,
+            data: v.data,
+            isVideo: true
+        }));
+        
+        if (uploadedImageUrls.length === 0 && videoFiles.length === 0) {
             hideLoadingOverlay();
-            showCustomNotification('error', '❌ Errore', 'Nessun file è stato caricato con successo!');
+            showCustomNotification('error', '❌ Errore', 'Nessun file è stato elaborato con successo!');
             return;
         }
         
@@ -186,7 +195,8 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             violationType: document.getElementById('violationType').value,
             description: document.getElementById('description').value.trim(),
             incidentDate: document.getElementById('incidentDate').value,
-            evidenceUrls: uploadedMediaUrls, // Tutti i media caricati
+            evidenceUrls: uploadedImageUrls, // Solo immagini (con link)
+            evidenceFiles: videoFiles, // Video (base64 locale)
             submittedDate: new Date().toISOString(),
             status: 'pending',
             openedBy: null
@@ -216,14 +226,14 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     } catch (error) {
         hideLoadingOverlay();
         console.error('Errore:', error);
-        showCustomNotification('error', '❌ Errore', 'Si è verificato un errore durante il caricamento. Riprova più tardi.');
+        showCustomNotification('error', '❌ Errore', 'Si è verificato un errore. Riprova più tardi.');
     }
 });
 
 // ==================== WEBHOOK DISCORD ====================
 async function sendDiscordWebhook(data) {
-    const images = data.evidenceUrls.filter(e => !e.isVideo);
-    const videos = data.evidenceUrls.filter(e => e.isVideo);
+    const imageCount = data.evidenceUrls?.length || 0;
+    const videoCount = data.evidenceFiles?.length || 0;
     
     const embed = {
         title: '🚨 Nuova Segnalazione Ricevuta',
@@ -244,7 +254,7 @@ async function sendDiscordWebhook(data) {
             { name: '⚠️ Tipo Violazione', value: `**${data.violationType}**`, inline: true },
             { 
                 name: '📎 Prove Allegate', 
-                value: `${images.length} immagini${videos.length > 0 ? ` • ${videos.length} video` : ''}`, 
+                value: `${imageCount} immagini${videoCount > 0 ? ` • ${videoCount} video` : ''}`, 
                 inline: true 
             },
             { name: '\u200B', value: '\u200B', inline: false },
@@ -278,13 +288,13 @@ async function sendDiscordWebhook(data) {
     };
     
     // Thumbnail prima immagine
-    if (images.length > 0) {
-        embed.thumbnail = { url: images[0].url };
+    if (data.evidenceUrls && data.evidenceUrls.length > 0) {
+        embed.thumbnail = { url: data.evidenceUrls[0].url };
     }
     
     // Link alle immagini
-    if (images.length > 0) {
-        const imageLinks = images.map((img, i) => 
+    if (data.evidenceUrls && data.evidenceUrls.length > 0) {
+        const imageLinks = data.evidenceUrls.map((img, i) => 
             `[🖼️ Immagine ${i + 1}](${img.url})`
         ).join(' • ');
         
@@ -295,15 +305,13 @@ async function sendDiscordWebhook(data) {
         });
     }
     
-    // Link ai video
-    if (videos.length > 0) {
-        const videoLinks = videos.map((vid, i) => 
-            `[🎥 Video ${i + 1}](${vid.url}) - ${vid.name}`
-        ).join('\n');
+    // Nota sui video (salvati localmente)
+    if (data.evidenceFiles && data.evidenceFiles.length > 0) {
+        const videoList = data.evidenceFiles.map((v, i) => `🎥 \`${v.name}\` (${(v.size / 1024 / 1024).toFixed(2)} MB)`).join('\n');
         
         embed.fields.push({
-            name: '🎥 Link ai Video',
-            value: videoLinks.length > 1024 ? videoLinks.substring(0, 1021) + '...' : videoLinks,
+            name: '🎥 Video Allegati',
+            value: `${videoList}\n\n⚠️ I video sono disponibili solo nel **Pannello Staff** (salvati localmente)`,
             inline: false
         });
     }
@@ -311,7 +319,7 @@ async function sendDiscordWebhook(data) {
     // Link pannello staff
     embed.fields.push({
         name: '👮 Pannello Staff',
-        value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
+        value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})\n\n📹 **I video sono visibili solo dal pannello staff**`,
         inline: false
     });
     
@@ -439,7 +447,10 @@ function showSuccessAnimation() {
             <h2 style="font-size: 32px; margin-bottom: 15px;">Segnalazione Inviata!</h2>
             <p style="font-size: 18px; opacity: 0.9;">Lo staff la esaminerà entro 48 ore</p>
             <p style="font-size: 16px; opacity: 0.8; margin-top: 10px;">Riceverai una risposta su Discord</p>
-            <div style="margin-top: 30px; font-size: 14px; opacity: 0.7;">Reindirizzamento in corso...</div>
+            <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px; max-width: 400px; margin: 20px auto 0;">
+                <p style="font-size: 14px; opacity: 0.9;">📹 I video sono stati salvati e saranno visibili allo staff</p>
+            </div>
+            <div style="margin-top: 20px; font-size: 14px; opacity: 0.7;">Reindirizzamento in corso...</div>
         </div>
     `;
     
@@ -486,4 +497,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('✅ Sistema segnalazioni con ImgBB (immagini e video) caricato correttamente!');
+console.log('✅ Sistema segnalazioni caricato: Immagini su ImgBB, Video in localStorage');
