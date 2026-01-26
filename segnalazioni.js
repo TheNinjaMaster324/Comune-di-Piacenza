@@ -275,16 +275,23 @@ async function sendDiscordWebhook(data) {
     
     // Aggiungi tutte le immagini come field con link
     if (data.evidenceUrls && data.evidenceUrls.length > 0) {
-        const imageLinks = data.evidenceUrls.map((img, i) => 
-            `[🖼️ Immagine ${i + 1}](${img.url})`
-        ).join(' • ');
-        
-        embed.fields.push({
-            name: '🔗 Link alle Prove',
-            value: imageLinks,
-            inline: false
-        });
-    }
+    const imageLinks = data.evidenceUrls.map((img, i) => 
+        `[🖼️ Immagine ${i + 1}](${img.url})`
+    ).join(' • ');
+    
+    embed.fields.push({
+        name: '🔗 Link alle Prove',
+        value: imageLinks,
+        inline: false
+    });
+    
+    // ✅ AGGIUNGI QUESTO CAMPO CON IL LINK ALLA SEGNALAZIONE
+    embed.fields.push({
+        name: '👮 Pannello Staff',
+        value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
+        inline: false
+    });
+}
     
     const payload = {
         embeds: [embed],
