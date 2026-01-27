@@ -1,6 +1,6 @@
 // ==================== CONFIGURAZIONE ====================
 const WEBHOOK_SEGNALAZIONI = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
-const IMGBB_API_KEY = 'f9af56390f8ad922c5e5dbbb09e03765'; // API Key pubblica per upload
+const IMGBB_API_KEY = 'f9af56390f8ad922c5e5dbbb09e03765';
 
 // ==================== GESTIONE FILE MULTIPLI ====================
 let uploadedFiles = [];
@@ -114,22 +114,10 @@ async function uploadToImgbb(fileObj) {
     try {
         console.log(`📤 Caricamento su Imgbb: ${fileObj.name}...`);
         
-        // Converti file in base64
-        const base64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const base64String = reader.result.split(',')[1];
-                resolve(base64String);
-            };
-            reader.onerror = () => reject(new Error('Errore lettura file'));
-            reader.readAsDataURL(fileObj.file);
-        });
-        
-        // Crea FormData per Imgbb
+        // Crea FormData DIRETTAMENTE con il file
         const formData = new FormData();
         formData.append('key', IMGBB_API_KEY);
-        formData.append('image', base64);
-        formData.append('name', fileObj.name);
+        formData.append('image', fileObj.file);
         
         const response = await fetch('https://api.imgbb.com/1/upload', {
             method: 'POST',
@@ -137,6 +125,8 @@ async function uploadToImgbb(fileObj) {
         });
         
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Errore risposta Imgbb:', errorText);
             throw new Error(`Errore HTTP ${response.status}`);
         }
         
@@ -144,6 +134,7 @@ async function uploadToImgbb(fileObj) {
         
         // Verifica risposta
         if (!data.success || !data.data || !data.data.url) {
+            console.error('Risposta Imgbb:', data);
             throw new Error('Risposta non valida da Imgbb');
         }
         
@@ -202,9 +193,9 @@ document.getElementById('reportForm').addEventListener('submit', async function(
                 
                 console.log(`✅ [${i + 1}/${uploadedFiles.length}] Caricato: ${file.name}`);
                 
-                // Pausa di 1 secondo tra i caricamenti per evitare rate limit
+                // Pausa di 2 secondi tra i caricamenti
                 if (i < uploadedFiles.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                 }
             } catch (uploadError) {
                 console.error(`❌ [${i + 1}/${uploadedFiles.length}] Errore: ${file.name}`, uploadError);
@@ -224,7 +215,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         
         updateLoadingMessage('📤 Invio segnalazione a Discord...');
         
-        // Separa immagini e video per il report
+        // Separa immagini e video
         const images = uploadedMediaUrls.filter(e => !e.isVideo);
         const videos = uploadedMediaUrls.filter(e => e.isVideo);
         
@@ -242,8 +233,8 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             violationType: document.getElementById('violationType').value,
             description: document.getElementById('description').value.trim(),
             incidentDate: document.getElementById('incidentDate').value,
-            evidenceUrls: images,  // Solo immagini
-            videoUrls: videos,     // Solo video
+            evidenceUrls: images,
+            videoUrls: videos,
             submittedDate: new Date().toISOString(),
             status: 'pending',
             openedBy: null
