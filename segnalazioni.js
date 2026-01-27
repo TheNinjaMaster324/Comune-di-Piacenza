@@ -23,6 +23,9 @@ function initCustomFileButton() {
     const fileInput = document.getElementById('evidence');
     if (!fileInput) return;
     
+    // Rimuovi il required per evitare errori di validazione
+    fileInput.removeAttribute('required');
+    
     // Nascondi l'input originale
     fileInput.style.display = 'none';
     
