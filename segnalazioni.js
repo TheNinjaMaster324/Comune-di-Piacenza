@@ -63,9 +63,6 @@ window.addEventListener('load', function() {
         });
         
         updateFileList();
-        
-        // Reset input per permettere nuovi caricamenti
-        e.target.value = '';
     });
     
     // ==================== SETUP DISCORD VALIDATION ====================
