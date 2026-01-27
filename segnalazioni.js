@@ -1,5 +1,6 @@
 // ==================== CONFIGURAZIONE ====================
 const WEBHOOK_SEGNALAZIONI = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
+const IMGBB_API_KEY = 'f9af56390f8ad922c5e5dbbb09e03765'; // API Key pubblica per upload
 
 // ==================== GESTIONE FILE MULTIPLI ====================
 let uploadedFiles = [];
@@ -42,9 +43,9 @@ window.addEventListener('load', function() {
                 return;
             }
             
-            // Controlla dimensione (max 200MB per Catbox)
-            if (file.size > 200 * 1024 * 1024) {
-                showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 200MB! Max 200MB per file.`);
+            // Controlla dimensione (max 32MB per Imgbb)
+            if (file.size > 32 * 1024 * 1024) {
+                showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 32MB! Max 32MB per file.`);
                 return;
             }
             
@@ -111,16 +112,29 @@ function removeFile(index) {
     updateFileList();
 }
 
-// ==================== UPLOAD SU CATBOX.MOE ====================
-async function uploadToCatbox(fileObj) {
+// ==================== UPLOAD SU IMGBB ====================
+async function uploadToImgbb(fileObj) {
     try {
-        console.log(`📤 Caricamento su Catbox: ${fileObj.name}...`);
+        console.log(`📤 Caricamento su Imgbb: ${fileObj.name}...`);
         
+        // Converti file in base64
+        const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64String = reader.result.split(',')[1];
+                resolve(base64String);
+            };
+            reader.onerror = () => reject(new Error('Errore lettura file'));
+            reader.readAsDataURL(fileObj.file);
+        });
+        
+        // Crea FormData per Imgbb
         const formData = new FormData();
-        formData.append('reqtype', 'fileupload');
-        formData.append('fileToUpload', fileObj.file);
+        formData.append('key', IMGBB_API_KEY);
+        formData.append('image', base64);
+        formData.append('name', fileObj.name);
         
-        const response = await fetch('https://catbox.moe/user/api.php', {
+        const response = await fetch('https://api.imgbb.com/1/upload', {
             method: 'POST',
             body: formData
         });
@@ -129,22 +143,23 @@ async function uploadToCatbox(fileObj) {
             throw new Error(`Errore HTTP ${response.status}`);
         }
         
-        const url = await response.text();
+        const data = await response.json();
         
-        // Verifica URL valido
-        if (!url || !url.startsWith('https://files.catbox.moe/')) {
-            throw new Error('URL non valido ricevuto da Catbox');
+        // Verifica risposta
+        if (!data.success || !data.data || !data.data.url) {
+            throw new Error('Risposta non valida da Imgbb');
         }
         
-        console.log(`✅ Caricato con successo: ${url.trim()}`);
+        const url = data.data.url;
+        console.log(`✅ Caricato con successo: ${url}`);
         
         return {
-            url: url.trim(),
+            url: url,
             name: fileObj.name,
             isVideo: fileObj.isVideo
         };
     } catch (error) {
-        console.error(`❌ Errore upload Catbox per ${fileObj.name}:`, error);
+        console.error(`❌ Errore upload Imgbb per ${fileObj.name}:`, error);
         throw new Error(`Impossibile caricare ${fileObj.name}: ${error.message}`);
     }
 }
@@ -173,7 +188,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     showLoadingOverlay('📤 Preparazione caricamento...');
     
     try {
-        // Upload TUTTI i file su Catbox.moe
+        // Upload TUTTI i file su Imgbb
         const uploadedMediaUrls = [];
         let successCount = 0;
         let failCount = 0;
@@ -184,15 +199,15 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             updateLoadingMessage(`📤 Caricamento ${fileType} ${i + 1}/${uploadedFiles.length}...`);
             
             try {
-                const mediaData = await uploadToCatbox(file);
+                const mediaData = await uploadToImgbb(file);
                 uploadedMediaUrls.push(mediaData);
                 successCount++;
                 
                 console.log(`✅ [${i + 1}/${uploadedFiles.length}] Caricato: ${file.name}`);
                 
-                // Pausa di 1.5 secondi tra i caricamenti per evitare rate limit
+                // Pausa di 1 secondo tra i caricamenti per evitare rate limit
                 if (i < uploadedFiles.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             } catch (uploadError) {
                 console.error(`❌ [${i + 1}/${uploadedFiles.length}] Errore: ${file.name}`, uploadError);
@@ -540,5 +555,5 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('✅ Sistema segnalazioni con Catbox.moe caricato!');
-console.log('📦 Upload supportati: Immagini + Video (max 200MB per file)');
+console.log('✅ Sistema segnalazioni con Imgbb caricato!');
+console.log('📦 Upload supportati: Immagini + Video (max 32MB per file)');
