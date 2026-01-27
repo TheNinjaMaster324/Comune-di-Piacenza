@@ -1,6 +1,5 @@
 // ==================== CONFIGURAZIONE ====================
 const WEBHOOK_SEGNALAZIONI = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
-const IMGBB_API_KEY = '5cbd206261a1b8340b7a826e97316a64';
 
 // ==================== GESTIONE FILE MULTIPLI ====================
 let uploadedFiles = [];
@@ -43,9 +42,9 @@ window.addEventListener('load', function() {
                 return;
             }
             
-            // Controlla dimensione (max 32MB per Imgbb)
-            if (file.size > 32 * 1024 * 1024) {
-                showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 32MB! Max 32MB per file.`);
+            // Controlla dimensione (max 100MB per Pomf)
+            if (file.size > 100 * 1024 * 1024) {
+                showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 100MB! Max 100MB per file.`);
                 return;
             }
             
@@ -109,36 +108,30 @@ function removeFile(index) {
     updateFileList();
 }
 
-// ==================== UPLOAD SU IMGBB ====================
-async function uploadToImgbb(fileObj) {
+// ==================== UPLOAD SU POMF.LAIN.LA ====================
+async function uploadToPomf(fileObj) {
     try {
-        console.log(`📤 Caricamento su Imgbb: ${fileObj.name}...`);
+        console.log(`📤 Caricamento su Pomf: ${fileObj.name}...`);
         
-        // Crea FormData DIRETTAMENTE con il file
         const formData = new FormData();
-        formData.append('key', IMGBB_API_KEY);
-        formData.append('image', fileObj.file);
+        formData.append('files[]', fileObj.file);
         
-        const response = await fetch('https://api.imgbb.com/1/upload', {
+        const response = await fetch('https://pomf.lain.la/upload.php', {
             method: 'POST',
             body: formData
         });
         
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Errore risposta Imgbb:', errorText);
             throw new Error(`Errore HTTP ${response.status}`);
         }
         
         const data = await response.json();
         
-        // Verifica risposta
-        if (!data.success || !data.data || !data.data.url) {
-            console.error('Risposta Imgbb:', data);
-            throw new Error('Risposta non valida da Imgbb');
+        if (!data.success || !data.files || !data.files[0]) {
+            throw new Error('Risposta non valida da Pomf');
         }
         
-        const url = data.data.url;
+        const url = 'https://a.pomf.cat/' + data.files[0].url;
         console.log(`✅ Caricato con successo: ${url}`);
         
         return {
@@ -147,7 +140,7 @@ async function uploadToImgbb(fileObj) {
             isVideo: fileObj.isVideo
         };
     } catch (error) {
-        console.error(`❌ Errore upload Imgbb per ${fileObj.name}:`, error);
+        console.error(`❌ Errore upload Pomf per ${fileObj.name}:`, error);
         throw new Error(`Impossibile caricare ${fileObj.name}: ${error.message}`);
     }
 }
@@ -176,7 +169,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     showLoadingOverlay('📤 Preparazione caricamento...');
     
     try {
-        // Upload TUTTI i file su Imgbb
+        // Upload TUTTI i file su Pomf
         const uploadedMediaUrls = [];
         let successCount = 0;
         let failCount = 0;
@@ -187,15 +180,15 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             updateLoadingMessage(`📤 Caricamento ${fileType} ${i + 1}/${uploadedFiles.length}...`);
             
             try {
-                const mediaData = await uploadToImgbb(file);
+                const mediaData = await uploadToPomf(file);
                 uploadedMediaUrls.push(mediaData);
                 successCount++;
                 
                 console.log(`✅ [${i + 1}/${uploadedFiles.length}] Caricato: ${file.name}`);
                 
-                // Pausa di 2 secondi tra i caricamenti
+                // Pausa di 1 secondo tra i caricamenti
                 if (i < uploadedFiles.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             } catch (uploadError) {
                 console.error(`❌ [${i + 1}/${uploadedFiles.length}] Errore: ${file.name}`, uploadError);
@@ -267,12 +260,13 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     }
 });
 
-// ==================== WEBHOOK DISCORD ====================
+// ==================== WEBHOOK DISCORD CON IMMAGINI EMBED ====================
 async function sendDiscordWebhook(data) {
     const imageCount = data.evidenceUrls?.length || 0;
     const videoCount = data.videoUrls?.length || 0;
     
-    const embed = {
+    // EMBED PRINCIPALE
+    const mainEmbed = {
         title: '🚨 Nuova Segnalazione Ricevuta',
         description: 'È stata ricevuta una nuova segnalazione da un utente',
         color: 0xe74c3c,
@@ -324,9 +318,9 @@ async function sendDiscordWebhook(data) {
         timestamp: new Date().toISOString()
     };
     
-    // Thumbnail prima immagine
+    // THUMBNAIL prima immagine
     if (data.evidenceUrls && data.evidenceUrls.length > 0) {
-        embed.thumbnail = { url: data.evidenceUrls[0].url };
+        mainEmbed.image = { url: data.evidenceUrls[0].url }; // Immagine grande nel primo embed
     }
     
     // Link alle immagini
@@ -335,7 +329,7 @@ async function sendDiscordWebhook(data) {
             `[🖼️ Immagine ${i + 1}](${img.url})`
         ).join(' • ');
         
-        embed.fields.push({
+        mainEmbed.fields.push({
             name: '🔗 Link alle Immagini',
             value: imageLinks.length > 1024 ? imageLinks.substring(0, 1021) + '...' : imageLinks,
             inline: false
@@ -348,7 +342,7 @@ async function sendDiscordWebhook(data) {
             `[🎥 Video ${i + 1}](${vid.url}) - \`${vid.name}\``
         ).join('\n');
         
-        embed.fields.push({
+        mainEmbed.fields.push({
             name: '🎥 Link ai Video',
             value: videoLinks.length > 1024 ? videoLinks.substring(0, 1021) + '...' : videoLinks,
             inline: false
@@ -356,13 +350,28 @@ async function sendDiscordWebhook(data) {
     }
     
     // Link pannello staff
-    embed.fields.push({
+    mainEmbed.fields.push({
         name: '👮 Pannello Staff',
         value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
         inline: false
     });
     
-    const payload = { embeds: [embed] };
+    // Array di embeds (principale + immagini aggiuntive)
+    const embeds = [mainEmbed];
+    
+    // Aggiungi le altre immagini come embed separati (max 10 embed totali)
+    if (data.evidenceUrls && data.evidenceUrls.length > 1) {
+        const remainingImages = data.evidenceUrls.slice(1, 9); // Max 9 immagini aggiuntive (totale 10 embed)
+        remainingImages.forEach((img, i) => {
+            embeds.push({
+                title: `📸 Prova ${i + 2}`,
+                image: { url: img.url },
+                color: 0x3498db
+            });
+        });
+    }
+    
+    const payload = { embeds: embeds };
     
     try {
         const response = await fetch(WEBHOOK_SEGNALAZIONI, {
@@ -543,5 +552,5 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('✅ Sistema segnalazioni con Imgbb caricato!');
-console.log('📦 Upload supportati: Immagini + Video (max 32MB per file)');
+console.log('✅ Sistema segnalazioni con Pomf.lain.la caricato!');
+console.log('📦 Upload supportati: Immagini + Video (max 100MB per file)');
