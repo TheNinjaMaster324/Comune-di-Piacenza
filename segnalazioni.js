@@ -1,7 +1,10 @@
 // ==================== CONFIGURAZIONE ====================
 const WEBHOOK_SEGNALAZIONI = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
 
-// ==================== VERIFICA LOGIN ====================
+// ==================== GESTIONE FILE MULTIPLI ====================
+let uploadedFiles = [];
+
+// ==================== VERIFICA LOGIN E SETUP ====================
 window.addEventListener('load', function() {
     const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     if (!user.username) {
@@ -9,57 +12,68 @@ window.addEventListener('load', function() {
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 2000);
+        return;
     } else {
         document.getElementById('reporterUsername').value = user.username || '';
         document.getElementById('reporterEmail').value = user.email || '';
     }
     
-    // Rimuovi required dall'input file se necessario
+    // ==================== SETUP EVENT LISTENER PER FILE INPUT ====================
     const fileInput = document.getElementById('evidence');
-    if (fileInput) {
-        // Mantieni required, ma gestisci meglio la validazione
-        console.log('✅ Input file configurato correttamente');
+    if (!fileInput) {
+        console.error('❌ Input file non trovato!');
+        return;
     }
-});
-
-// ==================== GESTIONE FILE MULTIPLI ====================
-let uploadedFiles = [];
-
-document.getElementById('evidence').addEventListener('change', function(e) {
-    const files = Array.from(e.target.files);
     
-    files.forEach(file => {
-        // Controlla tipo file (immagini E video)
-        const isImage = file.type.startsWith('image/');
-        const isVideo = file.type.startsWith('video/');
+    console.log('✅ Input file trovato e configurato');
+    
+    fileInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
         
-        if (!isImage && !isVideo) {
-            showCustomNotification('error', '❌ File Non Supportato', `${file.name} non è un'immagine o un video valido!`);
-            return;
-        }
+        console.log(`📂 Selezionati ${files.length} file`);
         
-        // Controlla dimensione (max 200MB per Catbox)
-        if (file.size > 200 * 1024 * 1024) {
-            showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 200MB! Max 200MB per file.`);
-            return;
-        }
-        
-        // Aggiungi il file all'array
-        uploadedFiles.push({
-            file: file,
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            isVideo: isVideo
+        files.forEach(file => {
+            // Controlla tipo file (immagini E video)
+            const isImage = file.type.startsWith('image/');
+            const isVideo = file.type.startsWith('video/');
+            
+            if (!isImage && !isVideo) {
+                showCustomNotification('error', '❌ File Non Supportato', `${file.name} non è un'immagine o un video valido!`);
+                return;
+            }
+            
+            // Controlla dimensione (max 200MB per Catbox)
+            if (file.size > 200 * 1024 * 1024) {
+                showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 200MB! Max 200MB per file.`);
+                return;
+            }
+            
+            // Aggiungi il file all'array
+            uploadedFiles.push({
+                file: file,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                isVideo: isVideo
+            });
+            
+            console.log(`✅ File aggiunto: ${file.name} (${isVideo ? 'Video' : 'Immagine'}) - ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+            console.log(`📊 Totale file nell'array: ${uploadedFiles.length}`);
         });
         
-        console.log(`✅ File aggiunto: ${file.name} (${isVideo ? 'Video' : 'Immagine'}) - ${(file.size / 1024 / 1024).toFixed(2)} MB`);
-        
         updateFileList();
+        
+        // Reset input per permettere nuovi caricamenti
+        e.target.value = '';
     });
     
-    // Reset input per permettere nuovi caricamenti
-    e.target.value = '';
+    // ==================== SETUP DISCORD VALIDATION ====================
+    document.getElementById('reporterDiscord').addEventListener('blur', function() {
+        const value = this.value.trim();
+        if (value && !value.includes('#') && !value.match(/^[a-z0-9_.]+$/)) {
+            showCustomNotification('warning', '⚠️ Formato Discord', 'Formato Discord non valido (es: username#1234 o username)');
+        }
+    });
 });
 
 function updateFileList() {
@@ -93,18 +107,11 @@ function removeFile(index) {
     const removedFile = uploadedFiles[index];
     console.log(`🗑️ Rimosso: ${removedFile.name}`);
     uploadedFiles.splice(index, 1);
+    console.log(`📊 Totale file rimanenti: ${uploadedFiles.length}`);
     updateFileList();
 }
 
-// ==================== VALIDAZIONE ====================
-document.getElementById('reporterDiscord').addEventListener('blur', function() {
-    const value = this.value.trim();
-    if (value && !value.includes('#') && !value.match(/^[a-z0-9_.]+$/)) {
-        showCustomNotification('warning', '⚠️ Formato Discord', 'Formato Discord non valido (es: username#1234 o username)');
-    }
-});
-
-// ==================== UPLOAD SU CATBOX.MOE (SOLO CATBOX - NO STREAMABLE) ====================
+// ==================== UPLOAD SU CATBOX.MOE ====================
 async function uploadToCatbox(fileObj) {
     try {
         console.log(`📤 Caricamento su Catbox: ${fileObj.name}...`);
@@ -145,6 +152,8 @@ async function uploadToCatbox(fileObj) {
 // ==================== SUBMIT DEL FORM ====================
 document.getElementById('reportForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    
+    console.log(`📋 Submit form - File nell'array: ${uploadedFiles.length}`);
     
     // Validazione file
     if (uploadedFiles.length === 0) {
