@@ -1,6 +1,6 @@
 // ==================== CONFIGURAZIONE ====================
 const WEBHOOK_SEGNALAZIONI = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
-const IMGBB_API_KEY = 'TUA_API_KEY_QUI'; // ← METTI LA TUA API KEY DI IMGBB QUI!
+const IMGBB_API_KEY = '5cbd206261a1b8340b7a826e97316a64'; // ← METTI LA TUA API KEY DI IMGBB QUI!
 
 // ==================== GESTIONE FILE MULTIPLI ====================
 let uploadedFiles = [];
