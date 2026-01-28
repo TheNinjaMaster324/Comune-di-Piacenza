@@ -7,6 +7,9 @@ let currentReportFilter = 'all';
 // ==================== WEBHOOK AZIONI STAFF ====================
 const WEBHOOK_AZIONI_STAFF = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
 
+// ==================== FUNZIONE sendStaffActionWebhook CORRETTA ====================
+// Nel tuo staff.js, cerca questa funzione (riga ~10) e SOSTITUISCILA TUTTA
+
 async function sendStaffActionWebhook(action, report, staffUsername, note = '') {
     const actionConfig = {
         'opened': { title: '👁️ Segnalazione Aperta', description: `${staffUsername} ha preso in carico la segnalazione`, color: 0x3498db },
@@ -39,28 +42,35 @@ async function sendStaffActionWebhook(action, report, staffUsername, note = '') 
         embed.fields.push({ name: '📝 Nota', value: note, inline: false });
     }
 
+    // IMMAGINI
     if (report.evidenceUrls && report.evidenceUrls.length > 0) {
         const imageLinks = report.evidenceUrls.map((img, i) => `[🖼️ Immagine ${i + 1}](${img.url})`).join(' • ');
-        embed.fields.push({ name: '🔗 Prove', value: imageLinks, inline: false });
+        embed.fields.push({ name: '🔗 Prove (Immagini)', value: imageLinks, inline: false });
         embed.thumbnail = { url: report.evidenceUrls[0].url };
+    }
+    
+    // VIDEO (BLOCCO SEPARATO!)
+    if (report.videoUrls && report.videoUrls.length > 0) {
+        const videoLinks = report.videoUrls.map((vid, i) => `[🎥 Video ${i + 1}](${vid.url})`).join(' • ');
+        embed.fields.push({ name: '🎥 Prove (Video)', value: videoLinks, inline: false });
     }
 
     const payload = {
-    embeds: [embed],
-    components: [
-        {
-            type: 1,
-            components: [
-                {
-                    type: 2,
-                    style: 5,
-                    label: '🔍 Visualizza Segnalazione',
-                    url: `https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${report.id}`
-                }
-            ]
-        }
-    ]
-};
+        embeds: [embed],
+        components: [
+            {
+                type: 1,
+                components: [
+                    {
+                        type: 2,
+                        style: 5,
+                        label: '🔍 Visualizza Segnalazione',
+                        url: `https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${report.id}`
+                    }
+                ]
+            }
+        ]
+    };
 
     try {
         await fetch(WEBHOOK_AZIONI_STAFF, {
@@ -1057,6 +1067,12 @@ function sendWebhook(type, data) {
     }).catch(err => console.error('Errore webhook:', err));
 }
 
+// ==================== FUNZIONE sendReportWebhook COMPLETA E CORRETTA ====================
+// Nel tuo staff.js, CERCA questa funzione (circa riga 724) e SOSTITUISCILA TUTTA con questa:
+
+// ==================== FUNZIONE sendReportWebhook CORRETTA ====================
+// Nel tuo staff.js, cerca questa funzione e SOSTITUISCILA TUTTA
+
 function sendReportWebhook(action, report) {
     const settings = JSON.parse(localStorage.getItem('globalSettings') || '{}');
     const webhookUrl = settings.globalWebhook;
@@ -1090,39 +1106,23 @@ function sendReportWebhook(action, report) {
         footer: { text: `Segnalazione #${report.id} • ${currentUser.username}` }
     };
     
-    // Aggiungi thumbnail se ci sono immagini
-    if (report.evidenceFiles && report.evidenceFiles.length > 0) {
-        embed.thumbnail = { url: report.evidenceFiles[0].data };
+    // IMMAGINI - Thumbnail e link
+    if (report.evidenceUrls && report.evidenceUrls.length > 0) {
+        embed.thumbnail = { url: report.evidenceUrls[0].url };
+        const imageLinks = report.evidenceUrls.map((img, i) => `[🖼️ Immagine ${i + 1}](${img.url})`).join(' • ');
+        embed.fields.push({ name: '🔗 Prove (Immagini)', value: imageLinks, inline: false });
     }
     
-    if (type === 'announcement') {
-    const typeEmojis = { 'info': 'ℹ️', 'warning': '⚠️', 'event': '🎉', 'update': '🔄' };
-    embed = {
-        title: `${typeEmojis[data.type] || '📢'} Nuovo Annuncio: ${data.title}`,
-        description: data.message,
-        color: 0x667eea,
-        timestamp: new Date().toISOString(),
-        footer: { text: `Pubblicato da ${data.author}` }
+    // VIDEO - Link cliccabili (BLOCCO SEPARATO!)
+    if (report.videoUrls && report.videoUrls.length > 0) {
+        const videoLinks = report.videoUrls.map((vid, i) => `[🎥 Video ${i + 1}](${vid.url})`).join(' • ');
+        embed.fields.push({ name: '🎥 Prove (Video)', value: videoLinks, inline: false });
+    }
+    
+    const payload = {
+        username: 'Azioni Staff - Piacenza RP',
+        embeds: [embed]
     };
-    
-    // Gestisci il ping
-    if (data.ping === '@everyone') {
-        content = '@everyone';
-    } else if (data.ping === '@here') {
-        content = '@here';
-    } else if (data.ping === 'both') {
-        content = '@everyone @here';
-    }
-    }
-
-const payload = {
-    username: 'Annunci - Piacenza RP',
-    content: content || undefined,
-    embeds: [embed],
-    allowed_mentions: {  // ← QUESTO È FONDAMENTALE!
-        parse: type === 'announcement' && content ? ['everyone', 'roles'] : []
-    }
-};
     
     fetch(webhookUrl, {
         method: 'POST',
