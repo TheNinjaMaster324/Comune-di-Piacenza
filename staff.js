@@ -355,6 +355,7 @@ function createReportCard(report) {
                     
                     ${report.status === 'in_progress' ? `
                         <button class="btn btn-success" onclick="resolveReport(${report.id})">✅ Chiudi Segnalazione</button>
+                        <button class="btn btn-primary" onclick="archiveReport(${report.id})">📁 Archivia</button>
                     ` : ''}
                     
                     ${report.status === 'resolved' ? `
@@ -363,7 +364,6 @@ function createReportCard(report) {
                     
                     ${report.status === 'rejected' || report.status === 'archived' ? `
                         <button class="btn btn-primary" onclick="reopenReport(${report.id})">🔄 Riapri Segnalazione</button>
-                        <button class="btn btn-primary" onclick="archiveReport(${report.id})">📁 Archivia</button>
                     ` : ''}
                 </div>
             </div>
