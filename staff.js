@@ -288,39 +288,56 @@ function createReportCard(report) {
             <div style="margin-bottom: 20px;">
                 <h4 style="color: #333; margin-bottom: 10px;">📎 Prove</h4>
             ${(() => {
-            // Prima controlla evidenceFiles (base64)
-            if (report.evidenceFiles && report.evidenceFiles.length > 0) {
-                return `
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px;">
-                ${report.evidenceFiles.map((file, index) => file.isVideo ? `
-                    <div style="position: relative; border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; cursor: pointer; background: #000;" onclick="event.stopPropagation(); openVideoModal(${report.id}, ${index})">
-                        <div style="width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px;">🎥</div>
-                        <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 5px; text-align: center; font-size: 11px;">${file.name}</div>
+            // Controlla evidenceUrls (Imgbb - immagini) e videoUrls (Pomf - video)
+            const hasImages = report.evidenceUrls && report.evidenceUrls.length > 0;
+            const hasVideos = report.videoUrls && report.videoUrls.length > 0;
+            
+            if (!hasImages && !hasVideos) {
+                return `<p style="color: #888;">Nessuna prova disponibile</p>`;
+            }
+            
+            let html = '';
+            
+            // IMMAGINI DA IMGBB
+            if (hasImages) {
+                html += `
+                    <div style="margin-bottom: 20px;">
+                        <h5 style="color: #667eea; margin-bottom: 10px;">🖼️ Immagini (${report.evidenceUrls.length})</h5>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+                            ${report.evidenceUrls.map((img, index) => `
+                                <a href="${img.url}" target="_blank" style="position: relative; border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; display: block; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform=''">
+                                    <img src="${img.url}" style="width: 100%; height: 150px; object-fit: cover;" alt="Prova ${index + 1}" loading="lazy">
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 5px; text-align: center; font-size: 11px;">📸 Immagine ${index + 1}</div>
+                                </a>
+                            `).join('')}
                         </div>
-                        ` : `
-                        <div style="position: relative; border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; cursor: pointer;" onclick="event.stopPropagation(); openImageModal(${report.id}, ${index})">
-                            <img src="${file.data}" style="width: 100%; height: 150px; object-fit: cover;" alt="Prova ${index + 1}">
-                            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 5px; text-align: center; font-size: 11px;">${file.name}</div>
+                    </div>
+                `;
+            }
+            
+            // VIDEO DA POMF
+            if (hasVideos) {
+                html += `
+                    <div>
+                        <h5 style="color: #e74c3c; margin-bottom: 10px;">🎥 Video (${report.videoUrls.length})</h5>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            ${report.videoUrls.map((vid, index) => `
+                                <a href="${vid.url}" target="_blank" style="display: flex; align-items: center; padding: 12px; background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 8px; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#e9ecef'; this.style.borderColor='#667eea'" onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='#e0e0e0'">
+                                    <span style="font-size: 32px; margin-right: 15px;">🎥</span>
+                                    <div style="flex: 1;">
+                                        <div style="color: #333; font-weight: 600; margin-bottom: 3px;">${vid.name || `Video ${index + 1}`}</div>
+                                        <div style="color: #666; font-size: 12px;">Clicca per visualizzare</div>
+                                    </div>
+                                    <span style="color: #667eea; font-weight: 600;">→</span>
+                                </a>
+                            `).join('')}
                         </div>
-                `).join('')}
-            </div>
-            `;
-        }
-        // Poi controlla evidenceUrls (ImgBB)
-        if (report.evidenceUrls && report.evidenceUrls.length > 0) {
-            return `
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px;">
-                    ${report.evidenceUrls.map((img, index) => `
-                        <a href="${img.url}" target="_blank" style="position: relative; border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden; display: block;">
-                            <img src="${img.url}" style="width: 100%; height: 150px; object-fit: cover;" alt="Prova ${index + 1}">
-                            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 5px; text-align: center; font-size: 11px;">Immagine ${index + 1}</div>
-                        </a>
-                    `).join('')}
-                </div>
-            `;
-        }
-        return `<p style="color: #888;">Nessuna prova disponibile</p>`;
-    })()}
+                    </div>
+                `;
+            }
+            
+            return html;
+        })()}
     </div>
                 
                 ${report.openedBy ? `
