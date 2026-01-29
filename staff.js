@@ -10,9 +10,6 @@ const WEBHOOK_AZIONI_STAFF = 'https://discord.com/api/webhooks/14646027759074675
 // ==================== FUNZIONE sendStaffActionWebhook CORRETTA ====================
 // Nel tuo staff.js, cerca questa funzione (riga ~10) e SOSTITUISCILA TUTTA
 
-// ==================== FUNZIONE sendStaffActionWebhook CORRETTA ====================
-// Nel tuo staff.js, cerca questa funzione (riga ~10) e SOSTITUISCILA TUTTA
-
 async function sendStaffActionWebhook(action, report, staffUsername, note = '') {
     const actionConfig = {
         'opened': { title: '👁️ Segnalazione Aperta', description: `${staffUsername} ha preso in carico la segnalazione`, color: 0x3498db },
@@ -1072,9 +1069,6 @@ function sendWebhook(type, data) {
 
 // ==================== FUNZIONE sendReportWebhook COMPLETA E CORRETTA ====================
 // Nel tuo staff.js, CERCA questa funzione (circa riga 724) e SOSTITUISCILA TUTTA con questa:
-
-// ==================== FUNZIONE sendReportWebhook CORRETTA ====================
-// Nel tuo staff.js, cerca questa funzione e SOSTITUISCILA TUTTA
 
 // ==================== FUNZIONE sendReportWebhook CORRETTA ====================
 // Nel tuo staff.js, cerca questa funzione e SOSTITUISCILA TUTTA
