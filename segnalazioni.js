@@ -292,12 +292,13 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         
         // Salva nel localStorage
         // Salva nel localStorage
+       // Salva nel localStorage
         const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
         reports.push(reportData);
-        localStorage.setItem('userReports', JSON.stringify(reports)); // ← FIX QUI
+        localStorage.setItem('userReports', JSON.stringify(reports)); // ✅ CORRETTO
 
         console.log('✅ Segnalazione salvata nel localStorage:', reportData);
-        
+
         // Invia webhook Discord
         await sendDiscordWebhook(reportData);
         
