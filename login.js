@@ -152,6 +152,7 @@ async function sendRegistrationWebhook(user) {
         color: 0x27ae60,
         fields: [
             { name: '👤 Username', value: user.username, inline: true },
+            { name: '🎮 Nome Roblox', value: user.robloxName || 'Non fornito', inline: true },
             { name: '📧 Email', value: user.email, inline: true },
             { name: '📅 Data Registrazione', value: new Date(user.registeredDate).toLocaleString('it-IT'), inline: false }
         ],
@@ -190,6 +191,7 @@ async function sendLoginWebhook(user) {
         color: 0x3498db,
         fields: [
             { name: '👤 Username', value: user.username, inline: true },
+            { name: '🎮 Nome Roblox', value: user.robloxName || 'Non fornito', inline: true },
             { name: '📧 Email', value: user.email, inline: true },
             { name: '📅 Data Login', value: new Date().toLocaleString('it-IT'), inline: false }
         ],
@@ -219,10 +221,14 @@ async function sendLoginWebhook(user) {
 }
 
 // ==================== FORM HANDLERS ====================
+
+// 🔥 LOGIN FORM - CON NOME ROBLOX
 document.getElementById('loginForm').onsubmit = async function(e) {
     e.preventDefault();
     const user = document.getElementById('loginUsername').value.trim();
     const pass = document.getElementById('loginPassword').value.trim();
+    const robloxName = document.getElementById('loginRobloxName') ? document.getElementById('loginRobloxName').value.trim() : '';
+    
     const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
     const found = users.find(u => u.username === user && u.password === pass);
     
@@ -231,13 +237,22 @@ document.getElementById('loginForm').onsubmit = async function(e) {
         return;
     }
     
+    // ✅ Aggiorna il nome Roblox se fornito
+    if (robloxName && robloxName !== found.robloxName) {
+        found.robloxName = robloxName;
+        const userIndex = users.findIndex(u => u.username === user);
+        users[userIndex] = found;
+        localStorage.setItem('piacenzaUsers', JSON.stringify(users));
+    }
+    
     generatedCode = makeCode();
     pendingUser = {
         username: found.username,
         email: found.email,
+        robloxName: found.robloxName || robloxName || 'Non fornito',
         isAdmin: false,
         isInstitutional: false,
-        isLogin: true // 🔥 Flag per sapere che è un login
+        isLogin: true
     };
     
     await sendEmail(found.email, generatedCode, 'Login');
@@ -245,12 +260,14 @@ document.getElementById('loginForm').onsubmit = async function(e) {
     document.getElementById('authModal').style.display = 'flex';
 };
 
+// 🔥 REGISTER FORM - CON NOME ROBLOX
 document.getElementById('registerForm').onsubmit = async function(e) {
     e.preventDefault();
     const user = document.getElementById('regUsername').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const pass = document.getElementById('regPassword').value.trim();
     const conf = document.getElementById('regPasswordConfirm').value.trim();
+    const robloxName = document.getElementById('regRobloxName') ? document.getElementById('regRobloxName').value.trim() : '';
     
     if (pass !== conf) {
         showNotification('Errore', 'Le password non coincidono!', 'error');
@@ -259,6 +276,11 @@ document.getElementById('registerForm').onsubmit = async function(e) {
     
     if (pass.length < 6) {
         showNotification('Errore', 'Password troppo corta (min. 6 caratteri)!', 'error');
+        return;
+    }
+    
+    if (!robloxName) {
+        showNotification('Errore', 'Inserisci il tuo nome Roblox!', 'error');
         return;
     }
     
@@ -273,9 +295,10 @@ document.getElementById('registerForm').onsubmit = async function(e) {
         username: user,
         email: email,
         password: pass,
+        robloxName: robloxName,
         isAdmin: false,
         isInstitutional: false,
-        register: true, // 🔥 Flag per sapere che è una registrazione
+        register: true,
         registeredDate: new Date().toISOString()
     };
     
@@ -299,9 +322,10 @@ document.getElementById('adminForm').onsubmit = async function(e) {
     pendingUser = {
         username: user,
         email: email,
+        robloxName: 'Admin',
         isAdmin: true,
         isInstitutional: false,
-        isLogin: true // 🔥 Admin login = login
+        isLogin: true
     };
     
     await sendEmail(email, generatedCode, 'Login Admin');
@@ -329,7 +353,8 @@ document.getElementById('institutionalForm').onsubmit = async function(e) {
     
     generatedCode = makeCode();
     pendingUser = validation.userData;
-    pendingUser.isLogin = true; // 🔥 Istituzionale login = login
+    pendingUser.robloxName = 'Esponente Istituzionale';
+    pendingUser.isLogin = true;
     
     await sendEmail(email, generatedCode, `Login Esponente - ${faction}`);
     document.getElementById('cookieConsent').style.display = 'block';
@@ -353,6 +378,7 @@ document.getElementById('authForm').onsubmit = async function(e) {
             username: pendingUser.username,
             email: pendingUser.email,
             password: pendingUser.password,
+            robloxName: pendingUser.robloxName,
             registeredDate: pendingUser.registeredDate
         };
         
@@ -401,3 +427,5 @@ document.getElementById('authCode').oninput = function() {
 document.getElementById('instID').oninput = function() {
     this.value = this.value.toUpperCase();
 };
+
+console.log('✅ Sistema login con Nome Roblox caricato!');

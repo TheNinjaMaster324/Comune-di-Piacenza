@@ -36,11 +36,20 @@
                 <button class="tab" id="tabInstitutional">Esponente</button>
             </div>
 
+            <!-- ==================== FORM LOGIN ==================== -->
             <form id="loginForm" class="form-container active">
                 <div class="input-group">
                     <label for="loginUsername">Nome Utente</label>
                     <input type="text" id="loginUsername" required>
                 </div>
+                
+                <!-- 🆕 NUOVO: Nome Roblox -->
+                <div class="input-group">
+                    <label for="loginRobloxName">🎮 Nome Roblox</label>
+                    <input type="text" id="loginRobloxName" placeholder="Es: Player123" required>
+                    <small>Il tuo nome utente su Roblox</small>
+                </div>
+                
                 <div class="input-group">
                     <label for="loginPassword">Password</label>
                     <input type="password" id="loginPassword" required>
@@ -48,11 +57,20 @@
                 <button type="submit" class="submit-btn">Accedi</button>
             </form>
 
+            <!-- ==================== FORM REGISTRAZIONE ==================== -->
             <form id="registerForm" class="form-container">
                 <div class="input-group">
                     <label for="regUsername">Nome Utente</label>
                     <input type="text" id="regUsername" required>
                 </div>
+                
+                <!-- 🆕 NUOVO: Nome Roblox -->
+                <div class="input-group">
+                    <label for="regRobloxName">🎮 Nome Roblox *</label>
+                    <input type="text" id="regRobloxName" placeholder="Es: Player123" required>
+                    <small>Il nome con cui giochi su Roblox (obbligatorio)</small>
+                </div>
+                
                 <div class="input-group">
                     <label for="regEmail">Email</label>
                     <input type="email" id="regEmail" required>
@@ -68,6 +86,7 @@
                 <button type="submit" class="submit-btn">Registrati</button>
             </form>
 
+            <!-- ==================== FORM ADMIN ==================== -->
             <form id="adminForm" class="form-container">
                 <div class="input-group">
                     <label for="adminUsername">Nome Utente</label>
@@ -84,6 +103,7 @@
                 <button type="submit" class="submit-btn admin-btn">Accedi come Admin</button>
             </form>
 
+            <!-- ==================== FORM INSTITUTIONAL ==================== -->
             <form id="institutionalForm" class="form-container">
                 <div class="input-group">
                     <label for="instEmail">Email Istituzionale *</label>
