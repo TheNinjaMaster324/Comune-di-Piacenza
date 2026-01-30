@@ -176,8 +176,10 @@ async function uploadToPomf(fileObj) {
             throw new Error('Risposta non valida da Pomf');
         }
         
-        const url = 'https://a.pomf.cat/' + data.files[0].url;
+        // CORREZIONE: L'API Pomf restituisce già l'URL completo in data.files[0].url
+        const url = data.files[0].url;
         console.log(`✅ Video caricato su Pomf: ${url}`);
+        console.log(`📋 Risposta completa Pomf:`, data);
         
         return {
             url: url,
@@ -214,7 +216,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     showLoadingOverlay('📤 Preparazione caricamento...');
     
     try {
-        // Upload TUTTI i file su Pomf
+        // Upload TUTTI i file
         const uploadedMediaUrls = [];
         let successCount = 0;
         let failCount = 0;
@@ -236,7 +238,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
                 uploadedMediaUrls.push(mediaData);
                 successCount++;
                 
-                console.log(`✅ [${i + 1}/${uploadedFiles.length}] Caricato: ${file.name}`);
+                console.log(`✅ [${i + 1}/${uploadedFiles.length}] Caricato: ${file.name} → ${mediaData.url}`);
                 
                 // Pausa di 1 secondo tra i caricamenti
                 if (i < uploadedFiles.length - 1) {
@@ -264,6 +266,9 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         const images = uploadedMediaUrls.filter(e => !e.isVideo);
         const videos = uploadedMediaUrls.filter(e => e.isVideo);
         
+        console.log(`🖼️ Immagini caricate: ${images.length}`, images);
+        console.log(`🎥 Video caricati: ${videos.length}`, videos);
+        
         const reportData = {
             id: Date.now(),
             reporter: {
@@ -288,7 +293,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         // Salva nel localStorage
         const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
         reports.push(reportData);
-        localStorage.setItem('userReports', JSON.stringify(reports));
+        localStorage.setItem('userReports', JSON.stringify(reportData));
         
         console.log('✅ Segnalazione salvata nel localStorage:', reportData);
         
@@ -316,6 +321,8 @@ document.getElementById('reportForm').addEventListener('submit', async function(
 async function sendDiscordWebhook(data) {
     const imageCount = data.evidenceUrls?.length || 0;
     const videoCount = data.videoUrls?.length || 0;
+    
+    console.log(`📤 Invio webhook con ${imageCount} immagini e ${videoCount} video`);
     
     // EMBED PRINCIPALE
     const mainEmbed = {
@@ -386,19 +393,24 @@ async function sendDiscordWebhook(data) {
             value: imageLinks.length > 1024 ? imageLinks.substring(0, 1021) + '...' : imageLinks,
             inline: false
         });
+        
+        console.log(`🖼️ Link immagini aggiunti:`, imageLinks);
     }
     
     // Link ai video
     if (data.videoUrls && data.videoUrls.length > 0) {
-        const videoLinks = data.videoUrls.map((vid, i) => 
-            `[🎥 Video ${i + 1}](${vid.url}) - \`${vid.name}\``
-        ).join('\n');
+        const videoLinks = data.videoUrls.map((vid, i) => {
+            console.log(`🎥 Video ${i + 1}: ${vid.url} (${vid.name})`);
+            return `[🎥 Video ${i + 1}](${vid.url}) - \`${vid.name}\``;
+        }).join('\n');
         
         mainEmbed.fields.push({
             name: '🎥 Link ai Video',
             value: videoLinks.length > 1024 ? videoLinks.substring(0, 1021) + '...' : videoLinks,
             inline: false
         });
+        
+        console.log(`🎥 Link video aggiunti:`, videoLinks);
     }
     
     // Link pannello staff
