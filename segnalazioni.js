@@ -293,7 +293,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         // Salva nel localStorage
         const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
         reports.push(reportData);
-        localStorage.setItem('userReports', JSON.stringify(reportData));
+        localStorage.setItem('userReports', JSON.stringify(reports));
         
         console.log('✅ Segnalazione salvata nel localStorage:', reportData);
         
