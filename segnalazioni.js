@@ -176,9 +176,7 @@ async function uploadToPomf(fileObj) {
             throw new Error('Risposta non valida da Pomf');
         }
         
-        // FIX: usa solo il filename, non l'URL completo
-        const filename = data.files[0].url;
-        const url = `https://a.pomf.cat/${filename}`;
+        const url = 'https://a.pomf.cat/' + data.files[0].url;
         console.log(`✅ Video caricato su Pomf: ${url}`);
         
         return {
