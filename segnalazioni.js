@@ -153,15 +153,17 @@ async function uploadToImgbb(fileObj) {
 }
 
 // ==================== UPLOAD SU POMF.LAIN.LA CON PROXY CORS (SOLO VIDEO) ====================
-async function uploadToPomf(fileObj) {
+// ==================== UPLOAD SU CATBOX.MOE (SOLO VIDEO) - FUNZIONA OVUNQUE ====================
+async function uploadToCatbox(fileObj) {
     try {
-        console.log(`📤 Caricamento VIDEO su Pomf: ${fileObj.name}...`);
+        console.log(`📤 Caricamento VIDEO su Catbox: ${fileObj.name}...`);
         
         const formData = new FormData();
-        formData.append('files[]', fileObj.file);
+        formData.append('reqtype', 'fileupload');
+        formData.append('fileToUpload', fileObj.file);
         
-        // USA PROXY CORS per bypassare il blocco
-        const response = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://pomf.lain.la/upload.php'), {
+        // Catbox NON ha problemi CORS - funziona su localhost E GitHub Pages
+        const response = await fetch('https://catbox.moe/user/api.php', {
             method: 'POST',
             body: formData
         });
@@ -170,24 +172,21 @@ async function uploadToPomf(fileObj) {
             throw new Error(`Errore HTTP ${response.status}`);
         }
         
-        const data = await response.json();
+        const url = await response.text(); // Catbox restituisce l'URL direttamente come testo
         
-        if (!data.success || !data.files || !data.files[0]) {
-            throw new Error('Risposta non valida da Pomf');
+        if (!url || !url.startsWith('http')) {
+            throw new Error('Risposta non valida da Catbox');
         }
         
-        // CORREZIONE: L'API Pomf restituisce già l'URL completo in data.files[0].url
-        const url = data.files[0].url;
-        console.log(`✅ Video caricato su Pomf: ${url}`);
-        console.log(`📋 Risposta completa Pomf:`, data);
+        console.log(`✅ Video caricato su Catbox: ${url}`);
         
         return {
-            url: url,
+            url: url.trim(),
             name: fileObj.name,
             isVideo: true
         };
     } catch (error) {
-        console.error(`❌ Errore upload Pomf per ${fileObj.name}:`, error);
+        console.error(`❌ Errore upload Catbox per ${fileObj.name}:`, error);
         throw new Error(`Impossibile caricare video ${fileObj.name}: ${error.message}`);
     }
 }
@@ -228,12 +227,11 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             
             try {
                 // Usa Imgbb per IMMAGINI, Pomf per VIDEO
-                let mediaData;
                 if (file.isVideo) {
-                    mediaData = await uploadToPomf(file);
-                } else {
-                    mediaData = await uploadToImgbb(file);
-                }
+                mediaData = await uploadToCatbox(file); // ← CAMBIA QUI
+            } else {
+                mediaData = await uploadToImgbb(file);
+            }
                 
                 uploadedMediaUrls.push(mediaData);
                 successCount++;
