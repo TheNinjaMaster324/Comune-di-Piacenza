@@ -182,14 +182,7 @@ function showTab(tabName) {
 // ==================== DASHBOARD ====================
 function loadDashboard() {
     const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
-    let reports = JSON.parse(localStorage.getItem('userReports') || '[]');
-    
-    // ✅ PROTEZIONE: Assicura che reports sia sempre un array
-    if (!Array.isArray(reports)) {
-        console.error('❌ userReports non è un array! Resetto...');
-        reports = [];
-        localStorage.setItem('userReports', JSON.stringify(reports));
-    }
+    const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
     
     document.getElementById('totalUsers').textContent = users.length;
     
