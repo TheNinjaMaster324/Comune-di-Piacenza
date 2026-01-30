@@ -182,7 +182,14 @@ function showTab(tabName) {
 // ==================== DASHBOARD ====================
 function loadDashboard() {
     const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
-    const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
+    let reports = JSON.parse(localStorage.getItem('userReports') || '[]');
+    
+    // ✅ PROTEZIONE: Assicura che reports sia sempre un array
+    if (!Array.isArray(reports)) {
+        console.error('❌ userReports non è un array! Resetto...');
+        reports = [];
+        localStorage.setItem('userReports', JSON.stringify(reports));
+    }
     
     document.getElementById('totalUsers').textContent = users.length;
     
@@ -218,13 +225,21 @@ function loadDashboard() {
 
 // ==================== GESTIONE SEGNALAZIONI ====================
 function loadReports() {
-    const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
+    let reports = JSON.parse(localStorage.getItem('userReports') || '[]');
+    
+    // ✅ PROTEZIONE
+    if (!Array.isArray(reports)) {
+        console.error('❌ userReports non è un array! Resetto...');
+        reports = [];
+        localStorage.setItem('userReports', JSON.stringify(reports));
+    }
+    
     const list = document.getElementById('reportsList');
     
     if (!list) return;
     
     const sortedReports = reports.sort((a, b) => b.id - a.id);
-    
+        
     let filtered = sortedReports;
     if (currentReportFilter !== 'all') {
         filtered = sortedReports.filter(r => r.status === currentReportFilter);
