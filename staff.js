@@ -225,21 +225,13 @@ function loadDashboard() {
 
 // ==================== GESTIONE SEGNALAZIONI ====================
 function loadReports() {
-    let reports = JSON.parse(localStorage.getItem('userReports') || '[]');
-    
-    // ✅ PROTEZIONE
-    if (!Array.isArray(reports)) {
-        console.error('❌ userReports non è un array! Resetto...');
-        reports = [];
-        localStorage.setItem('userReports', JSON.stringify(reports));
-    }
-    
+    const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
     const list = document.getElementById('reportsList');
     
     if (!list) return;
     
     const sortedReports = reports.sort((a, b) => b.id - a.id);
-        
+    
     let filtered = sortedReports;
     if (currentReportFilter !== 'all') {
         filtered = sortedReports.filter(r => r.status === currentReportFilter);
