@@ -154,16 +154,17 @@ async function uploadToImgbb(fileObj) {
 
 // ==================== UPLOAD SU POMF.LAIN.LA CON PROXY CORS (SOLO VIDEO) ====================
 // ==================== UPLOAD SU CATBOX.MOE (SOLO VIDEO) - FUNZIONA OVUNQUE ====================
-async function uploadToCatbox(fileObj) {
+// ==================== UPLOAD SU LITTERBOX (SOLO VIDEO) - VELOCE E AFFIDABILE ====================
+async function uploadToLitterbox(fileObj) {
     try {
-        console.log(`📤 Caricamento VIDEO su Catbox: ${fileObj.name}...`);
+        console.log(`📤 Caricamento VIDEO su Litterbox: ${fileObj.name}...`);
         
         const formData = new FormData();
         formData.append('reqtype', 'fileupload');
+        formData.append('time', '72h'); // File disponibili per 72 ore
         formData.append('fileToUpload', fileObj.file);
         
-        // Catbox NON ha problemi CORS - funziona su localhost E GitHub Pages
-        const response = await fetch('https://catbox.moe/user/api.php', {
+        const response = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', {
             method: 'POST',
             body: formData
         });
@@ -172,13 +173,13 @@ async function uploadToCatbox(fileObj) {
             throw new Error(`Errore HTTP ${response.status}`);
         }
         
-        const url = await response.text(); // Catbox restituisce l'URL direttamente come testo
+        const url = await response.text();
         
         if (!url || !url.startsWith('http')) {
-            throw new Error('Risposta non valida da Catbox');
+            throw new Error('Risposta non valida da Litterbox');
         }
         
-        console.log(`✅ Video caricato su Catbox: ${url}`);
+        console.log(`✅ Video caricato su Litterbox: ${url}`);
         
         return {
             url: url.trim(),
@@ -186,7 +187,7 @@ async function uploadToCatbox(fileObj) {
             isVideo: true
         };
     } catch (error) {
-        console.error(`❌ Errore upload Catbox per ${fileObj.name}:`, error);
+        console.error(`❌ Errore upload Litterbox per ${fileObj.name}:`, error);
         throw new Error(`Impossibile caricare video ${fileObj.name}: ${error.message}`);
     }
 }
@@ -227,8 +228,9 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             
             try {
                 // Usa Imgbb per IMMAGINI, Pomf per VIDEO
-                if (file.isVideo) {
-                mediaData = await uploadToCatbox(file); // ← CAMBIA QUI
+                let mediaData;
+            if (file.isVideo) {
+                mediaData = await uploadToLitterbox(file); // ← CAMBIA QUI
             } else {
                 mediaData = await uploadToImgbb(file);
             }
