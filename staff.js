@@ -1,4 +1,4 @@
-// VARIABILI GLOBALI
+// ==================== VARIABILI GLOBALI ====================
 let currentUser = {};
 let allUsers = [];
 let currentFilter = 'all';
@@ -6,7 +6,7 @@ let currentReportFilter = 'all';
 
 const WEBHOOK_AZIONI_STAFF = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
 
-// ========== FUNZIONE DI CONFRONTO NOME ROBLOX ==========
+// ==================== FUNZIONE CONFRONTO NOME ROBLOX ====================
 function compareRobloxNames(name1, name2) {
     if (!name1 || !name2) return false;
     
@@ -27,7 +27,7 @@ function compareRobloxNames(name1, name2) {
     return false;
 }
 
-// ========== WEBHOOK AZIONI STAFF ==========
+// ==================== WEBHOOK AZIONI STAFF ====================
 async function sendStaffActionWebhook(action, report, staffUsername, note = '') {
     const actionConfig = {
         'opened': { title: '👁️ Segnalazione Aperta', description: `${staffUsername} ha preso in carico la segnalazione`, color: 0x3498db },
@@ -91,7 +91,7 @@ async function sendStaffActionWebhook(action, report, staffUsername, note = '') 
     }
 }
 
-// INIZIALIZZAZIONE
+// ==================== INIZIALIZZAZIONE ====================
 window.addEventListener('load', function() {
     currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     
@@ -157,6 +157,7 @@ function showTab(tabName) {
     if (tabName === 'reports') loadReports();
 }
 
+// ==================== DASHBOARD ====================
 function loadDashboard() {
     const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
     const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
@@ -164,8 +165,18 @@ function loadDashboard() {
     document.getElementById('totalUsers').textContent = users.length;
     
     const activeReports = reports.filter(r => r.status !== 'archived' && r.status !== 'rejected');
-    const reportedUsernames = [...new Set(activeReports.map(r => r.reported.username))];
-    document.getElementById('reportedUsers').textContent = reportedUsernames.length;
+    const reportedUsers = new Set();
+    
+    activeReports.forEach(report => {
+        reportedUsers.add(report.reported.username);
+        users.forEach(user => {
+            if (user.robloxName && report.reported.robloxName && compareRobloxNames(user.robloxName, report.reported.robloxName)) {
+                reportedUsers.add(user.username);
+            }
+        });
+    });
+    
+    document.getElementById('reportedUsers').textContent = reportedUsers.size;
     document.getElementById('totalReports').textContent = reports.filter(r => r.status === 'in_progress').length;
     document.getElementById('totalApplications').textContent = reports.length;
     
@@ -184,7 +195,7 @@ function loadDashboard() {
     }
 }
 
-// ========== GESTIONE UTENTI CON CONTROLLO ROBLOX ==========
+// ==================== GESTIONE UTENTI CON STATI DINAMICI ====================
 function loadUsers() {
     allUsers = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
     const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
@@ -192,23 +203,33 @@ function loadUsers() {
     allUsers.forEach(user => {
         if (!user.registeredDate) user.registeredDate = new Date().toISOString();
         
-        // ✅ CONTROLLO AUTOMATICO: cerca segnalazioni con nome Roblox simile
-        const matchingReports = reports.filter(r => {
-            // Salta segnalazioni archiviate o respinte
-            if (r.status === 'archived' || r.status === 'rejected') return false;
-            
-            // Confronta username esatto
+        // Trova tutte le segnalazioni per questo utente (controllo nome Roblox)
+        const allMatchingReports = reports.filter(r => {
             if (r.reported.username === user.username) return true;
-            
-            // ✅ CONFRONTA NOME ROBLOX (prime 5 lettere o tutto intero)
-            if (user.robloxName && r.reported.robloxName) {
-                return compareRobloxNames(user.robloxName, r.reported.robloxName);
-            }
-            
+            if (user.robloxName && r.reported.robloxName && compareRobloxNames(user.robloxName, r.reported.robloxName)) return true;
             return false;
         });
         
-        user.reportsCount = matchingReports.length;
+        // Filtra solo quelle ATTIVE (non archiviate/respinte)
+        const activeReports = allMatchingReports.filter(r => r.status !== 'archived' && r.status !== 'rejected');
+        user.reportsCount = activeReports.length;
+        
+        // ✅ STATO DINAMICO basato sul ticket PIÙ RECENTE
+        if (activeReports.length === 0) {
+            user.reportStatus = 'active'; // ✅ Attivo
+        } else {
+            // Prendi il ticket più recente (ID più alto)
+            const latestReport = activeReports.sort((a, b) => b.id - a.id)[0];
+            
+            // Mappa stato ticket → stato utente
+            if (latestReport.status === 'pending') {
+                user.reportStatus = 'pending'; // ⏳ Da Gestire
+            } else if (latestReport.status === 'in_progress') {
+                user.reportStatus = 'reported'; // 🚨 Segnalato
+            } else if (latestReport.status === 'resolved') {
+                user.reportStatus = 'active'; // ✅ Attivo (chiuso)
+            }
+        }
     });
     
     localStorage.setItem('piacenzaUsers', JSON.stringify(allUsers));
@@ -226,8 +247,8 @@ function renderUsers() {
             (user.robloxName && user.robloxName.toLowerCase().includes(searchTerm));
         
         if (currentFilter === 'all') return matchesSearch;
-        if (currentFilter === 'active') return matchesSearch && user.reportsCount === 0;
-        if (currentFilter === 'reported') return matchesSearch && user.reportsCount > 0;
+        if (currentFilter === 'active') return matchesSearch && user.reportStatus === 'active';
+        if (currentFilter === 'reported') return matchesSearch && (user.reportStatus === 'reported' || user.reportStatus === 'pending');
         
         return matchesSearch;
     });
@@ -237,34 +258,41 @@ function renderUsers() {
         return;
     }
     
-    tbody.innerHTML = filtered.map(user => `
-        <tr>
-            <td><strong>${user.username}</strong></td>
-            <td>
-                <span style="display: inline-flex; align-items: center; gap: 5px;">
-                    <span style="color: #4CAF50;">🎮</span>
-                    ${user.robloxName || '<span style="color: #888;">Non fornito</span>'}
-                </span>
-            </td>
-            <td>${user.email}</td>
-            <td>
-                ${user.reportsCount > 0
-                    ? '<span class="badge" style="background: #e74c3c; color: white;">🚨 Segnalato</span>'
-                    : '<span class="badge badge-success">✅ Attivo</span>'}
-            </td>
-            <td>${new Date(user.registeredDate).toLocaleDateString('it-IT')}</td>
-            <td>
-                <span style="display: inline-block; padding: 5px 12px; background: ${user.reportsCount > 0 ? '#e74c3c' : '#27ae60'}; color: white; border-radius: 15px; font-weight: 600; font-size: 13px;">
-                    ${user.reportsCount}
-                </span>
-            </td>
-            <td>
-                ${user.reportsCount > 0 ? `
-                    <button class="btn btn-primary" style="font-size: 13px; padding: 8px 12px;" onclick="viewUserReports('${user.username}')">👁️ Vedi</button>
-                ` : '<span style="color: #888;">Nessuna azione</span>'}
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = filtered.map(user => {
+        let statusBadge = '';
+        if (user.reportStatus === 'pending') {
+            statusBadge = '<span class="badge" style="background: #f39c12; color: white;">⏳ Da Gestire</span>';
+        } else if (user.reportStatus === 'reported') {
+            statusBadge = '<span class="badge" style="background: #e74c3c; color: white;">🚨 Segnalato</span>';
+        } else {
+            statusBadge = '<span class="badge badge-success">✅ Attivo</span>';
+        }
+        
+        return `
+            <tr>
+                <td><strong>${user.username}</strong></td>
+                <td>
+                    <span style="display: inline-flex; align-items: center; gap: 5px;">
+                        <span style="color: #4CAF50;">🎮</span>
+                        ${user.robloxName || '<span style="color: #888;">Non fornito</span>'}
+                    </span>
+                </td>
+                <td>${user.email}</td>
+                <td>${statusBadge}</td>
+                <td>${new Date(user.registeredDate).toLocaleDateString('it-IT')}</td>
+                <td>
+                    <span style="display: inline-block; padding: 5px 12px; background: ${user.reportsCount > 0 ? '#e74c3c' : '#27ae60'}; color: white; border-radius: 15px; font-weight: 600; font-size: 13px;">
+                        ${user.reportsCount}
+                    </span>
+                </td>
+                <td>
+                    ${user.reportsCount > 0 ? `
+                        <button class="btn btn-primary" style="font-size: 13px; padding: 8px 12px;" onclick="viewUserReports('${user.username}')">👁️ Vedi</button>
+                    ` : '<span style="color: #888;">Nessuna azione</span>'}
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function viewUserReports(username) {
@@ -301,7 +329,9 @@ function viewUserReports(username) {
     document.body.appendChild(modal);
 }
 
-function filterUsers() { renderUsers(); }
+function filterUsers() {
+    renderUsers();
+}
 
 function filterByStatus(status) {
     currentFilter = status;
@@ -310,7 +340,7 @@ function filterByStatus(status) {
     renderUsers();
 }
 
-// ========== GESTIONE SEGNALAZIONI ==========
+// ==================== SEGNALAZIONI ====================
 function loadReports() {
     const reports = JSON.parse(localStorage.getItem('userReports') || '[]');
     const list = document.getElementById('reportsList');
@@ -635,6 +665,303 @@ function navigateToReport(reportId) {
     }, 300);
 }
 
+// ==================== ANNUNCI ====================
+document.getElementById('announcementForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const announcement = {
+        id: Date.now(),
+        title: document.getElementById('announcementTitle').value,
+        message: document.getElementById('announcementMessage').value,
+        type: document.getElementById('announcementType').value,
+        ping: document.getElementById('announcementPing').value,
+        date: new Date().toISOString(),
+        author: currentUser.username
+    };
+    
+    const announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+    announcements.unshift(announcement);
+    localStorage.setItem('announcements', JSON.stringify(announcements));
+    
+    sendWebhook('announcement', announcement);
+    addLog(`Annuncio pubblicato: ${announcement.title}`);
+    showNotification('Annuncio pubblicato!', 'success');
+    
+    this.reset();
+    loadAnnouncements();
+});
+
+function loadAnnouncements() {
+    const announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+    const list = document.getElementById('announcementsList');
+    
+    if (announcements.length === 0) {
+        list.innerHTML = '<p style="color: #888;">Nessun annuncio</p>';
+        return;
+    }
+    
+    list.innerHTML = announcements.map(ann => `
+        <div class="log-item">
+            <div class="log-time">${new Date(ann.date).toLocaleString('it-IT')} - ${ann.author}</div>
+            <div class="log-action"><strong>${ann.title}</strong></div>
+            <p style="margin-top: 10px;">${ann.message}</p>
+            <button class="btn btn-danger" onclick="deleteAnnouncement(${ann.id})" style="margin-top: 10px;">🗑️</button>
+        </div>
+    `).join('');
+}
+
+function deleteAnnouncement(id) {
+    showConfirmDialog('🗑️ Eliminare?', 'Sei sicuro?', () => {
+        let announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+        announcements = announcements.filter(a => a.id !== id);
+        localStorage.setItem('announcements', JSON.stringify(announcements));
+        addLog('Annuncio eliminato');
+        showNotification('Annuncio eliminato', 'success');
+        loadAnnouncements();
+    });
+}
+
+function sendWebhook(type, data) {
+    const settings = JSON.parse(localStorage.getItem('globalSettings') || '{}');
+    const webhookUrl = settings.globalWebhook;
+    if (!webhookUrl) return;
+    
+    let embed = {};
+    let content = '';
+    
+    if (type === 'announcement') {
+        const typeEmojis = { 'info': 'ℹ️', 'warning': '⚠️', 'event': '🎉', 'update': '🔄' };
+        embed = {
+            title: `${typeEmojis[data.type] || '📢'} ${data.title}`,
+            description: data.message,
+            color: 0x667eea,
+            timestamp: new Date().toISOString(),
+            footer: { text: `Pubblicato da ${data.author}` }
+        };
+        
+        if (data.ping === '@everyone') content = '@everyone';
+        else if (data.ping === '@here') content = '@here';
+        else if (data.ping === 'both') content = '@everyone @here';
+    }
+    
+    fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'Annunci - Piacenza RP', content: content, embeds: [embed] })
+    }).catch(err => console.error('Errore webhook:', err));
+}
+
+function sendReportWebhook(action, report) {
+    const settings = JSON.parse(localStorage.getItem('globalSettings') || '{}');
+    const webhookUrl = settings.globalWebhook;
+    if (!webhookUrl) return;
+    
+    const actionConfig = {
+        open: { title: '🔓 Aperta', description: `#${report.id} presa in carico`, color: 0x3498db },
+        resolve: { title: '✅ Chiusa', description: `#${report.id} chiusa`, color: 0x27ae60 },
+        reject: { title: '❌ Respinta', description: `#${report.id} respinta`, color: 0xe74c3c },
+        archive: { title: '📁 Archiviata', description: `#${report.id} archiviata`, color: 0x95a5a6 },
+        reopen: { title: '🔄 Riaperta', description: `#${report.id} riaperta`, color: 0xf39c12 }
+    };
+    
+    const config = actionConfig[action];
+    const embed = {
+        title: config.title,
+        description: config.description,
+        color: config.color,
+        fields: [
+            { name: '🎯 Segnalato', value: report.reported.username, inline: true },
+            { name: '⚠️ Violazione', value: report.violationType, inline: true },
+            { name: '👮 Staff', value: currentUser.username, inline: true },
+            { name: '📝 Descrizione', value: report.description.substring(0, 200), inline: false },
+            { name: '🆔 ID', value: `\`${report.id}\``, inline: true }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: `#${report.id}` }
+    };
+    
+    if (report.evidenceUrls && report.evidenceUrls.length > 0) {
+        embed.thumbnail = { url: report.evidenceUrls[0].url };
+        const imageLinks = report.evidenceUrls.map((img, i) => `[🖼️ ${i + 1}](${img.url})`).join(' • ');
+        embed.fields.push({ name: '🔗 Immagini', value: imageLinks, inline: false });
+    }
+    
+    if (report.videoUrls && report.videoUrls.length > 0) {
+        const videoLinks = report.videoUrls.map((vid, i) => `[🎥 ${i + 1}](${vid.url})`).join(' • ');
+        embed.fields.push({ name: '🎥 Video', value: videoLinks, inline: false });
+    }
+    
+    fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'Azioni Staff - Piacenza RP', embeds: [embed] })
+    }).catch(err => console.error('Errore webhook:', err));
+}
+
+// ==================== LOG E SETTINGS ====================
+function addLog(action) {
+    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+    logs.push({ date: new Date().toISOString(), action: action, admin: currentUser.username || 'Admin' });
+    localStorage.setItem('adminLogs', JSON.stringify(logs));
+}
+
+function loadLogs() {
+    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+    const list = document.getElementById('logsList');
+    if (!list) return;
+    
+    if (logs.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 50px;"><p>📋 Nessun log</p></div>';
+        return;
+    }
+    
+    list.innerHTML = logs.slice().reverse().map(log => `
+        <div class="log-item">
+            <div class="log-time">${new Date(log.date).toLocaleString('it-IT')}</div>
+            <div class="log-action"><strong>${log.admin}:</strong> ${log.action}</div>
+        </div>
+    `).join('');
+}
+
+document.getElementById('settingsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const settings = {
+        serverName: document.getElementById('serverName').value,
+        supportEmail: document.getElementById('supportEmail').value,
+        globalWebhook: document.getElementById('globalWebhook').value,
+        welcomeMessage: document.getElementById('welcomeMessage').value
+    };
+    
+    localStorage.setItem('globalSettings', JSON.stringify(settings));
+    addLog('Impostazioni aggiornate');
+    showNotification('Impostazioni salvate!', 'success');
+});
+
+function loadSettings() {
+    const settings = JSON.parse(localStorage.getItem('globalSettings') || '{}');
+    if (settings.serverName) document.getElementById('serverName').value = settings.serverName;
+    if (settings.supportEmail) document.getElementById('supportEmail').value = settings.supportEmail;
+    if (settings.globalWebhook) document.getElementById('globalWebhook').value = settings.globalWebhook;
+    if (settings.welcomeMessage) document.getElementById('welcomeMessage').value = settings.welcomeMessage;
+}
+
+// ==================== EXPORT ====================
+function exportUsers() {
+    downloadJSON(JSON.parse(localStorage.getItem('piacenzaUsers') || '[]'), 'utenti.json');
+    addLog('Export utenti');
+    showNotification('Export completato!', 'success');
+}
+
+function exportUsersCSV() {
+    const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
+    let csv = 'Username,Nome Roblox,Email,Stato,Segnalazioni,Data Registrazione\n';
+    users.forEach(u => {
+        csv += `${u.username},${u.robloxName || 'N/A'},${u.email},${u.reportStatus === 'reported' || u.reportStatus === 'pending' ? 'Segnalato' : 'Attivo'},${u.reportsCount || 0},${new Date(u.registeredDate || Date.now()).toLocaleDateString('it-IT')}\n`;
+    });
+    
+    downloadText(csv, 'utenti.csv');
+    addLog('Export CSV');
+    showNotification('Export CSV completato!', 'success');
+}
+
+function exportAllData() {
+    const backup = {
+        users: JSON.parse(localStorage.getItem('piacenzaUsers') || '[]'),
+        reports: JSON.parse(localStorage.getItem('userReports') || '[]'),
+        announcements: JSON.parse(localStorage.getItem('announcements') || '[]'),
+        logs: JSON.parse(localStorage.getItem('adminLogs') || '[]'),
+        settings: JSON.parse(localStorage.getItem('globalSettings') || '{}'),
+        date: new Date().toISOString()
+    };
+    
+    downloadJSON(backup, `backup_${new Date().toISOString().split('T')[0]}.json`);
+    addLog('Backup completo');
+    showNotification('Backup scaricato!', 'success');
+}
+
+function clearAllData() {
+    showConfirmDialog('⚠️ Reset', 'ATTENZIONE! Cancellare TUTTI i dati? IRREVERSIBILE!', () => {
+        exportAllData();
+        localStorage.clear();
+        showNotification('Dati cancellati! Backup salvato.', 'success');
+        setTimeout(() => window.location.reload(), 2000);
+    });
+}
+
+// ==================== UTILITY ====================
+function downloadJSON(data, filename) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function downloadText(text, filename) {
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+function showConfirmDialog(title, message, onConfirm) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    
+    overlay.innerHTML = `
+        <div style="background: white; border-radius: 20px; padding: 40px; max-width: 500px; text-align: center;">
+            <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+            <h3 style="margin-bottom: 15px;">${title}</h3>
+            <p style="margin-bottom: 30px;">${message}</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="confirmBtn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px 30px; border-radius: 10px; cursor: pointer;">Ok</button>
+                <button id="cancelBtn" style="background: #e0e0e0; color: #333; border: none; padding: 12px 30px; border-radius: 10px; cursor: pointer;">Annulla</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    document.getElementById('confirmBtn').onclick = () => { overlay.remove(); onConfirm(); };
+    document.getElementById('cancelBtn').onclick = () => overlay.remove();
+}
+
+function toggleMobileMenu() {
+    const navMenu = document.getElementById('navMenu');
+    if (navMenu) navMenu.classList.toggle('active');
+}
+
+function logout() {
+    showConfirmDialog('👋 Logout', 'Sei sicuro?', () => {
+        sessionStorage.clear();
+        localStorage.removeItem('piacenza_auto_login');
+        window.location.href = 'index.html';
+    });
+}
+
+console.log('✅ Sistema Staff con Stati Dinamici caricato!');
+console.log('🎮 Controllo automatico nome Roblox attivo');
+
 // ========== ANNUNCI ==========
 document.getElementById('announcementForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -771,7 +1098,11 @@ function sendReportWebhook(action, report) {
 // ========== LOG E SETTINGS ==========
 function addLog(action) {
     const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-    logs.push({ date: new Date().toISOString(), action: action, admin: currentUser.username || 'Admin' });
+    logs.push({ 
+        date: new Date().toISOString(), 
+        action: action, 
+        admin: currentUser.username || 'Admin' 
+    });
     localStorage.setItem('adminLogs', JSON.stringify(logs));
 }
 
@@ -826,8 +1157,10 @@ function exportUsers() {
 function exportUsersCSV() {
     const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
     let csv = 'Username,Nome Roblox,Email,Stato,Segnalazioni,Data Registrazione\n';
+    
     users.forEach(u => {
-        csv += `${u.username},${u.robloxName || 'N/A'},${u.email},${u.reportsCount > 0 ? 'Segnalato' : 'Attivo'},${u.reportsCount || 0},${new Date(u.registeredDate || Date.now()).toLocaleDateString('it-IT')}\n`;
+        const stato = u.reportStatus === 'reported' || u.reportStatus === 'pending' ? 'Segnalato' : 'Attivo';
+        csv += `${u.username},${u.robloxName || 'N/A'},${u.email},${stato},${u.reportsCount || 0},${new Date(u.registeredDate || Date.now()).toLocaleDateString('it-IT')}\n`;
     });
     
     downloadText(csv, 'utenti.csv');
@@ -889,7 +1222,10 @@ function showNotification(message, type) {
     notification.className = `notification ${type}`;
     notification.textContent = message;
     document.body.appendChild(notification);
-    setTimeout(() => { notification.style.animation = 'slideIn 0.3s ease reverse'; setTimeout(() => notification.remove(), 300); }, 3000);
+    setTimeout(() => { 
+        notification.style.animation = 'slideIn 0.3s ease reverse'; 
+        setTimeout(() => notification.remove(), 300); 
+    }, 3000);
 }
 
 function showConfirmDialog(title, message, onConfirm) {
@@ -926,5 +1262,5 @@ function logout() {
     });
 }
 
-console.log('✅ Sistema Staff completo caricato!');
+console.log('✅ Sistema Staff con Stati Dinamici caricato!');
 console.log('🎮 Controllo automatico nome Roblox attivo');
