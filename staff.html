@@ -55,12 +55,12 @@
                     <div class="value" id="totalUsers">0</div>
                 </div>
                 <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
-                    <span class="icon">🚫</span>
+                    <span class="icon">🚨</span>
                     <h3>Utenti Segnalati</h3>
-                    <div class="value" id="bannedUsers">0</div>
+                    <div class="value" id="reportedUsers">0</div>
                 </div>
                 <div class="stat-card" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);">
-                    <span class="icon">🚨</span>
+                    <span class="icon">🔓</span>
                     <h3>Segnalazioni Aperte</h3>
                     <div class="value" id="totalReports">0</div>
                 </div>
@@ -104,20 +104,20 @@
                 <h2>👥 Gestione Utenti</h2>
                 
                 <div class="search-box">
-                    <input type="text" id="userSearch" placeholder="🔍 Cerca utente per username o email..." onkeyup="filterUsers()">
+                    <input type="text" id="userSearch" placeholder="🔍 Cerca utente per username, email o nome Roblox..." onkeyup="filterUsers()">
                 </div>
 
                 <div class="filter-buttons">
                     <button class="filter-btn active" onclick="filterByStatus('all')">Tutti</button>
                     <button class="filter-btn" onclick="filterByStatus('active')">✅ Attivi</button>
                     <button class="filter-btn" onclick="filterByStatus('reported')">🚨 Segnalati</button>
-                    <button class="filter-btn" onclick="filterByStatus('banned')">🚫 Bannati</button>
                 </div>
 
                 <table class="user-table" id="userTable">
                     <thead>
                         <tr>
                             <th>Username</th>
+                            <th>🎮 Nome Roblox</th>
                             <th>Email</th>
                             <th>Stato</th>
                             <th>Data Registrazione</th>
@@ -134,47 +134,46 @@
 
         <!-- ANNUNCI -->
         <div id="announcements" class="tab-content">
-    <div class="card">
-        <h2>📢 Crea Nuovo Annuncio</h2>
-        <form id="announcementForm">
-            <div class="input-group">
-                <label>Titolo Annuncio</label>
-                <input type="text" id="announcementTitle" required>
+            <div class="card">
+                <h2>📢 Crea Nuovo Annuncio</h2>
+                <form id="announcementForm">
+                    <div class="input-group">
+                        <label>Titolo Annuncio</label>
+                        <input type="text" id="announcementTitle" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Messaggio</label>
+                        <textarea id="announcementMessage" rows="6" required></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Tipo</label>
+                        <select id="announcementType">
+                            <option value="info">ℹ️ Informazione</option>
+                            <option value="warning">⚠️ Avviso</option>
+                            <option value="event">🎉 Evento</option>
+                            <option value="update">🔄 Aggiornamento</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Ping Discord</label>
+                        <select id="announcementPing">
+                            <option value="none">🔇 Nessuno</option>
+                            <option value="@everyone">📢 @everyone</option>
+                            <option value="@here">👥 @here</option>
+                            <option value="both">🔔 @everyone + @here</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">📤 Pubblica Annuncio</button>
+                </form>
             </div>
-            <div class="input-group">
-                <label>Messaggio</label>
-                <textarea id="announcementMessage" rows="6" required></textarea>
-            </div>
-            <div class="input-group">
-                <label>Tipo</label>
-                <select id="announcementType">
-                    <option value="info">ℹ️ Informazione</option>
-                    <option value="warning">⚠️ Avviso</option>
-                    <option value="event">🎉 Evento</option>
-                    <option value="update">🔄 Aggiornamento</option>
-                </select>
-            </div>
-            
-            <!-- ✅ CAMPO PING AGGIUNTO QUI -->
-            <div class="input-group">
-                <label>Ping Discord</label>
-                <select id="announcementPing">
-                    <option value="none">🔇 Nessuno</option>
-                    <option value="@everyone">📢 @everyone</option>
-                    <option value="@here">👥 @here</option>
-                    <option value="both">🔔 @everyone + @here</option>
-                </select>
-            </div>
-            
-            <button type="submit" class="btn btn-primary">📤 Pubblica Annuncio</button>
-        </form>
-    </div>
 
-    <div class="card">
-        <h2>📋 Annunci Pubblicati</h2>
-        <div id="announcementsList"></div>
-    </div>
-    </div>
+            <div class="card">
+                <h2>📋 Annunci Pubblicati</h2>
+                <div id="announcementsList"></div>
+            </div>
+        </div>
 
         <!-- LOG ATTIVITÀ -->
         <div id="logs" class="tab-content">
