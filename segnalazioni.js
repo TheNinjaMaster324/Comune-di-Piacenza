@@ -15,7 +15,7 @@ window.addEventListener('load', function() {
         }, 2000);
         return;
     } else {
-        document.getElementById('reporterUsername').value = user.username || '';
+        document.getElementById('loginRobloxName').value = user.username || '';
         document.getElementById('reporterEmail').value = user.email || '';
     }
     
