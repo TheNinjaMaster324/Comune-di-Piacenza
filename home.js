@@ -177,6 +177,7 @@ window.addEventListener('load', function() {
             }
             updateAdminStats();
             refreshHomeStats(); // Aggiorna stats subito
+            loadQuickActions();
         }
         
         // Se è esponente istituzionale, mostra link gestione
@@ -444,5 +445,160 @@ document.querySelectorAll('.admin-btn').forEach(btn => {
         return; // Non aggiungere l'alert a questo bottone
     }
 });
+
+
+// ==================== AZIONI RAPIDE - CARICAMENTO DINAMICO ====================
+
+function loadQuickActions() {
+    const container = document.getElementById('quickActionsContent');
+    if (!container) return;
+    
+    const settings = JSON.parse(localStorage.getItem('quickActionsSettings') || '{}');
+    const regEnabled = settings.registrationsEnabled !== false;
+    const maintEnabled = settings.maintenanceMode === true;
+    
+    container.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="regStatusIcon">${regEnabled ? '🔓' : '🔒'}</span>
+                    <span id="regStatusText" style="font-size: 14px; font-weight: 500; color: ${regEnabled ? '#27ae60' : '#e74c3c'};">
+                        ${regEnabled ? 'Registrazioni Aperte' : 'Registrazioni Chiuse'}
+                    </span>
+                </div>
+                <label class="quick-toggle">
+                    <input type="checkbox" id="toggleRegistrations" onchange="toggleRegistrations()" ${regEnabled ? 'checked' : ''}>
+                    <span class="quick-slider"></span>
+                </label>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="maintStatusIcon">${maintEnabled ? '🚨' : '✅'}</span>
+                    <span id="maintStatusText" style="font-size: 14px; font-weight: 500; color: ${maintEnabled ? '#e74c3c' : '#27ae60'};">
+                        ${maintEnabled ? 'Manutenzione Attiva' : 'Server Online'}
+                    </span>
+                </div>
+                <label class="quick-toggle">
+                    <input type="checkbox" id="toggleMaintenance" onchange="toggleMaintenance()" ${maintEnabled ? 'checked' : ''}>
+                    <span class="quick-slider"></span>
+                </label>
+            </div>
+            
+            <button class="admin-btn" onclick="forceLogoutAll()" style="background: #e74c3c; width: 100%; margin-top: 5px;">
+                📤 Logout Tutti
+            </button>
+            <button class="admin-btn" onclick="clearCache()" style="background: #95a5a6; width: 100%;">
+                🧹 Pulisci Cache
+            </button>
+        </div>
+    `;
+}
+
+function toggleRegistrations() {
+    const checkbox = document.getElementById('toggleRegistrations');
+    const enabled = checkbox.checked;
+    
+    const settings = JSON.parse(localStorage.getItem('quickActionsSettings') || '{}');
+    settings.registrationsEnabled = enabled;
+    localStorage.setItem('quickActionsSettings', JSON.stringify(settings));
+    
+    updateRegStatus(enabled);
+    showCustomAlert('success', enabled ? '✅ Registrazioni Attivate' : '🔒 Registrazioni Disattivate', 
+                     `Le registrazioni sono ora ${enabled ? 'aperte' : 'chiuse'}.`);
+}
+
+function updateRegStatus(enabled) {
+    const icon = document.getElementById('regStatusIcon');
+    const text = document.getElementById('regStatusText');
+    if (icon && text) {
+        icon.textContent = enabled ? '🔓' : '🔒';
+        text.textContent = enabled ? 'Registrazioni Aperte' : 'Registrazioni Chiuse';
+        text.style.color = enabled ? '#27ae60' : '#e74c3c';
+    }
+}
+
+function toggleMaintenance() {
+    const checkbox = document.getElementById('toggleMaintenance');
+    const enabled = checkbox.checked;
+    
+    if (enabled && !confirm('⚠️ Attivare la modalità manutenzione?\n\n• Gli utenti non potranno fare login\n• Banner pubblico visibile\n• Solo admin possono accedere\n\nConfermi?')) {
+        checkbox.checked = false;
+        return;
+    }
+    
+    const settings = JSON.parse(localStorage.getItem('quickActionsSettings') || '{}');
+    settings.maintenanceMode = enabled;
+    localStorage.setItem('quickActionsSettings', JSON.stringify(settings));
+    
+    updateMaintStatus(enabled);
+    showCustomAlert(enabled ? 'warning' : 'success', 
+                     enabled ? '🚨 Manutenzione Attivata' : '✅ Manutenzione Disattivata',
+                     enabled ? 'Server in manutenzione. Solo admin possono accedere.' : 'Server tornato online.');
+}
+
+function updateMaintStatus(enabled) {
+    const icon = document.getElementById('maintStatusIcon');
+    const text = document.getElementById('maintStatusText');
+    if (icon && text) {
+        icon.textContent = enabled ? '🚨' : '✅';
+        text.textContent = enabled ? 'Manutenzione Attiva' : 'Server Online';
+        text.style.color = enabled ? '#e74c3c' : '#27ae60';
+    }
+}
+
+function forceLogoutAll() {
+    if (!confirm('⚠️ Espellere TUTTI gli utenti?\n\n• Invalida tutte le sessioni\n• Gli utenti dovranno rifare login\n• Tu resti connesso\n\nConfermi?')) {
+        return;
+    }
+    
+    const onlineUsers = JSON.parse(localStorage.getItem('onlineUsers') || '{}');
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    
+    let count = 0;
+    Object.keys(onlineUsers).forEach(username => {
+        if (username !== currentUser.username) {
+            delete onlineUsers[username];
+            count++;
+        }
+    });
+    
+    localStorage.setItem('onlineUsers', JSON.stringify(onlineUsers));
+    localStorage.setItem('force_logout_timestamp', Date.now().toString());
+    
+    showCustomAlert('success', '📤 Logout Forzato', `${count} utenti espulsi dal server.`);
+    refreshHomeStats();
+}
+
+function clearCache() {
+    if (!confirm('🧹 Pulire la cache?\n\n• Log temporanei\n• Dati scaduti\n• Utenti offline\n\nConfermi?')) {
+        return;
+    }
+    
+    const onlineUsers = JSON.parse(localStorage.getItem('onlineUsers') || '{}');
+    const now = new Date().getTime();
+    const timeout = 5 * 60 * 1000;
+    
+    let cleaned = 0;
+    Object.keys(onlineUsers).forEach(username => {
+        const lastSeen = new Date(onlineUsers[username].lastSeen).getTime();
+        if (now - lastSeen > timeout) {
+            delete onlineUsers[username];
+            cleaned++;
+        }
+    });
+    
+    localStorage.setItem('onlineUsers', JSON.stringify(onlineUsers));
+    
+    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
+    if (logs.length > 500) {
+        const newLogs = logs.slice(-500);
+        localStorage.setItem('adminLogs', JSON.stringify(newLogs));
+        cleaned += logs.length - 500;
+    }
+    
+    showCustomAlert('success', '🧹 Cache Pulita', `${cleaned} elementi rimossi.`);
+    refreshHomeStats();
+}
 
 console.log('✅ home.js caricato correttamente!');

@@ -225,6 +225,18 @@ async function sendLoginWebhook(user) {
 // 🔥 LOGIN FORM - CON NOME ROBLOX
 document.getElementById('loginForm').onsubmit = async function(e) {
     e.preventDefault();
+    const settings = JSON.parse(localStorage.getItem('quickActionsSettings') || '{}');
+    if (settings.maintenanceMode === true) {
+        const username = document.getElementById('loginUsername').value.trim();
+        const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
+        const user = users.find(u => u.username === username);
+        
+        // Solo admin può accedere
+        if (!user || !user.isAdmin) {
+            showNotification('Server in Manutenzione', 'Il server è in manutenzione. Solo admin possono accedere.', 'error');
+            return;
+        }
+    }
     const user = document.getElementById('loginUsername').value.trim();
     const pass = document.getElementById('loginPassword').value.trim();
     const robloxName = document.getElementById('loginRobloxName') ? document.getElementById('loginRobloxName').value.trim() : '';
@@ -263,6 +275,11 @@ document.getElementById('loginForm').onsubmit = async function(e) {
 // 🔥 REGISTER FORM - CON NOME ROBLOX
 document.getElementById('registerForm').onsubmit = async function(e) {
     e.preventDefault();
+    const settings = JSON.parse(localStorage.getItem('quickActionsSettings') || '{}');
+    if (settings.registrationsEnabled === false) {
+        showNotification('Registrazioni Chiuse', 'Le registrazioni sono temporaneamente disabilitate dallo staff. Riprova più tardi!', 'error');
+        return;
+    }
     const user = document.getElementById('regUsername').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const pass = document.getElementById('regPassword').value.trim();
