@@ -479,6 +479,7 @@ function createReportCard(report) {
                         <button class="btn btn-primary" onclick="archiveReport(${report.id})">📁 Archivia</button>
                     ` : ''}
                     ${report.status === 'resolved' ? `
+                        <button class="btn btn-primary" onclick="reopenReport(${report.id})">🔄 Riapri</button>
                         <button class="btn btn-primary" onclick="archiveReport(${report.id})">📁 Archivia</button>
                     ` : ''}
                     ${report.status === 'rejected' || report.status === 'archived' ? `
