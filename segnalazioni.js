@@ -1,6 +1,6 @@
 // ==================== CONFIGURAZIONE ====================
 const WEBHOOK_SEGNALAZIONI = 'https://discord.com/api/webhooks/1464602775907467550/UXyFjYPWIv-pQaIzdCIichb9FeG5PVsEMmRRdmk87_Hx2cw_3ffvjeGsMWNGpW6Y5oYE';
-const IMGBB_API_KEY = '5cbd206261a1b8340b7a826e97316a64'; // ← METTI LA TUA API KEY DI IMGBB QUI!
+const IMGBB_API_KEY = '5cbd206261a1b8340b7a826e97316a64';
 
 // ==================== GESTIONE FILE MULTIPLI ====================
 let uploadedFiles = [];
@@ -15,7 +15,9 @@ window.addEventListener('load', function() {
         }, 2000);
         return;
     } else {
+        // ✅ PRE-COMPILA I CAMPI CON I DATI DELL'UTENTE
         document.getElementById('reporterUsername').value = user.username || '';
+        document.getElementById('reporterRobloxName').value = user.robloxName || ''; // ← AGGIUNTO
         document.getElementById('reporterEmail').value = user.email || '';
     }
     
@@ -34,7 +36,6 @@ window.addEventListener('load', function() {
         console.log(`📂 Selezionati ${files.length} file`);
         
         files.forEach(file => {
-            // Controlla tipo file (immagini E video)
             const isImage = file.type.startsWith('image/');
             const isVideo = file.type.startsWith('video/');
             
@@ -43,18 +44,16 @@ window.addEventListener('load', function() {
                 return;
             }
             
-            // Controlla dimensione
             if (isImage && file.size > 32 * 1024 * 1024) {
-                showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 32MB! Max 32MB per immagini.`);
+                showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 32MB!`);
                 return;
             }
             
             if (isVideo && file.size > 100 * 1024 * 1024) {
-                showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 100MB! Max 100MB per video.`);
+                showCustomNotification('error', '❌ File Troppo Grande', `${file.name} supera i 100MB!`);
                 return;
             }
             
-            // Aggiungi il file all'array
             uploadedFiles.push({
                 file: file,
                 name: file.name,
@@ -64,7 +63,6 @@ window.addEventListener('load', function() {
             });
             
             console.log(`✅ File aggiunto: ${file.name} (${isVideo ? 'Video' : 'Immagine'}) - ${(file.size / 1024 / 1024).toFixed(2)} MB`);
-            console.log(`📊 Totale file nell'array: ${uploadedFiles.length}`);
         });
         
         updateFileList();
@@ -74,7 +72,7 @@ window.addEventListener('load', function() {
     document.getElementById('reporterDiscord').addEventListener('blur', function() {
         const value = this.value.trim();
         if (value && !value.includes('#') && !value.match(/^[a-z0-9_.]+$/)) {
-            showCustomNotification('warning', '⚠️ Formato Discord', 'Formato Discord non valido (es: username#1234 o username)');
+            showCustomNotification('warning', '⚠️ Formato Discord', 'Formato Discord non valido (es: username#1234)');
         }
     });
 });
@@ -110,7 +108,6 @@ function removeFile(index) {
     const removedFile = uploadedFiles[index];
     console.log(`🗑️ Rimosso: ${removedFile.name}`);
     uploadedFiles.splice(index, 1);
-    console.log(`📊 Totale file rimanenti: ${uploadedFiles.length}`);
     updateFileList();
 }
 
@@ -128,9 +125,7 @@ async function uploadToImgbb(fileObj) {
             body: formData
         });
         
-        if (!response.ok) {
-            throw new Error(`Errore HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Errore HTTP ${response.status}`);
         
         const data = await response.json();
         
@@ -138,30 +133,27 @@ async function uploadToImgbb(fileObj) {
             throw new Error('Risposta non valida da Imgbb');
         }
         
-        const url = data.data.url;
-        console.log(`✅ Immagine caricata su Imgbb: ${url}`);
+        console.log(`✅ Immagine caricata: ${data.data.url}`);
         
         return {
-            url: url,
+            url: data.data.url,
             name: fileObj.name,
             isVideo: false
         };
     } catch (error) {
-        console.error(`❌ Errore upload Imgbb per ${fileObj.name}:`, error);
-        throw new Error(`Impossibile caricare immagine ${fileObj.name}: ${error.message}`);
+        console.error(`❌ Errore upload Imgbb:`, error);
+        throw new Error(`Impossibile caricare ${fileObj.name}: ${error.message}`);
     }
 }
 
-// ==================== UPLOAD SU POMF.LAIN.LA CON PROXY CORS (SOLO VIDEO) ====================
-// ==================== UPLOAD SU CATBOX.MOE (SOLO VIDEO) - FUNZIONA OVUNQUE ====================
-// ==================== UPLOAD SU LITTERBOX (SOLO VIDEO) - VELOCE E AFFIDABILE ====================
+// ==================== UPLOAD SU LITTERBOX (SOLO VIDEO) ====================
 async function uploadToLitterbox(fileObj) {
     try {
         console.log(`📤 Caricamento VIDEO su Litterbox: ${fileObj.name}...`);
         
         const formData = new FormData();
         formData.append('reqtype', 'fileupload');
-        formData.append('time', '72h'); // File disponibili per 72 ore
+        formData.append('time', '72h');
         formData.append('fileToUpload', fileObj.file);
         
         const response = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', {
@@ -169,9 +161,7 @@ async function uploadToLitterbox(fileObj) {
             body: formData
         });
         
-        if (!response.ok) {
-            throw new Error(`Errore HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Errore HTTP ${response.status}`);
         
         const url = await response.text();
         
@@ -179,7 +169,7 @@ async function uploadToLitterbox(fileObj) {
             throw new Error('Risposta non valida da Litterbox');
         }
         
-        console.log(`✅ Video caricato su Litterbox: ${url}`);
+        console.log(`✅ Video caricato: ${url}`);
         
         return {
             url: url.trim(),
@@ -187,8 +177,8 @@ async function uploadToLitterbox(fileObj) {
             isVideo: true
         };
     } catch (error) {
-        console.error(`❌ Errore upload Litterbox per ${fileObj.name}:`, error);
-        throw new Error(`Impossibile caricare video ${fileObj.name}: ${error.message}`);
+        console.error(`❌ Errore upload Litterbox:`, error);
+        throw new Error(`Impossibile caricare ${fileObj.name}: ${error.message}`);
     }
 }
 
@@ -196,9 +186,8 @@ async function uploadToLitterbox(fileObj) {
 document.getElementById('reportForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    console.log(`📋 Submit form - File nell'array: ${uploadedFiles.length}`);
+    console.log(`📋 Submit form - File: ${uploadedFiles.length}`);
     
-    // Validazione file
     if (uploadedFiles.length === 0) {
         showCustomNotification('error', '❌ Nessun File', 'Devi caricare almeno un file come prova!');
         return;
@@ -207,7 +196,6 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     const reporterUsername = document.getElementById('reporterUsername').value.trim();
     const reportedUsername = document.getElementById('reportedUsername').value.trim();
     
-    // Validazione auto-segnalazione
     if (reporterUsername.toLowerCase() === reportedUsername.toLowerCase()) {
         showCustomNotification('error', '❌ Errore', 'Non puoi segnalare te stesso!');
         return;
@@ -216,7 +204,6 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     showLoadingOverlay('📤 Preparazione caricamento...');
     
     try {
-        // Upload TUTTI i file
         const uploadedMediaUrls = [];
         let successCount = 0;
         let failCount = 0;
@@ -227,57 +214,56 @@ document.getElementById('reportForm').addEventListener('submit', async function(
             updateLoadingMessage(`📤 Caricamento ${fileType} ${i + 1}/${uploadedFiles.length}...`);
             
             try {
-                // Usa Imgbb per IMMAGINI, Pomf per VIDEO
                 let mediaData;
-            if (file.isVideo) {
-                mediaData = await uploadToLitterbox(file); // ← CAMBIA QUI
-            } else {
-                mediaData = await uploadToImgbb(file);
-            }
+                if (file.isVideo) {
+                    mediaData = await uploadToLitterbox(file);
+                } else {
+                    mediaData = await uploadToImgbb(file);
+                }
                 
                 uploadedMediaUrls.push(mediaData);
                 successCount++;
                 
-                console.log(`✅ [${i + 1}/${uploadedFiles.length}] Caricato: ${file.name} → ${mediaData.url}`);
+                console.log(`✅ [${i + 1}/${uploadedFiles.length}] ${file.name} → ${mediaData.url}`);
                 
-                // Pausa di 1 secondo tra i caricamenti
                 if (i < uploadedFiles.length - 1) {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             } catch (uploadError) {
-                console.error(`❌ [${i + 1}/${uploadedFiles.length}] Errore: ${file.name}`, uploadError);
+                console.error(`❌ [${i + 1}/${uploadedFiles.length}] ${file.name}`, uploadError);
                 failCount++;
                 showCustomNotification('warning', '⚠️ Avviso', `Impossibile caricare ${file.name}`);
             }
         }
         
-        // Verifica se almeno un file è stato caricato
         if (uploadedMediaUrls.length === 0) {
             hideLoadingOverlay();
-            showCustomNotification('error', '❌ Errore Caricamento', 'Nessun file è stato caricato con successo! Riprova.');
+            showCustomNotification('error', '❌ Errore Caricamento', 'Nessun file caricato! Riprova.');
             return;
         }
         
-        console.log(`📊 Riepilogo: ${successCount} caricati, ${failCount} falliti`);
+        console.log(`📊 Riepilogo: ${successCount} OK, ${failCount} KO`);
         
         updateLoadingMessage('📤 Invio segnalazione a Discord...');
         
-        // Separa immagini e video
         const images = uploadedMediaUrls.filter(e => !e.isVideo);
         const videos = uploadedMediaUrls.filter(e => e.isVideo);
         
-        console.log(`🖼️ Immagini caricate: ${images.length}`, images);
-        console.log(`🎥 Video caricati: ${videos.length}`, videos);
+        console.log(`🖼️ Immagini: ${images.length}`, images);
+        console.log(`🎥 Video: ${videos.length}`, videos);
         
+        // ✅ REPORT DATA CON NOMI ROBLOX
         const reportData = {
             id: Date.now(),
             reporter: {
                 username: reporterUsername,
+                robloxName: document.getElementById('reporterRobloxName').value.trim(), // ← AGGIUNTO
                 discord: document.getElementById('reporterDiscord').value.trim(),
                 email: document.getElementById('reporterEmail').value.trim()
             },
             reported: {
                 username: reportedUsername,
+                robloxName: document.getElementById('reportedRobloxName').value.trim() || 'Non fornito', // ← AGGIUNTO
                 discord: document.getElementById('reportedDiscord').value.trim() || 'Non fornito'
             },
             violationType: document.getElementById('violationType').value,
@@ -295,7 +281,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         reports.push(reportData);
         localStorage.setItem('userReports', JSON.stringify(reports));
         
-        console.log('✅ Segnalazione salvata nel localStorage:', reportData);
+        console.log('✅ Segnalazione salvata:', reportData);
         
         // Invia webhook Discord
         await sendDiscordWebhook(reportData);
@@ -303,7 +289,7 @@ document.getElementById('reportForm').addEventListener('submit', async function(
         hideLoadingOverlay();
         showSuccessAnimation();
         
-        // Reset form e redirect
+        // Reset e redirect
         setTimeout(() => {
             uploadedFiles = [];
             document.getElementById('reportForm').reset();
@@ -313,31 +299,30 @@ document.getElementById('reportForm').addEventListener('submit', async function(
     } catch (error) {
         hideLoadingOverlay();
         console.error('❌ Errore generale:', error);
-        showCustomNotification('error', '❌ Errore', `Si è verificato un errore: ${error.message}`);
+        showCustomNotification('error', '❌ Errore', `Errore: ${error.message}`);
     }
 });
 
-// ==================== WEBHOOK DISCORD CON IMMAGINI EMBED ====================
+// ==================== WEBHOOK DISCORD ====================
 async function sendDiscordWebhook(data) {
     const imageCount = data.evidenceUrls?.length || 0;
     const videoCount = data.videoUrls?.length || 0;
     
-    console.log(`📤 Invio webhook con ${imageCount} immagini e ${videoCount} video`);
+    console.log(`📤 Invio webhook: ${imageCount} img, ${videoCount} vid`);
     
-    // EMBED PRINCIPALE
     const mainEmbed = {
         title: '🚨 Nuova Segnalazione Ricevuta',
-        description: 'È stata ricevuta una nuova segnalazione da un utente',
+        description: 'È stata ricevuta una nuova segnalazione',
         color: 0xe74c3c,
         fields: [
             { 
                 name: '👤 Segnalato da', 
-                value: `**Username:** ${data.reporter.username}\n**Discord:** ${data.reporter.discord}\n**Email:** ${data.reporter.email}`, 
+                value: `**Username:** ${data.reporter.username}\n**🎮 Roblox:** ${data.reporter.robloxName}\n**Discord:** ${data.reporter.discord}\n**Email:** ${data.reporter.email}`, 
                 inline: true 
             },
             { 
                 name: '🎯 Utente Segnalato', 
-                value: `**Username:** ${data.reported.username}\n**Discord:** ${data.reported.discord}`, 
+                value: `**Username:** ${data.reported.username}\n**🎮 Roblox:** ${data.reported.robloxName}\n**Discord:** ${data.reported.discord}`, 
                 inline: true 
             },
             { name: '\u200B', value: '\u200B', inline: false },
@@ -354,7 +339,7 @@ async function sendDiscordWebhook(data) {
                 inline: false 
             },
             { 
-                name: '📅 Data e Ora Incidente', 
+                name: '📅 Data Incidente', 
                 value: new Date(data.incidentDate).toLocaleString('it-IT', {
                     day: '2-digit',
                     month: '2-digit',
@@ -377,12 +362,10 @@ async function sendDiscordWebhook(data) {
         timestamp: new Date().toISOString()
     };
     
-    // THUMBNAIL prima immagine
     if (data.evidenceUrls && data.evidenceUrls.length > 0) {
-        mainEmbed.image = { url: data.evidenceUrls[0].url }; // Immagine grande nel primo embed
+        mainEmbed.image = { url: data.evidenceUrls[0].url };
     }
     
-    // Link alle immagini
     if (data.evidenceUrls && data.evidenceUrls.length > 0) {
         const imageLinks = data.evidenceUrls.map((img, i) => 
             `[🖼️ Immagine ${i + 1}](${img.url})`
@@ -393,39 +376,30 @@ async function sendDiscordWebhook(data) {
             value: imageLinks.length > 1024 ? imageLinks.substring(0, 1021) + '...' : imageLinks,
             inline: false
         });
-        
-        console.log(`🖼️ Link immagini aggiunti:`, imageLinks);
     }
     
-    // Link ai video
     if (data.videoUrls && data.videoUrls.length > 0) {
-        const videoLinks = data.videoUrls.map((vid, i) => {
-            console.log(`🎥 Video ${i + 1}: ${vid.url} (${vid.name})`);
-            return `[🎥 Video ${i + 1}](${vid.url}) - \`${vid.name}\``;
-        }).join('\n');
+        const videoLinks = data.videoUrls.map((vid, i) => 
+            `[🎥 Video ${i + 1}](${vid.url}) - \`${vid.name}\``
+        ).join('\n');
         
         mainEmbed.fields.push({
             name: '🎥 Link ai Video',
             value: videoLinks.length > 1024 ? videoLinks.substring(0, 1021) + '...' : videoLinks,
             inline: false
         });
-        
-        console.log(`🎥 Link video aggiunti:`, videoLinks);
     }
     
-    // Link pannello staff
     mainEmbed.fields.push({
         name: '👮 Pannello Staff',
-        value: `[🔍 **Apri Segnalazione nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
+        value: `[🔍 **Apri nel Pannello Staff**](https://theninjamaster324.github.io/Comune-di-Piacenza/staff.html?report=${data.id})`,
         inline: false
     });
     
-    // Array di embeds (principale + immagini aggiuntive)
     const embeds = [mainEmbed];
     
-    // Aggiungi le altre immagini come embed separati (max 10 embed totali)
     if (data.evidenceUrls && data.evidenceUrls.length > 1) {
-        const remainingImages = data.evidenceUrls.slice(1, 9); // Max 9 immagini aggiuntive (totale 10 embed)
+        const remainingImages = data.evidenceUrls.slice(1, 9);
         remainingImages.forEach((img, i) => {
             embeds.push({
                 title: `📸 Prova ${i + 2}`,
@@ -435,24 +409,22 @@ async function sendDiscordWebhook(data) {
         });
     }
     
-    const payload = { embeds: embeds };
-    
     try {
         const response = await fetch(WEBHOOK_SEGNALAZIONI, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ embeds: embeds })
         });
         
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('❌ Errore webhook Discord:', errorText);
-            throw new Error(`Errore invio webhook: ${response.status}`);
+            console.error('❌ Errore webhook:', errorText);
+            throw new Error(`Errore webhook: ${response.status}`);
         }
         
-        console.log('✅ Webhook Discord inviato con successo!');
+        console.log('✅ Webhook inviato!');
     } catch (error) {
-        console.error('❌ Errore invio webhook Discord:', error);
+        console.error('❌ Errore webhook:', error);
         throw error;
     }
 }
@@ -466,7 +438,6 @@ function updateLoadingMessage(message) {
     }
 }
 
-// ==================== NOTIFICHE ====================
 function showCustomNotification(type, title, message) {
     const notification = document.createElement('div');
     notification.className = 'custom-notification';
@@ -567,7 +538,7 @@ function showSuccessAnimation() {
             <p style="font-size: 18px; opacity: 0.9;">Lo staff la esaminerà entro 48 ore</p>
             <p style="font-size: 16px; opacity: 0.8; margin-top: 10px;">Riceverai una risposta su Discord</p>
             <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px; max-width: 400px; margin: 20px auto 0;">
-                <p style="font-size: 14px; opacity: 0.9;">✨ Tutti i file sono stati caricati con successo!</p>
+                <p style="font-size: 14px; opacity: 0.9;">✨ Tutti i file caricati con successo!</p>
             </div>
             <div style="margin-top: 20px; font-size: 14px; opacity: 0.7;">Reindirizzamento in corso...</div>
         </div>
@@ -583,32 +554,26 @@ style.textContent = `
         from { opacity: 0; transform: translateX(100px); }
         to { opacity: 1; transform: translateX(0); }
     }
-    
     @keyframes slideOutRight {
         from { opacity: 1; transform: translateX(0); }
         to { opacity: 0; transform: translateX(100px); }
     }
-    
     @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
     }
-    
     @keyframes fadeOut {
         from { opacity: 1; }
         to { opacity: 0; }
     }
-    
     @keyframes spin {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
     }
-    
     @keyframes scaleIn {
         from { transform: scale(0.5); opacity: 0; }
         to { transform: scale(1); opacity: 1; }
     }
-    
     @keyframes bounce {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-20px); }
@@ -618,4 +583,4 @@ document.head.appendChild(style);
 
 console.log('✅ Sistema segnalazioni caricato!');
 console.log('🖼️ Immagini: Imgbb (max 32MB)');
-console.log('🎥 Video: Pomf.lain.la (max 100MB)');
+console.log('🎥 Video: Litterbox (max 100MB)');
