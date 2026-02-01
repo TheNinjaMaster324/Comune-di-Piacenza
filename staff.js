@@ -469,7 +469,6 @@ function createReportCard(report) {
                         <p><strong>${report.openedBy}</strong> il ${new Date(report.openedDate).toLocaleString('it-IT')}</p>
                     </div>
                 ` : ''}
-                
                 <div class="report-actions" style="display: flex; gap: 10px; margin-top: 20px;">
                     ${report.status === 'pending' ? `
                         <button class="btn btn-primary" onclick="openReport(${report.id})">🔓 Apri</button>
@@ -484,8 +483,6 @@ function createReportCard(report) {
                     ` : ''}
                     ${report.status === 'rejected' || report.status === 'archived' ? `
                         <button class="btn btn-primary" onclick="reopenReport(${report.id})">🔄 Riapri</button>
-                        <button class="btn btn-primary" onclick="archiveReport(${report.id})">📁 Archivia</button>
-
                     ` : ''}
                 </div>
             </div>
