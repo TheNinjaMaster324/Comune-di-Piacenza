@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('load', function() {
     const savedLogin = localStorage.getItem('piacenza_auto_login');
     if (savedLogin) {
-        const { userData, expiry } = JSON.parse(savedLogin);
+        const { userData, expiry} = JSON.parse(savedLogin);
         if (new Date().getTime() < expiry) {
             completeLogin(userData, false);
             return;
@@ -142,19 +142,44 @@ async function sendEmail(email, code, type) {
 
 // ==================== WEBHOOK DISCORD ====================
 
-// 🎉 Webhook Registrazione
+// 🎉 Webhook Registrazione - FORMATO CORRETTO PER BOT DISCORD
 async function sendRegistrationWebhook(user) {
-    console.log('📤 Invio webhook REGISTRAZIONE per:', user.username);
+    console.log('📤 Invio webhook REGISTRAZIONE per:', user.username, 'Discord ID:', user.discordId);
     
     const embed = {
-        title: '🎉 Nuova Registrazione!',
-        description: `Un nuovo utente si è registrato su **Comune di Piacenza RP**`,
-        color: 0x27ae60,
+        title: '📋 Nuova Registrazione',
+        color: 5814783,
         fields: [
-            { name: '👤 Username', value: user.username, inline: true },
-            { name: '🎮 Nome Roblox', value: user.robloxName || 'Non fornito', inline: true },
-            { name: '📧 Email', value: user.email, inline: true },
-            { name: '📅 Data Registrazione', value: new Date(user.registeredDate).toLocaleString('it-IT'), inline: false }
+            {
+                name: '👤 Discord',
+                value: `<@${user.discordId}>`,
+                inline: true
+            },
+            {
+                name: '🏷️ Discord Username',
+                value: `@${user.username}`,
+                inline: true
+            },
+            {
+                name: '📝 Username Account',
+                value: user.username,
+                inline: true
+            },
+            {
+                name: '📧 Email',
+                value: user.email,
+                inline: true
+            },
+            {
+                name: '🎮 Nome Roblox',
+                value: user.robloxName || 'Non fornito',
+                inline: true
+            },
+            {
+                name: '🆔 Discord ID',
+                value: `\`${user.discordId}\``,
+                inline: false
+            }
         ],
         footer: { text: 'Sistema Registrazioni - Comune di Piacenza RP' },
         timestamp: new Date().toISOString()
@@ -164,15 +189,11 @@ async function sendRegistrationWebhook(user) {
         const response = await fetch(WEBHOOK_REGISTRAZIONE, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username: 'Registrazioni - Piacenza RP',
-                avatar_url: 'https://via.placeholder.com/100/27ae60/FFFFFF?text=REG',
-                embeds: [embed]
-            })
+            body: JSON.stringify({ embeds: [embed] })
         });
         
         if (response.ok) {
-            console.log('✅ Webhook registrazione inviato!');
+            console.log('✅ Webhook registrazione inviato con successo!');
         } else {
             console.error('❌ Errore webhook registrazione:', response.status);
         }
@@ -222,7 +243,7 @@ async function sendLoginWebhook(user) {
 
 // ==================== FORM HANDLERS ====================
 
-// 🔥 LOGIN FORM - CON NOME ROBLOX
+// 🔥 LOGIN FORM - CON DISCORD ID
 document.getElementById('loginForm').onsubmit = async function(e) {
     e.preventDefault();
     const settings = JSON.parse(localStorage.getItem('quickActionsSettings') || '{}');
@@ -231,15 +252,22 @@ document.getElementById('loginForm').onsubmit = async function(e) {
         const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
         const user = users.find(u => u.username === username);
         
-        // Solo admin può accedere
         if (!user || !user.isAdmin) {
             showNotification('Server in Manutenzione', 'Il server è in manutenzione. Solo admin possono accedere.', 'error');
             return;
         }
     }
+    
     const user = document.getElementById('loginUsername').value.trim();
+    const discordId = document.getElementById('loginDiscordID').value.trim();
+    const robloxName = document.getElementById('loginRobloxName').value.trim();
     const pass = document.getElementById('loginPassword').value.trim();
-    const robloxName = document.getElementById('loginRobloxName') ? document.getElementById('loginRobloxName').value.trim() : '';
+    
+    // Valida Discord ID
+    if (!/^[0-9]{17,19}$/.test(discordId)) {
+        showNotification('Errore', 'Discord ID non valido! Deve essere 17-19 numeri.', 'error');
+        return;
+    }
     
     const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
     const found = users.find(u => u.username === user && u.password === pass);
@@ -249,8 +277,9 @@ document.getElementById('loginForm').onsubmit = async function(e) {
         return;
     }
     
-    // ✅ Aggiorna il nome Roblox se fornito
-    if (robloxName && robloxName !== found.robloxName) {
+    // ✅ Aggiorna Discord ID e nome Roblox
+    if (discordId !== found.discordId || robloxName !== found.robloxName) {
+        found.discordId = discordId;
         found.robloxName = robloxName;
         const userIndex = users.findIndex(u => u.username === user);
         users[userIndex] = found;
@@ -261,7 +290,8 @@ document.getElementById('loginForm').onsubmit = async function(e) {
     pendingUser = {
         username: found.username,
         email: found.email,
-        robloxName: found.robloxName || robloxName || 'Non fornito',
+        discordId: found.discordId,
+        robloxName: found.robloxName,
         isAdmin: false,
         isInstitutional: false,
         isLogin: true
@@ -272,7 +302,7 @@ document.getElementById('loginForm').onsubmit = async function(e) {
     document.getElementById('authModal').style.display = 'flex';
 };
 
-// 🔥 REGISTER FORM - CON NOME ROBLOX
+// 🔥 REGISTER FORM - CON DISCORD ID
 document.getElementById('registerForm').onsubmit = async function(e) {
     e.preventDefault();
     const settings = JSON.parse(localStorage.getItem('quickActionsSettings') || '{}');
@@ -280,11 +310,19 @@ document.getElementById('registerForm').onsubmit = async function(e) {
         showNotification('Registrazioni Chiuse', 'Le registrazioni sono temporaneamente disabilitate dallo staff. Riprova più tardi!', 'error');
         return;
     }
+    
     const user = document.getElementById('regUsername').value.trim();
+    const discordId = document.getElementById('regDiscordID').value.trim();
+    const robloxName = document.getElementById('regRobloxName').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const pass = document.getElementById('regPassword').value.trim();
     const conf = document.getElementById('regPasswordConfirm').value.trim();
-    const robloxName = document.getElementById('regRobloxName') ? document.getElementById('regRobloxName').value.trim() : '';
+    
+    // Valida Discord ID
+    if (!/^[0-9]{17,19}$/.test(discordId)) {
+        showNotification('Errore', 'Discord ID non valido! Deve essere 17-19 numeri.', 'error');
+        return;
+    }
     
     if (pass !== conf) {
         showNotification('Errore', 'Le password non coincidono!', 'error');
@@ -307,11 +345,17 @@ document.getElementById('registerForm').onsubmit = async function(e) {
         return;
     }
     
+    if (users.find(u => u.discordId === discordId)) {
+        showNotification('Errore', 'Questo Discord ID è già registrato!', 'error');
+        return;
+    }
+    
     generatedCode = makeCode();
     pendingUser = {
         username: user,
         email: email,
         password: pass,
+        discordId: discordId,
         robloxName: robloxName,
         isAdmin: false,
         isInstitutional: false,
@@ -339,6 +383,7 @@ document.getElementById('adminForm').onsubmit = async function(e) {
     pendingUser = {
         username: user,
         email: email,
+        discordId: '000000000000000000',
         robloxName: 'Admin',
         isAdmin: true,
         isInstitutional: false,
@@ -370,6 +415,7 @@ document.getElementById('institutionalForm').onsubmit = async function(e) {
     
     generatedCode = makeCode();
     pendingUser = validation.userData;
+    pendingUser.discordId = '000000000000000000';
     pendingUser.robloxName = 'Esponente Istituzionale';
     pendingUser.isLogin = true;
     
@@ -395,6 +441,7 @@ document.getElementById('authForm').onsubmit = async function(e) {
             username: pendingUser.username,
             email: pendingUser.email,
             password: pendingUser.password,
+            discordId: pendingUser.discordId,
             robloxName: pendingUser.robloxName,
             registeredDate: pendingUser.registeredDate
         };
@@ -405,6 +452,8 @@ document.getElementById('authForm').onsubmit = async function(e) {
         // 📤 Invia webhook REGISTRAZIONE
         console.log('🚀 Invio webhook registrazione...');
         await sendRegistrationWebhook(newUser);
+        
+        showNotification('Registrazione Completata!', 'Ora puoi tornare su Discord e completare la verifica CAPTCHA!', 'success');
     }
     // 🔥 SE È UN LOGIN
     else if (pendingUser.isLogin) {
@@ -445,4 +494,17 @@ document.getElementById('instID').oninput = function() {
     this.value = this.value.toUpperCase();
 };
 
-console.log('✅ Sistema login con Nome Roblox caricato!');
+// Validazione Discord ID (solo numeri)
+if (document.getElementById('loginDiscordID')) {
+    document.getElementById('loginDiscordID').oninput = function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    };
+}
+
+if (document.getElementById('regDiscordID')) {
+    document.getElementById('regDiscordID').oninput = function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    };
+}
+
+console.log('✅ Sistema login con Discord ID caricato!');
