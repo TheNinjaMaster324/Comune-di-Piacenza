@@ -1,4 +1,4 @@
-// GESTIONE FAZIONI - Sistema Completo
+// GESTIONE FAZIONI - Sistema Completo con UI Google Moduli
 console.log('🔄 Caricamento gestione.js...');
 
 window.addEventListener('load', function() {
@@ -9,6 +9,7 @@ window.addEventListener('load', function() {
         return;
     }
     initializeFactionPanel(user);
+    injectGoogleModuliStyles();
 });
 
 const factionColors = {
@@ -202,50 +203,484 @@ function renderQuestions() {
     if (!list) return;
     
     if (questions.length === 0) {
-        list.innerHTML = '<p style="color: #888;">Nessuna domanda aggiunta.</p>';
+        list.innerHTML = '<p style="color: #888; text-align: center; padding: 40px;">Nessuna domanda aggiunta. Clicca su "+ Aggiungi Domanda" per iniziare.</p>';
         return;
     }
     
-    list.innerHTML = questions.map((q, i) => `
-        <div class="question-card">
-            <h5>Domanda ${i + 1}: ${q.question}</h5>
-            <p><strong>Tipo:</strong> ${q.type === 'open' ? 'Risposta Aperta' : q.type === 'closed' ? 'Risposta Chiusa' : 'Scelta Multipla'}</p>
-            ${q.options ? '<p><strong>Opzioni:</strong> ' + q.options.join(', ') + '</p>' : ''}
-            <p><strong>Punteggio Max:</strong> ${q.maxScore || 'N/A'}</p>
-            <p><strong>Obbligatoria:</strong> ${q.required ? 'Sì' : 'No'}</p>
-            <div class="question-options">
-                <button onclick="deleteQuestion(${i})" class="btn-danger">🗑️ Elimina</button>
+    list.innerHTML = questions.map((q, i) => {
+        const typeIcons = {
+            'short': '📝',
+            'paragraph': '📄',
+            'multiple': '⭕',
+            'checkboxes': '☑️',
+            'dropdown': '🔽',
+            'linear': '📊',
+            'grid': '📊',
+            'date': '📅',
+            'time': '🕐',
+            'file': '📎'
+        };
+        
+        const typeNames = {
+            'short': 'Risposta breve',
+            'paragraph': 'Paragrafo',
+            'multiple': 'Scelta multipla',
+            'checkboxes': 'Caselle di controllo',
+            'dropdown': 'Elenco a discesa',
+            'linear': 'Scala lineare',
+            'grid': 'Griglia a scelta multipla',
+            'date': 'Data',
+            'time': 'Ora',
+            'file': 'Caricamento file'
+        };
+        
+        return `
+            <div class="gm-question-card" style="animation: slideIn 0.3s ease ${i * 0.05}s both;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <span style="font-size: 24px;">${typeIcons[q.type] || '❓'}</span>
+                            <h4 style="margin: 0; color: #202124; font-size: 16px;">${q.question}</h4>
+                            ${q.required ? '<span class="gm-required-badge">* Obbligatoria</span>' : ''}
+                        </div>
+                        <p style="margin: 5px 0; color: #5f6368; font-size: 14px;">${typeNames[q.type] || q.type}</p>
+                        ${q.options && q.options.length > 0 ? `
+                            <div style="margin-top: 10px; padding-left: 34px;">
+                                ${q.options.map(opt => `<div style="color: #5f6368; font-size: 14px; margin: 5px 0;">• ${opt}</div>`).join('')}
+                            </div>
+                        ` : ''}
+                        ${q.maxScore ? `<div style="margin-top: 10px; padding: 8px 12px; background: #e8f0fe; border-radius: 8px; display: inline-block;"><strong style="color: #1a73e8;">📊 Punteggio max: ${q.maxScore}</strong></div>` : ''}
+                    </div>
+                    <button onclick="deleteQuestion(${i})" class="gm-icon-btn" title="Elimina domanda">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#5f6368">
+                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
+// ==================== SISTEMA CREAZIONE DOMANDE STILE GOOGLE MODULI ====================
 function addQuestion() {
-    const type = prompt('Tipo di domanda:\n\n1 = Risposta Aperta\n2 = Risposta Chiusa (Sì/No)\n3 = Scelta Multipla\n\nInserisci numero:');
-    if (!type || !['1', '2', '3'].includes(type)) return;
+    showGoogleModuliModal();
+}
+
+function showGoogleModuliModal() {
+    const modal = document.createElement('div');
+    modal.id = 'gmModal';
+    modal.className = 'gm-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: gmFadeIn 0.3s ease;
+    `;
     
-    const question = prompt('Testo della domanda:');
-    if (!question) return;
+    modal.innerHTML = `
+        <div class="gm-modal-content" style="animation: gmSlideUp 0.4s ease;">
+            <div class="gm-modal-header">
+                <h2 style="margin: 0; color: #202124; font-size: 22px; font-weight: 400;">Nuova domanda</h2>
+                <button onclick="closeGMModal()" class="gm-close-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#5f6368">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="gm-modal-body">
+                <!-- Step 1: Testo Domanda -->
+                <div id="gmStep1" class="gm-step active">
+                    <label class="gm-label">Domanda</label>
+                    <input type="text" id="gmQuestionText" class="gm-input" placeholder="Inserisci la tua domanda" autofocus>
+                    <div class="gm-hint">Questa è la domanda che verrà mostrata ai candidati</div>
+                </div>
+                
+                <!-- Step 2: Tipo Domanda -->
+                <div id="gmStep2" class="gm-step">
+                    <label class="gm-label">Tipo di domanda</label>
+                    <div class="gm-type-grid">
+                        <div class="gm-type-option" onclick="selectQuestionType('short')">
+                            <div class="gm-type-icon">📝</div>
+                            <div class="gm-type-name">Risposta breve</div>
+                            <div class="gm-type-desc">Testo su una riga</div>
+                        </div>
+                        <div class="gm-type-option" onclick="selectQuestionType('paragraph')">
+                            <div class="gm-type-icon">📄</div>
+                            <div class="gm-type-name">Paragrafo</div>
+                            <div class="gm-type-desc">Testo su più righe</div>
+                        </div>
+                        <div class="gm-type-option" onclick="selectQuestionType('multiple')">
+                            <div class="gm-type-icon">⭕</div>
+                            <div class="gm-type-name">Scelta multipla</div>
+                            <div class="gm-type-desc">Scegli un'opzione</div>
+                        </div>
+                        <div class="gm-type-option" onclick="selectQuestionType('checkboxes')">
+                            <div class="gm-type-icon">☑️</div>
+                            <div class="gm-type-name">Caselle</div>
+                            <div class="gm-type-desc">Scegli più opzioni</div>
+                        </div>
+                        <div class="gm-type-option" onclick="selectQuestionType('dropdown')">
+                            <div class="gm-type-icon">🔽</div>
+                            <div class="gm-type-name">Elenco</div>
+                            <div class="gm-type-desc">Menu a tendina</div>
+                        </div>
+                        <div class="gm-type-option" onclick="selectQuestionType('linear')">
+                            <div class="gm-type-icon">📊</div>
+                            <div class="gm-type-name">Scala lineare</div>
+                            <div class="gm-type-desc">1-5, 1-10, etc.</div>
+                        </div>
+                        <div class="gm-type-option" onclick="selectQuestionType('grid')">
+                            <div class="gm-type-icon">📊</div>
+                            <div class="gm-type-name">Griglia</div>
+                            <div class="gm-type-desc">Tabella di opzioni</div>
+                        </div>
+                        <div class="gm-type-option" onclick="selectQuestionType('date')">
+                            <div class="gm-type-icon">📅</div>
+                            <div class="gm-type-name">Data</div>
+                            <div class="gm-type-desc">Seleziona data</div>
+                        </div>
+                        <div class="gm-type-option" onclick="selectQuestionType('time')">
+                            <div class="gm-type-icon">🕐</div>
+                            <div class="gm-type-name">Ora</div>
+                            <div class="gm-type-desc">Seleziona ora</div>
+                        </div>
+                        <div class="gm-type-option" onclick="selectQuestionType('file')">
+                            <div class="gm-type-icon">📎</div>
+                            <div class="gm-type-name">File</div>
+                            <div class="gm-type-desc">Carica documento</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Opzioni (se tipo lo richiede) -->
+                <div id="gmStep3" class="gm-step">
+                    <div id="gmOptionsContainer"></div>
+                </div>
+                
+                <!-- Step 4: Impostazioni -->
+                <div id="gmStep4" class="gm-step">
+                    <label class="gm-label">Impostazioni</label>
+                    
+                    <div class="gm-setting-row">
+                        <label class="gm-checkbox-label">
+                            <input type="checkbox" id="gmRequired" class="gm-checkbox">
+                            <span>Domanda obbligatoria</span>
+                        </label>
+                    </div>
+                    
+                    <div class="gm-setting-row">
+                        <label class="gm-checkbox-label">
+                            <input type="checkbox" id="gmScored" class="gm-checkbox" onchange="toggleScoreInput()">
+                            <span>Valuta questa domanda</span>
+                        </label>
+                    </div>
+                    
+                    <div id="gmScoreInput" style="display: none; margin-top: 15px;">
+                        <label class="gm-label">Punteggio massimo</label>
+                        <input type="number" id="gmMaxScore" class="gm-input" min="0" step="1" placeholder="Es: 10">
+                        <div class="gm-hint">Inserisci solo numeri interi</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gm-modal-footer">
+                <div class="gm-step-indicator" id="gmStepIndicator">
+                    <span class="gm-step-dot active"></span>
+                    <span class="gm-step-dot"></span>
+                    <span class="gm-step-dot"></span>
+                    <span class="gm-step-dot"></span>
+                </div>
+                <div class="gm-footer-actions">
+                    <button id="gmBackBtn" onclick="gmPrevStep()" class="gm-btn-secondary" style="display: none;">Indietro</button>
+                    <button id="gmNextBtn" onclick="gmNextStep()" class="gm-btn-primary">Avanti</button>
+                    <button id="gmSaveBtn" onclick="saveGMQuestion()" class="gm-btn-primary" style="display: none;">Salva Domanda</button>
+                </div>
+            </div>
+        </div>
+    `;
     
-    const required = confirm('Domanda obbligatoria?');
-    const maxScore = prompt('Punteggio massimo (lascia vuoto per nessun punteggio):');
-    
-    const newQ = {
-        question: question,
-        type: type === '1' ? 'open' : type === '2' ? 'closed' : 'multiple',
-        required: required,
-        maxScore: maxScore ? parseInt(maxScore) : null
-    };
-    
-    if (type === '3') {
-        const opts = prompt('Opzioni separate da virgola:');
-        if (opts) newQ.options = opts.split(',').map(o => o.trim());
+    document.body.appendChild(modal);
+    document.getElementById('gmQuestionText').focus();
+}
+
+let currentGMStep = 1;
+let selectedQuestionType = null;
+
+function gmNextStep() {
+    if (currentGMStep === 1) {
+        const questionText = document.getElementById('gmQuestionText').value.trim();
+        if (!questionText) {
+            showGMNotification('error', 'Inserisci il testo della domanda!');
+            return;
+        }
     }
     
-    questions.push(newQ);
+    if (currentGMStep === 2 && !selectedQuestionType) {
+        showGMNotification('error', 'Seleziona un tipo di domanda!');
+        return;
+    }
+    
+    document.getElementById(`gmStep${currentGMStep}`).classList.remove('active');
+    currentGMStep++;
+    
+    // Salta step 3 se non servono opzioni
+    if (currentGMStep === 3 && !['multiple', 'checkboxes', 'dropdown', 'linear', 'grid'].includes(selectedQuestionType)) {
+        currentGMStep++;
+    }
+    
+    if (currentGMStep === 3) {
+        setupOptionsStep();
+    }
+    
+    document.getElementById(`gmStep${currentGMStep}`).classList.add('active');
+    updateGMNavigation();
+}
+
+function gmPrevStep() {
+    document.getElementById(`gmStep${currentGMStep}`).classList.remove('active');
+    currentGMStep--;
+    
+    // Salta step 3 se non servono opzioni
+    if (currentGMStep === 3 && !['multiple', 'checkboxes', 'dropdown', 'linear', 'grid'].includes(selectedQuestionType)) {
+        currentGMStep--;
+    }
+    
+    document.getElementById(`gmStep${currentGMStep}`).classList.add('active');
+    updateGMNavigation();
+}
+
+function updateGMNavigation() {
+    const backBtn = document.getElementById('gmBackBtn');
+    const nextBtn = document.getElementById('gmNextBtn');
+    const saveBtn = document.getElementById('gmSaveBtn');
+    
+    backBtn.style.display = currentGMStep > 1 ? 'inline-block' : 'none';
+    nextBtn.style.display = currentGMStep < 4 ? 'inline-block' : 'none';
+    saveBtn.style.display = currentGMStep === 4 ? 'inline-block' : 'none';
+    
+    // Update step indicator
+    document.querySelectorAll('.gm-step-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i < currentGMStep);
+    });
+}
+
+function selectQuestionType(type) {
+    selectedQuestionType = type;
+    document.querySelectorAll('.gm-type-option').forEach(opt => opt.classList.remove('selected'));
+    event.target.closest('.gm-type-option').classList.add('selected');
+    setTimeout(() => gmNextStep(), 300);
+}
+
+function setupOptionsStep() {
+    const container = document.getElementById('gmOptionsContainer');
+    
+    if (selectedQuestionType === 'multiple' || selectedQuestionType === 'checkboxes' || selectedQuestionType === 'dropdown') {
+        container.innerHTML = `
+            <label class="gm-label">Opzioni</label>
+            <div id="gmOptionsList"></div>
+            <button onclick="addGMOption()" class="gm-btn-text">+ Aggiungi opzione</button>
+        `;
+        addGMOption();
+        addGMOption();
+    } else if (selectedQuestionType === 'linear') {
+        container.innerHTML = `
+            <label class="gm-label">Scala</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label class="gm-label">Da</label>
+                    <select id="gmScaleFrom" class="gm-input">
+                        <option value="0">0</option>
+                        <option value="1" selected>1</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="gm-label">A</label>
+                    <select id="gmScaleTo" class="gm-input">
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+            </div>
+        `;
+    } else if (selectedQuestionType === 'grid') {
+        container.innerHTML = `
+            <label class="gm-label">Righe (domande)</label>
+            <div id="gmRowsList"></div>
+            <button onclick="addGMRow()" class="gm-btn-text">+ Aggiungi riga</button>
+            
+            <label class="gm-label" style="margin-top: 20px;">Colonne (opzioni)</label>
+            <div id="gmColumnsList"></div>
+            <button onclick="addGMColumn()" class="gm-btn-text">+ Aggiungi colonna</button>
+        `;
+        addGMRow();
+        addGMColumn();
+        addGMColumn();
+    }
+}
+
+let gmOptionCounter = 0;
+function addGMOption() {
+    const list = document.getElementById('gmOptionsList');
+    const id = gmOptionCounter++;
+    const div = document.createElement('div');
+    div.className = 'gm-option-row';
+    div.innerHTML = `
+        <span class="gm-option-bullet">${selectedQuestionType === 'checkboxes' ? '☐' : '○'}</span>
+        <input type="text" class="gm-input" placeholder="Opzione ${id + 1}" id="gmOpt${id}">
+        <button onclick="this.parentElement.remove()" class="gm-icon-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#5f6368">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
+    `;
+    list.appendChild(div);
+}
+
+let gmRowCounter = 0;
+function addGMRow() {
+    const list = document.getElementById('gmRowsList');
+    const id = gmRowCounter++;
+    const div = document.createElement('div');
+    div.className = 'gm-option-row';
+    div.innerHTML = `
+        <input type="text" class="gm-input" placeholder="Riga ${id + 1}" id="gmRow${id}">
+        <button onclick="this.parentElement.remove()" class="gm-icon-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#5f6368">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
+    `;
+    list.appendChild(div);
+}
+
+let gmColumnCounter = 0;
+function addGMColumn() {
+    const list = document.getElementById('gmColumnsList');
+    const id = gmColumnCounter++;
+    const div = document.createElement('div');
+    div.className = 'gm-option-row';
+    div.innerHTML = `
+        <input type="text" class="gm-input" placeholder="Colonna ${id + 1}" id="gmCol${id}">
+        <button onclick="this.parentElement.remove()" class="gm-icon-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#5f6368">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
+    `;
+    list.appendChild(div);
+}
+
+function toggleScoreInput() {
+    const scoreInput = document.getElementById('gmScoreInput');
+    const checked = document.getElementById('gmScored').checked;
+    scoreInput.style.display = checked ? 'block' : 'none';
+}
+
+function saveGMQuestion() {
+    const questionText = document.getElementById('gmQuestionText').value.trim();
+    const required = document.getElementById('gmRequired').checked;
+    const scored = document.getElementById('gmScored').checked;
+    const maxScore = scored ? parseInt(document.getElementById('gmMaxScore').value) || 0 : null;
+    
+    // Validazione punteggio
+    if (scored && (isNaN(maxScore) || maxScore < 0)) {
+        showGMNotification('error', 'Inserisci un punteggio valido (numero intero positivo)!');
+        return;
+    }
+    
+    const newQuestion = {
+        question: questionText,
+        type: selectedQuestionType,
+        required: required,
+        maxScore: maxScore
+    };
+    
+    // Raccogli opzioni in base al tipo
+    if (selectedQuestionType === 'multiple' || selectedQuestionType === 'checkboxes' || selectedQuestionType === 'dropdown') {
+        const options = [];
+        document.querySelectorAll('#gmOptionsList input').forEach(input => {
+            if (input.value.trim()) options.push(input.value.trim());
+        });
+        if (options.length === 0) {
+            showGMNotification('error', 'Aggiungi almeno un\'opzione!');
+            return;
+        }
+        newQuestion.options = options;
+    } else if (selectedQuestionType === 'linear') {
+        newQuestion.scaleFrom = parseInt(document.getElementById('gmScaleFrom').value);
+        newQuestion.scaleTo = parseInt(document.getElementById('gmScaleTo').value);
+    } else if (selectedQuestionType === 'grid') {
+        const rows = [];
+        const columns = [];
+        document.querySelectorAll('#gmRowsList input').forEach(input => {
+            if (input.value.trim()) rows.push(input.value.trim());
+        });
+        document.querySelectorAll('#gmColumnsList input').forEach(input => {
+            if (input.value.trim()) columns.push(input.value.trim());
+        });
+        if (rows.length === 0 || columns.length === 0) {
+            showGMNotification('error', 'Aggiungi almeno una riga e una colonna!');
+            return;
+        }
+        newQuestion.rows = rows;
+        newQuestion.columns = columns;
+    }
+    
+    questions.push(newQuestion);
     saveQuestions();
     renderQuestions();
-    alert('✅ Domanda aggiunta!');
+    closeGMModal();
+    showGMNotification('success', '✅ Domanda aggiunta con successo!');
+}
+
+function showGMNotification(type, message) {
+    const notification = document.createElement('div');
+    notification.className = 'gm-notification';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#f44336' : '#4caf50'};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10001;
+        animation: gmSlideIn 0.3s ease;
+        font-weight: 500;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.animation = 'gmSlideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+function closeGMModal() {
+    const modal = document.getElementById('gmModal');
+    if (modal) {
+        modal.style.animation = 'gmFadeOut 0.3s ease';
+        setTimeout(() => modal.remove(), 300);
+    }
+    currentGMStep = 1;
+    selectedQuestionType = null;
+    gmOptionCounter = 0;
+    gmRowCounter = 0;
+    gmColumnCounter = 0;
 }
 
 function deleteQuestion(index) {
@@ -253,6 +688,7 @@ function deleteQuestion(index) {
         questions.splice(index, 1);
         saveQuestions();
         renderQuestions();
+        showGMNotification('success', '✅ Domanda eliminata!');
     }
 }
 
@@ -261,6 +697,7 @@ function saveQuestions() {
     localStorage.setItem(`questions_${user.faction}`, JSON.stringify(questions));
 }
 
+// ==================== RESTO DEL CODICE (IDENTICO) ====================
 function loadApplications(faction) {
     const applications = JSON.parse(localStorage.getItem(`applications_${faction}`) || '[]');
     const list = document.getElementById('applicationsList');
@@ -530,4 +967,310 @@ function toggleMobileMenu() {
     if (navMenu) navMenu.classList.toggle('active');
 }
 
-console.log('✅ Gestione Fazioni caricata completamente!');
+// ==================== STILI GOOGLE MODULI ====================
+function injectGoogleModuliStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes gmFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes gmFadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        @keyframes gmSlideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes gmSlideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes gmSlideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100px); opacity: 0; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .gm-modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 650px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+        }
+        
+        .gm-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .gm-close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        
+        .gm-close-btn:hover {
+            background: #f1f3f4;
+        }
+        
+        .gm-modal-body {
+            padding: 24px;
+            min-height: 300px;
+        }
+        
+        .gm-step {
+            display: none;
+        }
+        
+        .gm-step.active {
+            display: block;
+            animation: gmSlideUp 0.4s ease;
+        }
+        
+        .gm-label {
+            display: block;
+            color: #202124;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .gm-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        
+        .gm-input:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
+        }
+        
+        .gm-hint {
+            color: #5f6368;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .gm-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .gm-type-option {
+            padding: 20px 16px;
+            border: 2px solid #dadce0;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .gm-type-option:hover {
+            border-color: #1a73e8;
+            background: #f8f9fa;
+        }
+        
+        .gm-type-option.selected {
+            border-color: #1a73e8;
+            background: #e8f0fe;
+        }
+        
+        .gm-type-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .gm-type-name {
+            color: #202124;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .gm-type-desc {
+            color: #5f6368;
+            font-size: 11px;
+        }
+        
+        .gm-option-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .gm-option-bullet {
+            font-size: 20px;
+            color: #5f6368;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .gm-btn-text {
+            background: none;
+            border: none;
+            color: #1a73e8;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 8px 0;
+            transition: background 0.2s;
+        }
+        
+        .gm-btn-text:hover {
+            background: rgba(26, 115, 232, 0.04);
+        }
+        
+        .gm-icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        
+        .gm-icon-btn:hover {
+            background: #f1f3f4;
+        }
+        
+        .gm-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        
+        .gm-checkbox-label:hover {
+            background: #f8f9fa;
+        }
+        
+        .gm-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .gm-setting-row {
+            margin-bottom: 16px;
+        }
+        
+        .gm-modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .gm-step-indicator {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .gm-step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #dadce0;
+            transition: all 0.3s;
+        }
+        
+        .gm-step-dot.active {
+            background: #1a73e8;
+            width: 24px;
+            border-radius: 4px;
+        }
+        
+        .gm-footer-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .gm-btn-primary, .gm-btn-secondary {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        
+        .gm-btn-primary {
+            background: #1a73e8;
+            color: white;
+        }
+        
+        .gm-btn-primary:hover {
+            background: #1557b0;
+        }
+        
+        .gm-btn-secondary {
+            background: white;
+            color: #1a73e8;
+            border: 1px solid #dadce0;
+        }
+        
+        .gm-btn-secondary:hover {
+            background: #f8f9fa;
+        }
+        
+        .gm-question-card {
+            background: white;
+            border: 1px solid #dadce0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+        
+        .gm-question-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-color: #1a73e8;
+        }
+        
+        .gm-required-badge {
+            background: #e8f0fe;
+            color: #1a73e8;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+console.log('✅ Gestione Fazioni caricata completamente con Google Moduli UI!');
