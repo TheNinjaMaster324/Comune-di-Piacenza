@@ -360,7 +360,8 @@
 
             try {
                 // Invia al webhook
-                const response = await fetch('/api/appeal', {
+                const response = await fetch('http://TUO_IP_BOT:3000/api/appeal', {
+
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
