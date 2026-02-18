@@ -5,12 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ricorso - Comune di Piacenza</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -32,20 +28,11 @@
         }
 
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+        .header { text-align: center; margin-bottom: 30px; }
 
         .logo {
             width: 80px;
@@ -59,16 +46,8 @@
             font-size: 40px;
         }
 
-        h1 {
-            color: #2d3748;
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: #718096;
-            font-size: 14px;
-        }
+        h1 { color: #2d3748; font-size: 28px; margin-bottom: 10px; }
+        .subtitle { color: #718096; font-size: 14px; }
 
         .case-info {
             background: #f7fafc;
@@ -78,19 +57,10 @@
             border-radius: 8px;
         }
 
-        .case-info p {
-            margin: 5px 0;
-            color: #4a5568;
-            font-size: 14px;
-        }
+        .case-info p { margin: 5px 0; color: #4a5568; font-size: 14px; }
+        .case-info strong { color: #2d3748; }
 
-        .case-info strong {
-            color: #2d3748;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
+        .form-group { margin-bottom: 25px; }
 
         label {
             display: block;
@@ -100,13 +70,9 @@
             font-size: 14px;
         }
 
-        .required {
-            color: #e53e3e;
-        }
+        .required { color: #e53e3e; }
 
-        input[type="text"],
-        input[type="url"],
-        textarea {
+        input[type="url"], textarea {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid #e2e8f0;
@@ -116,30 +82,15 @@
             font-family: inherit;
         }
 
-        input:focus,
-        textarea:focus {
+        input:focus, textarea:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        .char-count {
-            text-align: right;
-            font-size: 12px;
-            color: #a0aec0;
-            margin-top: 5px;
-        }
-
-        .helper-text {
-            font-size: 12px;
-            color: #718096;
-            margin-top: 5px;
-        }
+        textarea { resize: vertical; min-height: 120px; }
+        .char-count { text-align: right; font-size: 12px; color: #a0aec0; margin-top: 5px; }
+        .helper-text { font-size: 12px; color: #718096; margin-top: 5px; }
 
         .submit-btn {
             width: 100%;
@@ -155,56 +106,20 @@
             margin-top: 10px;
         }
 
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); }
+        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:disabled { background: #cbd5e0; cursor: not-allowed; transform: none; }
 
-        .submit-btn:active {
-            transform: translateY(0);
-        }
+        .error { color: #e53e3e; font-size: 12px; margin-top: 5px; display: none; }
 
-        .submit-btn:disabled {
-            background: #cbd5e0;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .error {
-            color: #e53e3e;
-            font-size: 12px;
-            margin-top: 5px;
-            display: none;
-        }
-
-        .success-message {
-            display: none;
-            text-align: center;
-            padding: 30px;
-        }
-
-        .success-message .icon {
-            font-size: 60px;
-            margin-bottom: 20px;
-        }
-
-        .success-message h2 {
-            color: #2d3748;
-            margin-bottom: 10px;
-        }
-
-        .success-message p {
-            color: #718096;
-        }
+        .success-message { display: none; text-align: center; padding: 30px; }
+        .success-message .icon { font-size: 60px; margin-bottom: 20px; }
+        .success-message h2 { color: #2d3748; margin-bottom: 10px; }
+        .success-message p { color: #718096; }
 
         @media (max-width: 600px) {
-            .container {
-                padding: 25px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
+            .container { padding: 25px; }
+            h1 { font-size: 24px; }
         }
     </style>
 </head>
@@ -224,54 +139,33 @@
 
         <form id="appealForm">
             <div class="form-group">
-                <label for="reason">
-                    Motivo del ricorso <span class="required">*</span>
-                </label>
+                <label for="reason">Motivo del ricorso <span class="required">*</span></label>
                 <textarea 
                     id="reason" 
-                    name="reason" 
                     placeholder="Spiega dettagliatamente perché ritieni ingiusta questa sanzione..."
                     required
                     minlength="20"
                     maxlength="1000"
                 ></textarea>
-                <div class="char-count">
-                    <span id="charCount">0</span>/1000 caratteri (minimo 20)
-                </div>
+                <div class="char-count"><span id="charCount">0</span>/1000 caratteri (minimo 20)</div>
                 <div class="error" id="reasonError">Il motivo deve contenere almeno 20 caratteri</div>
             </div>
 
             <div class="form-group">
-                <label for="evidence">
-                    Prove (Link)
-                </label>
-                <input 
-                    type="url" 
-                    id="evidence" 
-                    name="evidence" 
-                    placeholder="https://imgur.com/abc123 (opzionale)"
-                />
-                <p class="helper-text">Link a screenshot, video o altre prove (es. Imgur, YouTube, Google Drive)</p>
+                <label for="evidence">Prove - Link Immagini</label>
+                <input type="url" id="evidence" placeholder="https://imgur.com/abc123 (opzionale)" />
+                <p class="helper-text">Link a screenshot (es. Imgur, ImgBB)</p>
                 <div class="error" id="evidenceError">Inserisci un link valido</div>
             </div>
 
             <div class="form-group">
-                <label for="evidenceVideo">
-                    Video prova (Link)
-                </label>
-                <input 
-                    type="url" 
-                    id="evidenceVideo" 
-                    name="evidenceVideo" 
-                    placeholder="https://youtube.com/... (opzionale)"
-                />
+                <label for="evidenceVideo">Prove - Link Video</label>
+                <input type="url" id="evidenceVideo" placeholder="https://youtube.com/... (opzionale)" />
                 <p class="helper-text">Link a video YouTube, Streamable, ecc.</p>
                 <div class="error" id="videoError">Inserisci un link valido</div>
             </div>
 
-            <button type="submit" class="submit-btn" id="submitBtn">
-                📨 Invia Ricorso
-            </button>
+            <button type="submit" class="submit-btn" id="submitBtn">📨 Invia Ricorso</button>
         </form>
 
         <div class="success-message" id="successMessage">
@@ -282,7 +176,9 @@
     </div>
 
     <script>
-        // Ottieni parametri URL
+        // ═══════════════════════════════════════════
+        // PARAMETRI URL
+        // ═══════════════════════════════════════════
         const urlParams = new URLSearchParams(window.location.search);
         const caseId = urlParams.get('case_id');
         const caseType = urlParams.get('type');
@@ -290,7 +186,7 @@
         const userName = urlParams.get('user_name');
         const guildId = urlParams.get('guild_id');
 
-        // Popola info caso
+        // Popola info
         if (caseId && caseType && userId && userName && guildId) {
             document.getElementById('caseId').textContent = '#' + caseId;
             document.getElementById('caseType').textContent = caseType.toUpperCase();
@@ -301,18 +197,14 @@
         }
 
         // Character counter
-        const reasonTextarea = document.getElementById('reason');
-        const charCount = document.getElementById('charCount');
-
-        reasonTextarea.addEventListener('input', function() {
-            charCount.textContent = this.value.length;
+        document.getElementById('reason').addEventListener('input', function() {
+            document.getElementById('charCount').textContent = this.value.length;
         });
 
-        // Form validation e submit
-        const form = document.getElementById('appealForm');
-        const submitBtn = document.getElementById('submitBtn');
-
-        form.addEventListener('submit', async function(e) {
+        // ═══════════════════════════════════════════
+        // FORM SUBMIT
+        // ═══════════════════════════════════════════
+        document.getElementById('appealForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             // Reset errors
@@ -322,7 +214,7 @@
             const evidence = document.getElementById('evidence').value.trim();
             const evidenceVideo = document.getElementById('evidenceVideo').value.trim();
 
-            // Validation
+            // Validazione
             let valid = true;
 
             if (reason.length < 20) {
@@ -343,34 +235,46 @@
             if (!valid) return;
 
             // Disable button
+            const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Invio in corso...';
 
-            // Prepara dati
-            const appealData = {
-                case_id: caseId,
-                type: caseType,
-                user_id: userId,
-                user_name: userName,
-                guild_id: guildId,
-                reason: reason,
-                evidence: evidence || 'Nessuna prova fornita',
-                evidence_video: evidenceVideo || 'Nessun video fornito'
-            };
-
             try {
-                // Invia al webhook
-                const response = await fetch('http://TUO_IP_BOT:3000/api/appeal', {
+                // ═══════════════════════════════════════════
+                // ✅ WEBHOOK DISCORD - SOSTITUISCI CON IL TUO!
+                // ═══════════════════════════════════════════
+                const webhookUrl = 'https://discord.com/api/webhooks/1473714851284123780/C8d6jAih6oFIfi80ojyM2-mudgH9E7rMsSZM5_7iiEBJDz2lwEJvzCWqKA6txJbFsMyO';
+                
+                // Prepara prove
+                let proveText = '';
+                if (evidence) proveText += `🖼️ ${evidence}\n`;
+                if (evidenceVideo) proveText += `🎥 ${evidenceVideo}`;
+                if (!proveText) proveText = 'Nessuna prova fornita';
 
+                // Invia webhook (messaggio TEMPORANEO che il bot vede e cancella)
+                const response = await fetch(webhookUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(appealData)
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: `APPEAL_WEB|${caseId}|${userId}|${guildId}|${caseType}`,
+                        embeds: [{
+                            color: 0xF39C12,
+                            title: `📩 Ricorso Web - ${caseType.toUpperCase()}`,
+                            fields: [
+                                { name: '🆔 Case ID', value: `#${caseId}`, inline: true },
+                                { name: '👤 Utente', value: `${userName}\n<@${userId}>`, inline: true },
+                                { name: '🏷️ Tipo', value: caseType.toUpperCase(), inline: true },
+                                { name: '📩 Motivo Ricorso', value: reason, inline: false },
+                                { name: '🔗 Prove', value: proveText, inline: false }
+                            ],
+                            footer: { text: `User ID: ${userId}` },
+                            timestamp: new Date().toISOString()
+                        }]
+                    })
                 });
 
                 if (response.ok) {
-                    // Mostra messaggio successo
+                    // Mostra successo
                     document.getElementById('appealForm').style.display = 'none';
                     document.getElementById('caseInfo').style.display = 'none';
                     document.getElementById('successMessage').style.display = 'block';
