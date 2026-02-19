@@ -307,15 +307,15 @@
 
                 <div class="form-group">
                     <label>
-                        Prove (Screenshot, Video, etc.) <span class="required">*</span>
+                        Prove (Screenshot, Video, etc.)
                     </label>
                     <div class="file-upload-area" id="dropZone">
                         <div class="upload-icon">📎</div>
-                        <div class="upload-text">Clicca o trascina i file qui</div>
-                        <div class="upload-hint">Formati supportati: PNG, JPG, MP4, MOV (Max 8MB ciascuno)</div>
+                        <div class="upload-text">Clicca o trascina i file qui (facoltativo)</div>
+                        <div class="upload-hint">Formati supportati: PNG, JPG, MP4, MOV (Max 32MB immagini, 100MB video)</div>
                     </div>
                     <input type="file" id="fileInput" accept="image/*,video/*" multiple>
-                    <div class="helper-text">Carica almeno una prova (screenshot, video, registrazione, etc.)</div>
+                    <div class="helper-text">📌 Facoltativo: carica prove se disponibili (migliora le chance di accettazione)</div>
                     <div id="filePreview" class="file-preview"></div>
                 </div>
 
@@ -359,7 +359,8 @@
         // ═══════════════════════════════════════════
         const WEBHOOK_URL = 'https://discord.com/api/webhooks/1473714851284123780/C8d6jAih6oFIfi80ojyM2-mudgH9E7rMsSZM5_7iiEBJDz2lwEJvzCWqKA6txJbFsMyO';
         const STATUS_PAGE_URL = 'https://theninjamaster324.github.io/Comune-di-Piacenza/appeal-status.html';
-        // ↑ WEBHOOK GIÀ CONFIGURATO!
+        const IMGBB_API_KEY = '5cbd206261a1b8340b7a826e97316a64';
+        // ↑ WEBHOOK E IMGBB GIÀ CONFIGURATI!
 
         // ═══════════════════════════════════════════
         // 🔧 PARAMETRI URL
@@ -416,10 +417,25 @@
 
         function handleFiles(files) {
             Array.from(files).forEach(file => {
-                if (file.size > 8 * 1024 * 1024) {
-                    showError(`File troppo grande: ${file.name} (Max 8MB)`);
+                const isImage = file.type.startsWith('image/');
+                const isVideo = file.type.startsWith('video/');
+                
+                if (!isImage && !isVideo) {
+                    showError(`${file.name} non è un'immagine o video valido!`);
                     return;
                 }
+                
+                // Limiti dimensione
+                if (isImage && file.size > 32 * 1024 * 1024) {
+                    showError(`${file.name} supera i 32MB!`);
+                    return;
+                }
+                
+                if (isVideo && file.size > 100 * 1024 * 1024) {
+                    showError(`${file.name} supera i 100MB!`);
+                    return;
+                }
+                
                 selectedFiles.push(file);
             });
             updateFilePreview();
@@ -428,10 +444,11 @@
         function updateFilePreview() {
             filePreview.innerHTML = '';
             selectedFiles.forEach((file, index) => {
+                const isVideo = file.type.startsWith('video/');
                 const fileItem = document.createElement('div');
                 fileItem.className = 'file-item';
                 fileItem.innerHTML = `
-                    <span>📄 ${file.name}</span>
+                    <span>${isVideo ? '🎥' : '📄'} ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                     <span class="remove-file" onclick="removeFile(${index})">✖</span>
                 `;
                 filePreview.appendChild(fileItem);
@@ -462,25 +479,31 @@
                 return;
             }
 
-            if (selectedFiles.length === 0) {
-                showError('Carica almeno una prova!');
-                return;
-            }
-
             // Mostra loading
             submitBtn.disabled = true;
             loadingBox.style.display = 'block';
             errorBox.classList.remove('show');
 
             try {
-                // Upload file
+                // Upload file (se presenti)
                 const fileUrls = [];
-                for (const file of selectedFiles) {
-                    const url = await uploadFile(file);
-                    if (url) fileUrls.push(url);
+                if (selectedFiles.length > 0) {
+                    for (const file of selectedFiles) {
+                        try {
+                            const url = await uploadFile(file);
+                            if (url) fileUrls.push(url);
+                        } catch (uploadError) {
+                            console.error('Errore upload file:', uploadError);
+                            // Continua anche se un file fallisce
+                        }
+                    }
                 }
 
                 // Invia webhook nel formato che il bot si aspetta
+                const proveText = fileUrls.length > 0 
+                    ? fileUrls.join('\n') 
+                    : '⚠️ Nessuna prova fornita (il ricorso potrebbe essere più difficile da valutare)';
+                
                 const webhookData = {
                     content: `APPEAL_WEB|${caseId}|${userId}|1246497457198727189|${caseType.toLowerCase()}`,
                     embeds: [{
@@ -491,7 +514,7 @@
                             { name: '🆔 User ID', value: userId, inline: true },
                             { name: '🏷️ Tipo', value: caseType, inline: true },
                             { name: '📝 Motivo Ricorso', value: reasonTextarea.value, inline: false },
-                            { name: '📎 Prove', value: fileUrls.join('\n') || 'Nessuna prova fornita', inline: false }
+                            { name: '📎 Prove', value: proveText, inline: false }
                         ],
                         timestamp: new Date().toISOString()
                     }]
@@ -525,31 +548,65 @@
         });
 
         // ═══════════════════════════════════════════
-        // 📤 UPLOAD FILE (ImgBB / Litterbox)
+        // 📤 UPLOAD FILE (ImgBB per immagini, Litterbox per video)
         // ═══════════════════════════════════════════
         async function uploadFile(file) {
             const isImage = file.type.startsWith('image/');
+            const isVideo = file.type.startsWith('video/');
+            
+            if (!isImage && !isVideo) {
+                console.warn('File ignorato (non è immagine o video):', file.name);
+                return null;
+            }
             
             if (isImage) {
-                // ImgBB per immagini
-                const formData = new FormData();
-                formData.append('image', file);
-                const response = await fetch(`https://api.imgbb.com/1/upload?key=TUA-API-KEY-IMGBB`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                return data.data?.url;
+                // Upload su ImgBB
+                try {
+                    console.log(`📤 Upload immagine su ImgBB: ${file.name}`);
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    
+                    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const data = await response.json();
+                    if (!data.success || !data.data?.url) throw new Error('Risposta ImgBB non valida');
+                    
+                    console.log(`✅ Immagine caricata: ${data.data.url}`);
+                    return data.data.url;
+                } catch (error) {
+                    console.error('❌ Errore upload ImgBB:', error);
+                    throw new Error(`Impossibile caricare ${file.name}`);
+                }
             } else {
-                // Litterbox per video
-                const formData = new FormData();
-                formData.append('fileToUpload', file);
-                formData.append('time', '72h');
-                const response = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                return await response.text();
+                // Upload su Litterbox
+                try {
+                    console.log(`📤 Upload video su Litterbox: ${file.name}`);
+                    const formData = new FormData();
+                    formData.append('reqtype', 'fileupload');
+                    formData.append('time', '72h');
+                    formData.append('fileToUpload', file);
+                    
+                    const response = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    
+                    const url = await response.text();
+                    if (!url || !url.startsWith('http')) throw new Error('Risposta Litterbox non valida');
+                    
+                    console.log(`✅ Video caricato: ${url.trim()}`);
+                    return url.trim();
+                } catch (error) {
+                    console.error('❌ Errore upload Litterbox:', error);
+                    throw new Error(`Impossibile caricare ${file.name}`);
+                }
             }
         }
 
