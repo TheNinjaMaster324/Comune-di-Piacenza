@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stato Ricorso - Comune di Piacenza</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 650px;
+            width: 100%;
+            padding: 40px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header { text-align: center; margin-bottom: 30px; }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+
+        h1 { color: #2d3748; font-size: 28px; margin-bottom: 10px; }
+        .subtitle { color: #718096; font-size: 14px; }
+
+        .status-box {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .status-box.pending {
+            border-left-color: #f39c12;
+            background: #fffbeb;
+        }
+
+        .status-box.accepted {
+            border-left-color: #27ae60;
+            background: #f0fdf4;
+        }
+
+        .status-box.rejected {
+            border-left-color: #e74c3c;
+            background: #fef2f2;
+        }
+
+        .status-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .status-title {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+
+        .status-message {
+            text-align: center;
+            color: #4a5568;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .case-info {
+            background: #f7fafc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .case-info p {
+            margin: 8px 0;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .case-info strong {
+            color: #2d3748;
+        }
+
+        .invite-button {
+            display: inline-block;
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .invite-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .checking-status {
+            text-align: center;
+            color: #718096;
+            font-size: 12px;
+            margin-top: 15px;
+            animation: pulse 2s infinite;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .important-notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .important-notice h3 {
+            color: #856404;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .important-notice ul {
+            margin-left: 20px;
+            color: #856404;
+            font-size: 13px;
+        }
+
+        .important-notice li {
+            margin: 5px 0;
+        }
+
+        .bookmark-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .bookmark-button:hover {
+            background: #2980b9;
+        }
+
+        .rejection-reason {
+            background: #fee;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+
+        .rejection-reason h3 {
+            color: #c0392b;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .rejection-reason p {
+            color: #555;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">📩</div>
+            <h1>Stato Ricorso</h1>
+            <p class="subtitle">Comune di Piacenza Roleplay</p>
+        </div>
+
+        <div id="statusContainer">
+            <!-- Contenuto dinamico -->
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════
+        // 🔥 CONFIGURAZIONE FIREBASE
+        // ═══════════════════════════════════════════
+        const FIREBASE_URL = 'https://comune-di-piacenza-d1492-default-rtdb.europe-west1.firebasedatabase.app/';
+        // ↑ SOSTITUISCI CON IL TUO URL!
+
+        // ═══════════════════════════════════════════
+        // 🔧 PARAMETRI URL
+        // ═══════════════════════════════════════════
+        const urlParams = new URLSearchParams(window.location.search);
+        const caseId = urlParams.get('case_id');
+        const userId = urlParams.get('user_id');
+        const userName = urlParams.get('user_name');
+        const caseType = urlParams.get('type');
+
+        if (!caseId) {
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box rejected">
+                    <div class="status-icon">❌</div>
+                    <div class="status-title">Link Non Valido</div>
+                    <div class="status-message">Questo link non è valido. Usa il link ricevuto nel DM.</div>
+                </div>
+            `;
+        }
+
+        let pollingInterval;
+        let lastCheck = null;
+
+        // ═══════════════════════════════════════════
+        // 🔄 CONTROLLA STATO APPEAL
+        // ═══════════════════════════════════════════
+        async function checkAppealStatus() {
+            try {
+                const response = await fetch(`${FIREBASE_URL}/appeals/${caseId}.json`);
+                const data = await response.json();
+
+                lastCheck = new Date().toLocaleTimeString('it-IT');
+
+                if (!data) {
+                    // Nessun dato trovato su Firebase
+                    showNotFoundStatus();
+                    return;
+                }
+
+                if (data.status === 'accepted') {
+                    showAcceptedStatus(data);
+                    stopPolling();
+                } else if (data.status === 'rejected') {
+                    showRejectedStatus(data);
+                    stopPolling();
+                } else if (data.status === 'pending') {
+                    showPendingStatus();
+                } else {
+                    // Stato sconosciuto
+                    showNotFoundStatus();
+                }
+
+            } catch (error) {
+                console.error('Errore controllo stato:', error);
+                showErrorStatus();
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // 📺 UI: PENDING
+        // ═══════════════════════════════════════════
+        function showPendingStatus() {
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box pending">
+                    <div class="status-icon">⏳</div>
+                    <div class="status-title">Ricorso in Attesa di Revisione</div>
+                    <div class="status-message">
+                        Il tuo ricorso è stato inviato allo staff.<br>
+                        Riceverai una risposta entro 48 ore.
+                    </div>
+                </div>
+
+                <div class="case-info">
+                    <p><strong>🆔 Case ID:</strong> #${caseId}</p>
+                    <p><strong>👤 Utente:</strong> ${userName || 'N/A'}</p>
+                    <p><strong>🏷️ Tipo:</strong> ${(caseType || 'N/A').toUpperCase()}</p>
+                    <p><strong>📅 Inviato:</strong> ${new Date().toLocaleString('it-IT')}</p>
+                </div>
+
+                <div class="checking-status">
+                    ⏱️ Controllo automatico ogni 5 secondi...
+                </div>
+                <div class="timestamp">Ultima verifica: ${lastCheck || 'mai'}</div>
+
+                <div class="important-notice">
+                    <h3>⚠️ IMPORTANTE:</h3>
+                    <ul>
+                        <li>✅ <strong>Tieni questa pagina aperta</strong> per vedere la risposta in tempo reale</li>
+                        <li>✅ Oppure <strong>salva questo link</strong> e controlla più tardi</li>
+                        <li>📱 Riceverai anche una notifica Discord (se i DM sono attivi)</li>
+                    </ul>
+                    <button class="bookmark-button" onclick="bookmarkPage()">🔖 Aggiungi ai Preferiti</button>
+                </div>
+            `;
+        }
+
+        // ═══════════════════════════════════════════
+        // 📺 UI: ACCEPTED
+        // ═══════════════════════════════════════════
+        function showAcceptedStatus(data) {
+            const inviteUrl = data.invite || 'N/A';
+            const resolvedBy = data.resolved_by || 'Staff';
+            const resolvedAt = data.resolved_at ? new Date(data.resolved_at).toLocaleString('it-IT') : 'N/A';
+
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box accepted">
+                    <div class="status-icon">✅</div>
+                    <div class="status-title">Ricorso ACCETTATO!</div>
+                    <div class="status-message">
+                        🎉 Il tuo ricorso è stato <strong>approvato</strong> dallo staff!<br>
+                        Puoi tornare nel server cliccando il bottone qui sotto.
+                    </div>
+                </div>
+
+                <div class="case-info">
+                    <p><strong>🆔 Case ID:</strong> #${caseId}</p>
+                    <p><strong>👤 Utente:</strong> ${userName || 'N/A'}</p>
+                    <p><strong>✅ Approvato da:</strong> ${resolvedBy}</p>
+                    <p><strong>📅 Data approvazione:</strong> ${resolvedAt}</p>
+                </div>
+
+                ${inviteUrl !== 'N/A' ? `
+                    <a href="${inviteUrl}" class="invite-button" target="_blank">
+                        🔓 Torna nel Server Discord
+                    </a>
+                    <div class="status-message" style="margin-top: 15px; font-size: 12px;">
+                        ⚠️ Questo invito funziona <strong>una sola volta</strong>. Non condividerlo!
+                    </div>
+                ` : `
+                    <div class="status-message" style="margin-top: 20px;">
+                        La sanzione è stata rimossa. Sei già nel server! ✅
+                    </div>
+                `}
+            `;
+        }
+
+        // ═══════════════════════════════════════════
+        // 📺 UI: NOT FOUND
+        // ═══════════════════════════════════════════
+        function showNotFoundStatus() {
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box rejected">
+                    <div class="status-icon">❓</div>
+                    <div class="status-title">Ricorso Non Trovato</div>
+                    <div class="status-message">
+                        Non è stato trovato nessun ricorso con questo ID.<br><br>
+                        <strong>Possibili motivi:</strong><br>
+                        • Il ricorso non è ancora stato creato<br>
+                        • L'ID nel link non è corretto<br>
+                        • Il ricorso è stato già gestito e rimosso<br><br>
+                        Verifica di aver usato il link corretto ricevuto nel DM.
+                    </div>
+                </div>
+
+                <div class="case-info">
+                    <p><strong>🆔 Case ID cercato:</strong> #${caseId}</p>
+                    <p><strong>🔍 Ultima verifica:</strong> ${lastCheck || 'mai'}</p>
+                </div>
+            `;
+            stopPolling();
+        }
+
+        // ═══════════════════════════════════════════
+        // 📺 UI: ERROR
+        // ═══════════════════════════════════════════
+        function showErrorStatus() {
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box rejected">
+                    <div class="status-icon">⚠️</div>
+                    <div class="status-title">Errore di Connessione</div>
+                    <div class="status-message">
+                        Impossibile verificare lo stato del ricorso.<br><br>
+                        <strong>Cosa fare:</strong><br>
+                        • Verifica la tua connessione internet<br>
+                        • Ricarica la pagina<br>
+                        • Riprova tra qualche minuto<br><br>
+                        Se il problema persiste, contatta lo staff.
+                    </div>
+                </div>
+
+                <div class="case-info">
+                    <p><strong>🆔 Case ID:</strong> #${caseId}</p>
+                    <p><strong>🔍 Ultima verifica:</strong> ${lastCheck || 'mai'}</p>
+                </div>
+
+                <button class="bookmark-button" onclick="location.reload()">🔄 Ricarica Pagina</button>
+            `;
+        }
+
+        // ═══════════════════════════════════════════
+        // 📺 UI: REJECTED
+        // ═══════════════════════════════════════════
+        function showRejectedStatus(data) {
+            const reason = data.reason || 'Nessun motivo fornito';
+            const resolvedBy = data.resolved_by || 'Staff';
+            const resolvedAt = data.resolved_at ? new Date(data.resolved_at).toLocaleString('it-IT') : 'N/A';
+
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box rejected">
+                    <div class="status-icon">❌</div>
+                    <div class="status-title">Ricorso Rifiutato</div>
+                    <div class="status-message">
+                        Il tuo ricorso non è stato approvato dallo staff.
+                    </div>
+                </div>
+
+                <div class="case-info">
+                    <p><strong>🆔 Case ID:</strong> #${caseId}</p>
+                    <p><strong>👤 Utente:</strong> ${userName || 'N/A'}</p>
+                    <p><strong>❌ Rifiutato da:</strong> ${resolvedBy}</p>
+                    <p><strong>📅 Data rifiuto:</strong> ${resolvedAt}</p>
+                </div>
+
+                <div class="rejection-reason">
+                    <h3>📝 Motivo del Rifiuto:</h3>
+                    <p>${reason}</p>
+                </div>
+
+                <div class="status-message" style="margin-top: 20px; font-size: 13px;">
+                    💡 Se ritieni che questa decisione sia ingiusta, contatta lo staff direttamente.
+                </div>
+            `;
+        }
+
+        // ═══════════════════════════════════════════
+        // 🔄 POLLING
+        // ═══════════════════════════════════════════
+        function startPolling() {
+            console.log('🔄 Polling avviato - controllo ogni 5 secondi');
+            checkAppealStatus(); // Controlla subito
+            pollingInterval = setInterval(checkAppealStatus, 5000); // Ogni 5 sec
+        }
+
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                console.log('⏹️ Polling fermato');
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // 🔖 BOOKMARK
+        // ═══════════════════════════════════════════
+        function bookmarkPage() {
+            if (window.sidebar && window.sidebar.addPanel) {
+                // Firefox
+                window.sidebar.addPanel(document.title, window.location.href, '');
+            } else if (window.external && ('AddFavorite' in window.external)) {
+                // IE
+                window.external.AddFavorite(window.location.href, document.title);
+            } else {
+                // Altri browser
+                alert('Premi CTRL+D (o CMD+D su Mac) per salvare questa pagina nei preferiti!');
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // 🚀 AVVIO
+        // ═══════════════════════════════════════════
+        if (caseId) {
+            startPolling();
+        }
+
+        // Ferma polling quando si chiude la pagina
+        window.addEventListener('beforeunload', stopPolling);
+    </script>
+</body>
+</html>
