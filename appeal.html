@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ricorso - Comune di Piacenza</title>
+    <title>Stato Ricorso - Comune di Piacenza</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -32,6 +32,11 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         .header { text-align: center; margin-bottom: 30px; }
 
         .logo {
@@ -49,183 +54,161 @@
         h1 { color: #2d3748; font-size: 28px; margin-bottom: 10px; }
         .subtitle { color: #718096; font-size: 14px; }
 
-        .case-info {
+        .status-box {
             background: #f7fafc;
             border-left: 4px solid #667eea;
-            padding: 15px;
+            padding: 20px;
             margin-bottom: 25px;
             border-radius: 8px;
         }
 
-        .case-info p { margin: 5px 0; color: #4a5568; font-size: 14px; }
-        .case-info strong { color: #2d3748; }
-
-        .form-group { margin-bottom: 25px; }
-
-        label {
-            display: block;
-            color: #2d3748;
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 14px;
+        .status-box.pending {
+            border-left-color: #f39c12;
+            background: #fffbeb;
         }
 
-        .required { color: #e53e3e; }
-
-        textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 120px;
+        .status-box.accepted {
+            border-left-color: #27ae60;
+            background: #f0fdf4;
         }
 
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        .status-box.rejected {
+            border-left-color: #e74c3c;
+            background: #fef2f2;
         }
 
-        .char-count { text-align: right; font-size: 12px; color: #a0aec0; margin-top: 5px; }
-        .helper-text { font-size: 12px; color: #718096; margin-top: 5px; }
-
-        /* ==================== FILE UPLOAD STYLING ==================== */
-        .file-upload-area {
-            border: 2px dashed #cbd5e0;
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            background: #f7fafc;
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .file-upload-area:hover {
-            border-color: #667eea;
-            background: #edf2f7;
-        }
-
-        .file-upload-area.dragover {
-            border-color: #667eea;
-            background: #e6fffa;
-        }
-
-        .upload-icon {
+        .status-icon {
             font-size: 48px;
+            text-align: center;
             margin-bottom: 15px;
         }
 
-        .upload-text {
-            color: #4a5568;
-            font-size: 16px;
-            margin-bottom: 8px;
-        }
-
-        .upload-hint {
-            color: #a0aec0;
-            font-size: 13px;
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        .file-list {
-            margin-top: 20px;
-        }
-
-        .file-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 8px;
+        .status-title {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
             margin-bottom: 10px;
-            animation: fadeIn 0.3s ease;
+            color: #2d3748;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-        }
-
-        .file-icon {
-            font-size: 28px;
-        }
-
-        .file-details {
-            flex: 1;
-        }
-
-        .file-name {
+        .status-message {
+            text-align: center;
+            color: #4a5568;
             font-size: 14px;
-            color: #333;
-            font-weight: 500;
-            margin-bottom: 2px;
+            line-height: 1.6;
         }
 
-        .file-size {
-            font-size: 12px;
-            color: #888;
+        .case-info {
+            background: #f7fafc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
         }
 
-        .remove-btn {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
+        .case-info p {
+            margin: 8px 0;
+            color: #4a5568;
+            font-size: 14px;
         }
 
-        .remove-btn:hover {
-            background: #c0392b;
-            transform: translateY(-2px);
+        .case-info strong {
+            color: #2d3748;
         }
 
-        .submit-btn {
+        .invite-button {
+            display: inline-block;
             width: 100%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border: none;
+            text-align: center;
             padding: 15px;
             border-radius: 8px;
-            font-size: 16px;
+            text-decoration: none;
+            font-size: 18px;
             font-weight: 600;
-            cursor: pointer;
+            margin-top: 20px;
             transition: all 0.3s;
-            margin-top: 10px;
+            border: none;
+            cursor: pointer;
         }
 
-        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); }
-        .submit-btn:active { transform: translateY(0); }
-        .submit-btn:disabled { background: #cbd5e0; cursor: not-allowed; transform: none; }
+        .invite-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
 
-        .error { color: #e53e3e; font-size: 12px; margin-top: 5px; display: none; }
+        .checking-status {
+            text-align: center;
+            color: #718096;
+            font-size: 12px;
+            margin-top: 15px;
+            animation: pulse 2s infinite;
+        }
 
-        .success-message { display: none; text-align: center; padding: 30px; }
-        .success-message .icon { font-size: 60px; margin-bottom: 20px; }
-        .success-message h2 { color: #2d3748; margin-bottom: 10px; }
-        .success-message p { color: #718096; }
+        .timestamp {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 11px;
+            margin-top: 5px;
+        }
 
-        @media (max-width: 600px) {
-            .container { padding: 25px; }
-            h1 { font-size: 24px; }
+        .important-notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .important-notice h3 {
+            color: #856404;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .important-notice ul {
+            margin-left: 20px;
+            color: #856404;
+            font-size: 13px;
+        }
+
+        .important-notice li {
+            margin: 5px 0;
+        }
+
+        .bookmark-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        .bookmark-button:hover {
+            background: #2980b9;
+        }
+
+        .rejection-reason {
+            background: #fee;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+
+        .rejection-reason h3 {
+            color: #c0392b;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .rejection-reason p {
+            color: #555;
+            line-height: 1.6;
         }
     </style>
 </head>
@@ -233,294 +216,229 @@
     <div class="container">
         <div class="header">
             <div class="logo">📩</div>
-            <h1>Ricorso Sanzione</h1>
+            <h1>Stato Ricorso</h1>
             <p class="subtitle">Comune di Piacenza Roleplay</p>
         </div>
 
-        <div class="case-info" id="caseInfo">
-            <p><strong>🆔 Case ID:</strong> <span id="caseId">-</span></p>
-            <p><strong>🏷️ Tipo:</strong> <span id="caseType">-</span></p>
-            <p><strong>👤 Utente:</strong> <span id="userName">-</span></p>
-        </div>
-
-        <form id="appealForm">
-            <div class="form-group">
-                <label for="reason">Motivo del ricorso <span class="required">*</span></label>
-                <textarea 
-                    id="reason" 
-                    placeholder="Spiega dettagliatamente perché ritieni ingiusta questa sanzione..."
-                    required
-                    minlength="20"
-                    maxlength="1000"
-                ></textarea>
-                <div class="char-count"><span id="charCount">0</span>/1000 caratteri (minimo 20)</div>
-                <div class="error" id="reasonError">Il motivo deve contenere almeno 20 caratteri</div>
-            </div>
-
-            <div class="form-group">
-                <label>Prove (Immagini/Video)</label>
-                <div class="file-upload-area" id="uploadArea">
-                    <div class="upload-icon">📎</div>
-                    <div class="upload-text">Clicca per caricare file</div>
-                    <div class="upload-hint">Oppure trascina i file qui • Max 32MB per immagini, 100MB per video</div>
-                </div>
-                <input type="file" id="fileInput" accept="image/*,video/*" multiple>
-                <div class="file-list" id="fileList"></div>
-                <p class="helper-text">📸 Immagini: JPG, PNG, GIF • 🎥 Video: MP4, WEBM, MOV</p>
-            </div>
-
-            <button type="submit" class="submit-btn" id="submitBtn">📨 Invia Ricorso</button>
-        </form>
-
-        <div class="success-message" id="successMessage">
-            <div class="icon">✅</div>
-            <h2>Ricorso Inviato!</h2>
-            <p>Il tuo ricorso è stato inviato con successo allo staff.<br>Riceverai una risposta tramite DM Discord.</p>
+        <div id="statusContainer">
+            <!-- Contenuto dinamico -->
         </div>
     </div>
 
     <script>
         // ═══════════════════════════════════════════
-        // CONFIGURAZIONE
+        // 🔥 CONFIGURAZIONE FIREBASE
         // ═══════════════════════════════════════════
-        const IMGBB_API_KEY = '5cbd206261a1b8340b7a826e97316a64';
-        const WEBHOOK_URL = 'https://discord.com/api/webhooks/1473714851284123780/C8d6jAih6oFIfi80ojyM2-mudgH9E7rMsSZM5_7iiEBJDz2lwEJvzCWqKA6txJbFsMyO'; // ← SOSTITUISCI!
-        
-        let uploadedFiles = [];
-        
+        const FIREBASE_URL = 'https://comune-di-piacenza-default-rtdb.europe-west1.firebasedatabase.app';
+        // ↑ SOSTITUISCI CON IL TUO URL!
+
         // ═══════════════════════════════════════════
-        // PARAMETRI URL
+        // 🔧 PARAMETRI URL
         // ═══════════════════════════════════════════
         const urlParams = new URLSearchParams(window.location.search);
         const caseId = urlParams.get('case_id');
-        const caseType = urlParams.get('type');
         const userId = urlParams.get('user_id');
         const userName = urlParams.get('user_name');
-        const guildId = urlParams.get('guild_id');
+        const caseType = urlParams.get('type');
 
-        if (caseId && caseType && userId && userName && guildId) {
-            document.getElementById('caseId').textContent = '#' + caseId;
-            document.getElementById('caseType').textContent = caseType.toUpperCase();
-            document.getElementById('userName').textContent = userName;
-        } else {
-            document.getElementById('caseInfo').innerHTML = '<p style="color: #e53e3e;">⚠️ Link non valido! Usa il link ricevuto nel DM.</p>';
-            document.getElementById('appealForm').style.display = 'none';
-        }
-
-        // Character counter
-        document.getElementById('reason').addEventListener('input', function() {
-            document.getElementById('charCount').textContent = this.value.length;
-        });
-
-        // ═══════════════════════════════════════════
-        // FILE UPLOAD HANDLING
-        // ═══════════════════════════════════════════
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-
-        uploadArea.addEventListener('click', () => fileInput.click());
-
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            handleFiles(Array.from(e.dataTransfer.files));
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(Array.from(e.target.files));
-        });
-
-        function handleFiles(files) {
-            files.forEach(file => {
-                const isImage = file.type.startsWith('image/');
-                const isVideo = file.type.startsWith('video/');
-                
-                if (!isImage && !isVideo) {
-                    alert(`❌ ${file.name} non è un'immagine o un video valido!`);
-                    return;
-                }
-                
-                if (isImage && file.size > 32 * 1024 * 1024) {
-                    alert(`❌ ${file.name} supera i 32MB!`);
-                    return;
-                }
-                
-                if (isVideo && file.size > 100 * 1024 * 1024) {
-                    alert(`❌ ${file.name} supera i 100MB!`);
-                    return;
-                }
-                
-                uploadedFiles.push({
-                    file: file,
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                    isVideo: isVideo
-                });
-            });
-            
-            updateFileList();
-        }
-
-        function updateFileList() {
-            const fileList = document.getElementById('fileList');
-            
-            if (uploadedFiles.length === 0) {
-                fileList.innerHTML = '';
-                return;
-            }
-            
-            fileList.innerHTML = uploadedFiles.map((file, index) => `
-                <div class="file-item">
-                    <div class="file-info">
-                        <div class="file-icon">${file.isVideo ? '🎥' : '🖼️'}</div>
-                        <div class="file-details">
-                            <div class="file-name">${file.name}</div>
-                            <div class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
-                        </div>
-                    </div>
-                    <button type="button" class="remove-btn" onclick="removeFile(${index})">🗑️</button>
+        if (!caseId) {
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box rejected">
+                    <div class="status-icon">❌</div>
+                    <div class="status-title">Link Non Valido</div>
+                    <div class="status-message">Questo link non è valido. Usa il link ricevuto nel DM.</div>
                 </div>
-            `).join('');
+            `;
         }
 
-        function removeFile(index) {
-            uploadedFiles.splice(index, 1);
-            updateFileList();
-        }
+        let pollingInterval;
+        let lastCheck = null;
 
         // ═══════════════════════════════════════════
-        // UPLOAD FUNCTIONS
+        // 🔄 CONTROLLA STATO APPEAL
         // ═══════════════════════════════════════════
-        async function uploadToImgbb(fileObj) {
-            const formData = new FormData();
-            formData.append('key', IMGBB_API_KEY);
-            formData.append('image', fileObj.file);
-            
-            const response = await fetch('https://api.imgbb.com/1/upload', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            if (!data.success) throw new Error('Upload fallito');
-            
-            return data.data.url;
-        }
-
-        async function uploadToLitterbox(fileObj) {
-            const formData = new FormData();
-            formData.append('reqtype', 'fileupload');
-            formData.append('time', '72h');
-            formData.append('fileToUpload', fileObj.file);
-            
-            const response = await fetch('https://litterbox.catbox.moe/resources/internals/api.php', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const url = await response.text();
-            if (!url.startsWith('http')) throw new Error('Upload fallito');
-            
-            return url.trim();
-        }
-
-        // ═══════════════════════════════════════════
-        // FORM SUBMIT
-        // ═══════════════════════════════════════════
-        document.getElementById('appealForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const reason = document.getElementById('reason').value.trim();
-
-            // Validazione
-            if (reason.length < 20) {
-                document.getElementById('reasonError').style.display = 'block';
-                return;
-            }
-
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Caricamento file...';
-
+        async function checkAppealStatus() {
             try {
-                // Upload file
-                const imageUrls = [];
-                const videoUrls = [];
+                const response = await fetch(`${FIREBASE_URL}/appeals/${caseId}.json`);
+                const data = await response.json();
 
-                for (let i = 0; i < uploadedFiles.length; i++) {
-                    const file = uploadedFiles[i];
-                    submitBtn.textContent = `⏳ Caricamento ${i + 1}/${uploadedFiles.length}...`;
+                lastCheck = new Date().toLocaleTimeString('it-IT');
 
-                    try {
-                        if (file.isVideo) {
-                            const url = await uploadToLitterbox(file);
-                            videoUrls.push(url);
-                        } else {
-                            const url = await uploadToImgbb(file);
-                            imageUrls.push(url);
-                        }
-                    } catch (err) {
-                        console.error(`Errore upload ${file.name}:`, err);
-                    }
-
-                    if (i < uploadedFiles.length - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                    }
+                if (!data) {
+                    showPendingStatus();
+                    return;
                 }
 
-                submitBtn.textContent = '⏳ Invio ricorso...';
-
-                // Prepara prove
-                let proveText = '';
-                if (imageUrls.length > 0) proveText += `🖼️ ${imageUrls.join('\n🖼️ ')}\n`;
-                if (videoUrls.length > 0) proveText += `🎥 ${videoUrls.join('\n🎥 ')}`;
-                if (!proveText) proveText = 'Nessuna prova fornita';
-
-                // Invia webhook
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: `APPEAL_WEB|${caseId}|${userId}|${guildId}|${caseType}`,
-                        embeds: [{
-                            color: 0xF39C12,
-                            title: `📩 Ricorso Web - ${caseType.toUpperCase()}`,
-                            fields: [
-                                { name: '🆔 Case ID', value: `#${caseId}`, inline: true },
-                                { name: '👤 Utente', value: `${userName}\n<@${userId}>`, inline: true },
-                                { name: '🏷️ Tipo', value: caseType.toUpperCase(), inline: true },
-                                { name: '📩 Motivo Ricorso', value: reason, inline: false },
-                                { name: '🔗 Prove', value: proveText, inline: false }
-                            ],
-                            footer: { text: `User ID: ${userId}` },
-                            timestamp: new Date().toISOString()
-                        }]
-                    })
-                });
-
-                if (response.ok) {
-                    document.getElementById('appealForm').style.display = 'none';
-                    document.getElementById('caseInfo').style.display = 'none';
-                    document.getElementById('successMessage').style.display = 'block';
+                if (data.status === 'accepted') {
+                    showAcceptedStatus(data);
+                    stopPolling();
+                } else if (data.status === 'rejected') {
+                    showRejectedStatus(data);
+                    stopPolling();
                 } else {
-                    throw new Error('Errore invio');
+                    showPendingStatus();
                 }
+
             } catch (error) {
-                alert('❌ Errore durante l\'invio del ricorso. Riprova o contatta lo staff.');
-                submitBtn.disabled = false;
-                submitBtn.textContent = '📨 Invia Ricorso';
+                console.error('Errore controllo stato:', error);
+                showPendingStatus();
             }
-        });
+        }
+
+        // ═══════════════════════════════════════════
+        // 📺 UI: PENDING
+        // ═══════════════════════════════════════════
+        function showPendingStatus() {
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box pending">
+                    <div class="status-icon">⏳</div>
+                    <div class="status-title">Ricorso in Attesa di Revisione</div>
+                    <div class="status-message">
+                        Il tuo ricorso è stato inviato allo staff.<br>
+                        Riceverai una risposta entro 48 ore.
+                    </div>
+                </div>
+
+                <div class="case-info">
+                    <p><strong>🆔 Case ID:</strong> #${caseId}</p>
+                    <p><strong>👤 Utente:</strong> ${userName || 'N/A'}</p>
+                    <p><strong>🏷️ Tipo:</strong> ${(caseType || 'N/A').toUpperCase()}</p>
+                    <p><strong>📅 Inviato:</strong> ${new Date().toLocaleString('it-IT')}</p>
+                </div>
+
+                <div class="checking-status">
+                    ⏱️ Controllo automatico ogni 5 secondi...
+                </div>
+                <div class="timestamp">Ultima verifica: ${lastCheck || 'mai'}</div>
+
+                <div class="important-notice">
+                    <h3>⚠️ IMPORTANTE:</h3>
+                    <ul>
+                        <li>✅ <strong>Tieni questa pagina aperta</strong> per vedere la risposta in tempo reale</li>
+                        <li>✅ Oppure <strong>salva questo link</strong> e controlla più tardi</li>
+                        <li>📱 Riceverai anche una notifica Discord (se i DM sono attivi)</li>
+                    </ul>
+                    <button class="bookmark-button" onclick="bookmarkPage()">🔖 Aggiungi ai Preferiti</button>
+                </div>
+            `;
+        }
+
+        // ═══════════════════════════════════════════
+        // 📺 UI: ACCEPTED
+        // ═══════════════════════════════════════════
+        function showAcceptedStatus(data) {
+            const inviteUrl = data.invite || 'N/A';
+            const resolvedBy = data.resolved_by || 'Staff';
+            const resolvedAt = data.resolved_at ? new Date(data.resolved_at).toLocaleString('it-IT') : 'N/A';
+
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box accepted">
+                    <div class="status-icon">✅</div>
+                    <div class="status-title">Ricorso ACCETTATO!</div>
+                    <div class="status-message">
+                        🎉 Il tuo ricorso è stato <strong>approvato</strong> dallo staff!<br>
+                        Puoi tornare nel server cliccando il bottone qui sotto.
+                    </div>
+                </div>
+
+                <div class="case-info">
+                    <p><strong>🆔 Case ID:</strong> #${caseId}</p>
+                    <p><strong>👤 Utente:</strong> ${userName || 'N/A'}</p>
+                    <p><strong>✅ Approvato da:</strong> ${resolvedBy}</p>
+                    <p><strong>📅 Data approvazione:</strong> ${resolvedAt}</p>
+                </div>
+
+                ${inviteUrl !== 'N/A' ? `
+                    <a href="${inviteUrl}" class="invite-button" target="_blank">
+                        🔓 Torna nel Server Discord
+                    </a>
+                    <div class="status-message" style="margin-top: 15px; font-size: 12px;">
+                        ⚠️ Questo invito funziona <strong>una sola volta</strong>. Non condividerlo!
+                    </div>
+                ` : `
+                    <div class="status-message" style="margin-top: 20px;">
+                        La sanzione è stata rimossa. Sei già nel server! ✅
+                    </div>
+                `}
+            `;
+        }
+
+        // ═══════════════════════════════════════════
+        // 📺 UI: REJECTED
+        // ═══════════════════════════════════════════
+        function showRejectedStatus(data) {
+            const reason = data.reason || 'Nessun motivo fornito';
+            const resolvedBy = data.resolved_by || 'Staff';
+            const resolvedAt = data.resolved_at ? new Date(data.resolved_at).toLocaleString('it-IT') : 'N/A';
+
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box rejected">
+                    <div class="status-icon">❌</div>
+                    <div class="status-title">Ricorso Rifiutato</div>
+                    <div class="status-message">
+                        Il tuo ricorso non è stato approvato dallo staff.
+                    </div>
+                </div>
+
+                <div class="case-info">
+                    <p><strong>🆔 Case ID:</strong> #${caseId}</p>
+                    <p><strong>👤 Utente:</strong> ${userName || 'N/A'}</p>
+                    <p><strong>❌ Rifiutato da:</strong> ${resolvedBy}</p>
+                    <p><strong>📅 Data rifiuto:</strong> ${resolvedAt}</p>
+                </div>
+
+                <div class="rejection-reason">
+                    <h3>📝 Motivo del Rifiuto:</h3>
+                    <p>${reason}</p>
+                </div>
+
+                <div class="status-message" style="margin-top: 20px; font-size: 13px;">
+                    💡 Se ritieni che questa decisione sia ingiusta, contatta lo staff direttamente.
+                </div>
+            `;
+        }
+
+        // ═══════════════════════════════════════════
+        // 🔄 POLLING
+        // ═══════════════════════════════════════════
+        function startPolling() {
+            console.log('🔄 Polling avviato - controllo ogni 5 secondi');
+            checkAppealStatus(); // Controlla subito
+            pollingInterval = setInterval(checkAppealStatus, 5000); // Ogni 5 sec
+        }
+
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                console.log('⏹️ Polling fermato');
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // 🔖 BOOKMARK
+        // ═══════════════════════════════════════════
+        function bookmarkPage() {
+            if (window.sidebar && window.sidebar.addPanel) {
+                // Firefox
+                window.sidebar.addPanel(document.title, window.location.href, '');
+            } else if (window.external && ('AddFavorite' in window.external)) {
+                // IE
+                window.external.AddFavorite(window.location.href, document.title);
+            } else {
+                // Altri browser
+                alert('Premi CTRL+D (o CMD+D su Mac) per salvare questa pagina nei preferiti!');
+            }
+        }
+
+        // ═══════════════════════════════════════════
+        // 🚀 AVVIO
+        // ═══════════════════════════════════════════
+        if (caseId) {
+            startPolling();
+        }
+
+        // Ferma polling quando si chiude la pagina
+        window.addEventListener('beforeunload', stopPolling);
     </script>
 </body>
 </html>
