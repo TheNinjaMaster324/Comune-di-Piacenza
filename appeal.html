@@ -360,6 +360,7 @@
         const WEBHOOK_URL = 'https://discord.com/api/webhooks/1473714851284123780/C8d6jAih6oFIfi80ojyM2-mudgH9E7rMsSZM5_7iiEBJDz2lwEJvzCWqKA6txJbFsMyO';
         const STATUS_PAGE_URL = 'https://theninjamaster324.github.io/Comune-di-Piacenza/appeal-status.html';
         const IMGBB_API_KEY = '5cbd206261a1b8340b7a826e97316a64';
+        const FIREBASE_URL = 'https://comune-di-piacenza-default-rtdb.europe-west1.firebasedatabase.app';
         // ↑ WEBHOOK E IMGBB GIÀ CONFIGURATI!
 
         // ═══════════════════════════════════════════
@@ -375,6 +376,51 @@
         document.getElementById('caseId').textContent = caseId ? `#${caseId}` : 'N/A';
         document.getElementById('userName').textContent = userName;
         document.getElementById('caseType').textContent = caseType;
+
+        // ═══════════════════════════════════════════
+        // 🔒 CONTROLLO DUPLICATI (Firebase)
+        // ═══════════════════════════════════════════
+        async function checkAlreadySubmitted() {
+            if (!caseId) return false;
+            
+            try {
+                const response = await fetch(`${FIREBASE_URL}/appeals/${caseId}/appeal_submitted.json`);
+                if (!response.ok) return false;
+                
+                const data = await response.json();
+                return data === true;
+            } catch (error) {
+                console.error('Errore controllo Firebase:', error);
+                return false;
+            }
+        }
+
+        // Controlla all'avvio
+        (async () => {
+            const alreadySubmitted = await checkAlreadySubmitted();
+            
+            if (alreadySubmitted) {
+                // Nascondi form e mostra messaggio
+                document.getElementById('formContainer').style.display = 'none';
+                document.getElementById('successBox').innerHTML = `
+                    <div class="success-icon">⚠️</div>
+                    <div class="success-title">Ricorso Già Inviato</div>
+                    <div class="success-message">
+                        Hai già inviato un ricorso per questo case.<br><br>
+                        <strong>Non puoi inviare ricorsi multipli per la stessa sanzione.</strong><br><br>
+                        Puoi controllare lo stato del ricorso usando il link che hai ricevuto dopo l'invio.
+                    </div>
+                    <div class="status-link-box">
+                        <h3>🔗 Controlla lo Stato:</h3>
+                        <a href="${STATUS_PAGE_URL}?case_id=${caseId}&user_id=${userId}&user_name=${encodeURIComponent(userName)}&type=${caseType.toLowerCase()}" class="status-link" target="_blank">
+                            📊 Vai alla Pagina Stato
+                        </a>
+                    </div>
+                `;
+                document.getElementById('successBox').classList.add('show');
+                return;
+            }
+        })();
 
         // ═══════════════════════════════════════════
         // 📝 CHARACTER COUNTER
@@ -527,6 +573,19 @@
                 });
 
                 if (!response.ok) throw new Error('Errore invio webhook');
+
+                // 🔒 Marca come inviato su Firebase (doppio controllo)
+                try {
+                    await fetch(`${FIREBASE_URL}/appeals/${caseId}/appeal_submitted.json`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(true)
+                    });
+                    console.log('🔒 Appeal marcato come inviato su Firebase');
+                } catch (fbError) {
+                    console.warn('Errore Firebase mark:', fbError);
+                    // Continua comunque, il bot lo farà
+                }
 
                 // Successo!
                 formContainer.style.display = 'none';
