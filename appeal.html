@@ -265,7 +265,8 @@
                 lastCheck = new Date().toLocaleTimeString('it-IT');
 
                 if (!data) {
-                    showPendingStatus();
+                    // Nessun dato trovato su Firebase
+                    showNotFoundStatus();
                     return;
                 }
 
@@ -275,13 +276,16 @@
                 } else if (data.status === 'rejected') {
                     showRejectedStatus(data);
                     stopPolling();
-                } else {
+                } else if (data.status === 'pending') {
                     showPendingStatus();
+                } else {
+                    // Stato sconosciuto
+                    showNotFoundStatus();
                 }
 
             } catch (error) {
                 console.error('Errore controllo stato:', error);
-                showPendingStatus();
+                showErrorStatus();
             }
         }
 
@@ -360,6 +364,59 @@
                         La sanzione è stata rimossa. Sei già nel server! ✅
                     </div>
                 `}
+            `;
+        }
+
+        // ═══════════════════════════════════════════
+        // 📺 UI: NOT FOUND
+        // ═══════════════════════════════════════════
+        function showNotFoundStatus() {
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box rejected">
+                    <div class="status-icon">❓</div>
+                    <div class="status-title">Ricorso Non Trovato</div>
+                    <div class="status-message">
+                        Non è stato trovato nessun ricorso con questo ID.<br><br>
+                        <strong>Possibili motivi:</strong><br>
+                        • Il ricorso non è ancora stato creato<br>
+                        • L'ID nel link non è corretto<br>
+                        • Il ricorso è stato già gestito e rimosso<br><br>
+                        Verifica di aver usato il link corretto ricevuto nel DM.
+                    </div>
+                </div>
+
+                <div class="case-info">
+                    <p><strong>🆔 Case ID cercato:</strong> #${caseId}</p>
+                    <p><strong>🔍 Ultima verifica:</strong> ${lastCheck || 'mai'}</p>
+                </div>
+            `;
+            stopPolling();
+        }
+
+        // ═══════════════════════════════════════════
+        // 📺 UI: ERROR
+        // ═══════════════════════════════════════════
+        function showErrorStatus() {
+            document.getElementById('statusContainer').innerHTML = `
+                <div class="status-box rejected">
+                    <div class="status-icon">⚠️</div>
+                    <div class="status-title">Errore di Connessione</div>
+                    <div class="status-message">
+                        Impossibile verificare lo stato del ricorso.<br><br>
+                        <strong>Cosa fare:</strong><br>
+                        • Verifica la tua connessione internet<br>
+                        • Ricarica la pagina<br>
+                        • Riprova tra qualche minuto<br><br>
+                        Se il problema persiste, contatta lo staff.
+                    </div>
+                </div>
+
+                <div class="case-info">
+                    <p><strong>🆔 Case ID:</strong> #${caseId}</p>
+                    <p><strong>🔍 Ultima verifica:</strong> ${lastCheck || 'mai'}</p>
+                </div>
+
+                <button class="bookmark-button" onclick="location.reload()">🔄 Ricarica Pagina</button>
             `;
         }
 
