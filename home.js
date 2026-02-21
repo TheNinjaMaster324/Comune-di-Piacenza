@@ -668,6 +668,7 @@ document.getElementById('eventGuideModal')?.addEventListener('click', function(e
 });
 
 // ==================== INVIO FORM EVENTI/GUIDE ====================
+// ✅ FIXATO - Data inviata in formato RAW
 
 document.getElementById('eventGuideForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -705,8 +706,14 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
     
     console.log('📤 Invio dati al bot Discord:', data);
     
-    // 🔥 WEBHOOK CHE IL BOT LEGGE
-    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474731676860154079/2qOLrr5D711JqjRM9ApH3Y1SFRwdfJteOeVtrSET3ivy6U_Wfjs255gFWQOcm1SIziKY'; // ⬅️ INSERISCI IL TUO WEBHOOK
+    // 🔥 WEBHOOK SEPARATI PER EVENTI E GUIDE
+    const WEBHOOK_EVENTI = 'https://discord.com/api/webhooks/1474735824380887140/DcvoHY6FSpxUwyQcc8KLVZI2eWe1fHt2mP74UXzOWKBNyU0JGwYi0iiljjjeJGaD8uQP'; // ⬅️ Webhook canale EVENTI
+    const WEBHOOK_GUIDE = 'https://discord.com/api/webhooks/1474731676860154079/2qOLrr5D711JqjRM9ApH3Y1SFRwdfJteOeVtrSET3ivy6U_Wfjs255gFWQOcm1SIziKY';   // ⬅️ Webhook canale GUIDE
+    
+    // Scegli il webhook in base al tipo
+    const WEBHOOK_URL = type === 'evento' ? WEBHOOK_EVENTI : WEBHOOK_GUIDE;
+    
+    console.log(`📍 Uso webhook: ${type === 'evento' ? 'EVENTI' : 'GUIDE'}`);
     
     try {
         const response = await fetch(WEBHOOK_URL, {
@@ -722,11 +729,14 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
                     fields: [
                         { name: '📝 Titolo', value: titolo, inline: false },
                         { name: '📄 Descrizione', value: descrizione.substring(0, 1024), inline: false },
+                        
+                        // ✅ FIX APPLICATO: Manda data RAW invece di timestamp Discord
                         type === 'evento' && dataEvento ? { 
                             name: '📅 Data Evento', 
-                            value: `<t:${Math.floor(new Date(dataEvento).getTime() / 1000)}:F>`, 
+                            value: dataEvento,  // ⬅️ FIXATO: "2026-02-21T18:00" invece di "<t:1771676280:F>"
                             inline: false 
                         } : null,
+                        
                         immagine ? { name: '🖼️ Immagine', value: immagine, inline: false } : null,
                         { name: '🔔 Ping', value: ping, inline: true },
                         { name: '👤 Autore', value: userData.username, inline: true },
