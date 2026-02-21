@@ -597,7 +597,6 @@ function closeEventGuideModal() {
     const modal = document.getElementById('eventGuideModal');
     modal.classList.remove('show');
     document.getElementById('eventGuideForm').reset();
-
 }
 
 document.addEventListener('keydown', function(e) {
@@ -614,13 +613,10 @@ document.getElementById('eventGuideModal')?.addEventListener('click', function(e
 
 // ==================== INVIO FORM EVENTI/GUIDE ====================
 
-// ==================== FIX FORM SUBMIT EVENTI/GUIDE ====================
-// SOSTITUISCI la funzione nel tuo home.js (cerca "eventGuideForm")
-
 document.getElementById('eventGuideForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    console.log('📋 Form submit iniziato...');
+    console.log('📋 Form submit avviato...');
     
     const userData = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     const type = document.getElementById('eventGuideType').value;
@@ -630,7 +626,7 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
     const immagine = document.getElementById('eventGuideImmagine').value.trim();
     const ping = document.querySelector('input[name="ping"]:checked').value;
     
-    console.log('📝 Dati form:', { type, titolo, descrizione });
+    console.log('📝 Dati:', { type, titolo, ping });
     
     if (!titolo || !descrizione) {
         showCustomAlert('warning', 'Campi Obbligatori', 'Compila titolo e descrizione!');
@@ -642,15 +638,12 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
         return;
     }
     
-    // IMPORTANTE: NON chiudere il modale ancora!
-    // closeEventGuideModal(); ← RIMOSSO
-    
     const WEBHOOK_EVENTI = 'https://discord.com/api/webhooks/1474735824380887140/DcvoHY6FSpxUwyQcc8KLVZI2eWe1fHt2mP74UXzOWKBNyU0JGwYi0iiljjjeJGaD8uQP';
     const WEBHOOK_GUIDE = 'https://discord.com/api/webhooks/1474731676860154079/2qOLrr5D711JqjRM9ApH3Y1SFRwdfJteOeVtrSET3ivy6U_Wfjs255gFWQOcm1SIziKY';
     
     const WEBHOOK_URL = type === 'evento' ? WEBHOOK_EVENTI : WEBHOOK_GUIDE;
     
-    console.log('🚀 Invio a Discord...');
+    console.log('🚀 Invio a webhook...');
     
     try {
         const response = await fetch(WEBHOOK_URL, {
@@ -683,22 +676,24 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
             })
         });
         
-        console.log('📡 Risposta webhook:', response.status);
+        console.log('📡 Risposta:', response.status);
         
         if (response.ok) {
-            console.log('✅ Pubblicazione completata!');
+            console.log('✅ SUCCESSO! Mostro alert e aspetto prima di chiudere...');
             
-            // PRIMA mostra l'alert
-            showCustomAlert('success', '✅ Pubblicato!', 
-                `${type === 'evento' ? 'Evento' : 'Guida'} pubblicato su Discord con successo!\n\n` +
-                `Titolo: ${titolo}`
+            // PRIMA: Mostra alert
+            showCustomAlert('success', '✅ PUBBLICATO!', 
+                `${type === 'evento' ? '🎉 EVENTO' : '📚 GUIDA'} pubblicato con successo!\n\n` +
+                `"${titolo}"\n\n` +
+                `Controlla Discord!`
             );
             
-            // POI chiudi il modale (dopo 1 secondo)
+            // DOPO: Aspetta 2 secondi e chiudi
             setTimeout(() => {
+                console.log('⏰ Chiudo modale dopo 2 secondi...');
                 closeEventGuideModal();
-                this.reset();
-            }, 1000);
+                document.getElementById('eventGuideForm').reset();
+            }, 2000);
             
         } else {
             const errorText = await response.text();
@@ -706,16 +701,12 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
             throw new Error(`Webhook error: ${response.status}`);
         }
     } catch (error) {
-        console.error('❌ Errore pubblicazione:', error);
-        showCustomAlert('error', '❌ Errore', 
-            'Impossibile pubblicare!\n\n' +
-            'Verifica la connessione e riprova.\n\n' +
-            `Dettagli: ${error.message}`
+        console.error('❌ ERRORE:', error);
+        showCustomAlert('error', '❌ Errore!', 
+            `Impossibile pubblicare!\n\n${error.message}\n\nRiprova o contatta lo staff.`
         );
     }
 });
-
-console.log('✅ Form submit eventi/guide configurato con fix!');
 
 // ==================== SEZIONE EVENTI/GUIDE SUL SITO ====================
 
