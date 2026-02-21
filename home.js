@@ -602,3 +602,154 @@ function clearCache() {
 }
 
 console.log('✅ home.js caricato correttamente!');
+
+// ==================== GESTIONE MODALE EVENTI/GUIDE ====================
+
+// Mostra pulsanti solo per staff
+window.addEventListener('load', function() {
+    const userData = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    
+    if (userData.isAdmin) {
+        const buttons = document.getElementById('createEventsGuidesButtons');
+        if (buttons) {
+            buttons.style.display = 'flex';
+        }
+    }
+});
+
+// Apri modale
+function openEventGuideModal(type) {
+    const modal = document.getElementById('eventGuideModal');
+    const typeInput = document.getElementById('eventGuideType');
+    const modalTitle = document.getElementById('modalHeaderTitle');
+    const modalSubtitle = document.getElementById('modalHeaderSubtitle');
+    const submitBtn = document.getElementById('submitEventGuideBtn');
+    const dataField = document.getElementById('dataEventoField');
+    const dataInput = document.getElementById('eventGuideData');
+    
+    typeInput.value = type;
+    
+    if (type === 'evento') {
+        modalTitle.textContent = '🎉 Crea Nuovo Evento';
+        modalSubtitle.textContent = 'Compila i campi e pubblica su Discord';
+        submitBtn.textContent = '🚀 Pubblica Evento';
+        dataField.style.display = 'block';
+        dataInput.required = true;
+    } else {
+        modalTitle.textContent = '📚 Crea Nuova Guida';
+        modalSubtitle.textContent = 'Scrivi una guida utile per la community';
+        submitBtn.textContent = '📚 Pubblica Guida';
+        dataField.style.display = 'none';
+        dataInput.required = false;
+    }
+    
+    modal.classList.add('show');
+}
+
+// Chiudi modale
+function closeEventGuideModal() {
+    const modal = document.getElementById('eventGuideModal');
+    modal.classList.remove('show');
+    document.getElementById('eventGuideForm').reset();
+}
+
+// Chiudi con ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeEventGuideModal();
+    }
+});
+
+// Chiudi cliccando fuori
+document.getElementById('eventGuideModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEventGuideModal();
+    }
+});
+
+// ==================== INVIO FORM EVENTI/GUIDE ====================
+
+document.getElementById('eventGuideForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const userData = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    const type = document.getElementById('eventGuideType').value;
+    const titolo = document.getElementById('eventGuideTitolo').value.trim();
+    const descrizione = document.getElementById('eventGuideDescrizione').value.trim();
+    const dataEvento = document.getElementById('eventGuideData').value;
+    const immagine = document.getElementById('eventGuideImmagine').value.trim();
+    const ping = document.querySelector('input[name="ping"]:checked').value;
+    
+    // Validazione
+    if (!titolo || !descrizione) {
+        showCustomAlert('warning', 'Campi Obbligatori', 'Compila titolo e descrizione!');
+        return;
+    }
+    
+    if (type === 'evento' && !dataEvento) {
+        showCustomAlert('warning', 'Data Mancante', 'Inserisci la data dell\'evento!');
+        return;
+    }
+    
+    // Prepara dati
+    const data = {
+        type: type,
+        titolo: titolo,
+        descrizione: descrizione,
+        dataEvento: type === 'evento' ? dataEvento : null,
+        immagine: immagine || null,
+        ping: ping,
+        autore: userData.username,
+        timestamp: new Date().toISOString()
+    };
+    
+    console.log('📤 Invio dati al bot Discord:', data);
+    
+    // 🔥 WEBHOOK CHE IL BOT LEGGE
+    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1474731676860154079/2qOLrr5D711JqjRM9ApH3Y1SFRwdfJteOeVtrSET3ivy6U_Wfjs255gFWQOcm1SIziKY'; // ⬅️ INSERISCI IL TUO WEBHOOK
+    
+    try {
+        const response = await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: 'Sistema Eventi/Guide - Piacenza RP',
+                avatar_url: 'https://theninjamaster324.github.io/Comune-di-Piacenza/Place.png',
+                content: `EVENTO_GUIDA_TRIGGER`,
+                embeds: [{
+                    title: `📋 ${type === 'evento' ? 'Nuovo Evento' : 'Nuova Guida'}`,
+                    color: type === 'evento' ? 0x667eea : 0x27ae60,
+                    fields: [
+                        { name: '📝 Titolo', value: titolo, inline: false },
+                        { name: '📄 Descrizione', value: descrizione.substring(0, 1024), inline: false },
+                        type === 'evento' && dataEvento ? { 
+                            name: '📅 Data Evento', 
+                            value: `<t:${Math.floor(new Date(dataEvento).getTime() / 1000)}:F>`, 
+                            inline: false 
+                        } : null,
+                        immagine ? { name: '🖼️ Immagine', value: immagine, inline: false } : null,
+                        { name: '🔔 Ping', value: ping, inline: true },
+                        { name: '👤 Autore', value: userData.username, inline: true },
+                        { name: '🆔 Tipo', value: type, inline: true }
+                    ].filter(Boolean),
+                    thumbnail: immagine ? { url: immagine } : null,
+                    timestamp: new Date().toISOString(),
+                    footer: { text: 'Comune di Piacenza RP' }
+                }]
+            })
+        });
+        
+        if (response.ok) {
+            showCustomAlert('success', 'Pubblicato!', `${type === 'evento' ? 'Evento' : 'Guida'} pubblicato su Discord con successo!`);
+            closeEventGuideModal();
+            this.reset();
+        } else {
+            throw new Error('Errore webhook');
+        }
+    } catch (error) {
+        console.error('❌ Errore pubblicazione:', error);
+        showCustomAlert('error', 'Errore', 'Impossibile pubblicare. Riprova!');
+    }
+});
+
+console.log('✅ Sistema Eventi/Guide caricato!');

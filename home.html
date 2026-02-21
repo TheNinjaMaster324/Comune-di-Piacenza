@@ -8,10 +8,7 @@
 </head>
 <body>
 
-
-    <!-- INSERISCI QUESTO CODICE SUBITO DOPO IL TAG <body> nel tuo home.html -->
-
-<!-- Modal Alert Personalizzato -->
+    <!-- Modal Alert Personalizzato -->
     <div id="customAlert" class="custom-alert-overlay">
         <div class="custom-alert-box">
             <div class="alert-icon-wrapper">
@@ -23,6 +20,7 @@
             <button class="alert-btn" onclick="closeCustomAlert()">Ok</button>
         </div>
     </div>
+
     <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
@@ -97,57 +95,56 @@
         </section>
 
         <!-- Sezione Staff (Visibile solo agli admin) -->
-        <!-- Sezione Staff (Visibile solo agli admin) -->
-<section class="staff-section" id="staff" style="display: none;">
-    <div class="container">
-        <h2>🔒 Sezione Staff - Area Riservata</h2>
-        <div class="staff-content">
-            <div class="admin-panel">
-                <h3>Pannello di Amministrazione</h3>
-                <p class="admin-welcome">Benvenuto nell'area riservata agli amministratori.</p>
-                
-                <div class="admin-tools">
-                    <div class="tool-card">
-                        <h4>📊 Dashboard Completo</h4>
-                        <p>Accedi al pannello di amministrazione completo con tutte le funzionalità</p>
-                        <button class="admin-btn" onclick="window.location.href='staff.html'">🚀 Apri Pannello Staff</button>
-                    </div>
-                    
-                    <div class="tool-card">
-                        <h4>📊 Statistiche Server</h4>
-                        <div style="margin: 10px 0; line-height: 1.8;">
-                            <p style="margin: 5px 0;">
-                                👥 <strong>Utenti registrati:</strong> 
-                                <span id="totalUsers" style="color: #667eea; font-weight: bold;">0</span>
-                            </p>
-                            <p style="margin: 5px 0;">
-                                🟢 <strong>Utenti online:</strong> 
-                                <span id="onlineUsers" style="color: #27ae60; font-weight: bold;">0</span>
-                            </p>
-                            <p style="margin: 5px 0;">
-                                👨‍💼 <strong>Admin online:</strong> 
-                                <span id="adminOnline" style="color: #f5576c; font-weight: bold;">1</span>
-                            </p>
+        <section class="staff-section" id="staff" style="display: none;">
+            <div class="container">
+                <h2>🔒 Sezione Staff - Area Riservata</h2>
+                <div class="staff-content">
+                    <div class="admin-panel">
+                        <h3>Pannello di Amministrazione</h3>
+                        <p class="admin-welcome">Benvenuto nell'area riservata agli amministratori.</p>
+                        
+                        <div class="admin-tools">
+                            <div class="tool-card">
+                                <h4>📊 Dashboard Completo</h4>
+                                <p>Accedi al pannello di amministrazione completo con tutte le funzionalità</p>
+                                <button class="admin-btn" onclick="window.location.href='staff.html'">🚀 Apri Pannello Staff</button>
+                            </div>
+                            
+                            <div class="tool-card">
+                                <h4>📊 Statistiche Server</h4>
+                                <div style="margin: 10px 0; line-height: 1.8;">
+                                    <p style="margin: 5px 0;">
+                                        👥 <strong>Utenti registrati:</strong> 
+                                        <span id="totalUsers" style="color: #667eea; font-weight: bold;">0</span>
+                                    </p>
+                                    <p style="margin: 5px 0;">
+                                        🟢 <strong>Utenti online:</strong> 
+                                        <span id="onlineUsers" style="color: #27ae60; font-weight: bold;">0</span>
+                                    </p>
+                                    <p style="margin: 5px 0;">
+                                        👨‍💼 <strong>Admin online:</strong> 
+                                        <span id="adminOnline" style="color: #f5576c; font-weight: bold;">1</span>
+                                    </p>
+                                </div>
+                                <button class="admin-btn" onclick="refreshHomeStats()" style="width: 100%; margin-top: 10px; font-size: 13px;">🔄 Aggiorna</button>
+                            </div>
+                            
+                            <div class="tool-card">
+                                <h4>🛠️ Azioni Rapide</h4>
+                                <p>Controlli immediati per la gestione del server</p>
+                                <button class="admin-btn" onclick="window.location.href='staff.html'">📋 Visualizza Azioni</button>
+                                <div id="quickActionsContent"></div>
+                            </div>
                         </div>
-                        <button class="admin-btn" onclick="refreshHomeStats()" style="width: 100%; margin-top: 10px; font-size: 13px;">🔄 Aggiorna</button>
+                        
+                        <div class="admin-notice">
+                            <strong>⚠️ Nota:</strong> Questa sezione è visibile solo agli amministratori. 
+                            Gli utenti normali non possono accedere a queste funzionalità.
+                        </div>
                     </div>
-                    
-                    <div class="tool-card">
-                        <h4>🛠️ Azioni Rapide</h4>
-                        <p>Controlli immediati per la gestione del server</p>
-                        <button class="admin-btn" onclick="window.location.href='staff.html'">📋 Visualizza Azioni</button>
-                        <div id="quickActionsContent"></div>
-                    </div>
-                </div>
-                
-                <div class="admin-notice">
-                    <strong>⚠️ Nota:</strong> Questa sezione è visibile solo agli amministratori. 
-                    Gli utenti normali non possono accedere a queste funzionalità.
                 </div>
             </div>
-        </div>
-    </div>
-</section>
+        </section>
 
         <!-- Sezione Roleplay -->
         <section class="roleplay-section" id="roleplay">
@@ -230,298 +227,295 @@
         </section>
 
         <!-- Sezione Fazioni -->
-        <!-- SOLO LA SEZIONE FAZIONI MODIFICATA - Inseriscila nel tuo home.html -->
-
-<!-- Sezione Fazioni -->
-<section class="faction-card faction-police" id="fazioni">
-    <div class="container">
-        <h2>👮 Fazioni Disponibili</h2>
-        <p class="section-subtitle">Unisciti a una fazione e inizia la tua carriera</p>
-        
-        <div class="factions-grid">
-            <!-- 1. Polizia di Stato -->
-            <div class="faction-card police">
-                <div class="faction-header">
-                    <div class="faction-icon">👮</div>
-                    <h3>Polizia di Stato</h3>
-                    <span class="faction-badge">Forze dell'Ordine</span>
-                </div>
-                <div class="faction-body">
-                    <p class="faction-description">Mantieni l'ordine pubblico, arresta i criminali e garantisci la sicurezza dei cittadini.</p>
-                    <ul class="faction-features">
-                        <li>🚔 Pattugliamento della città</li>
-                        <li>⚖️ Arresti e multe</li>
-                        <li>🔫 Interventi armati</li>
-                        <li>📋 Rapporti e investigazioni</li>
-                    </ul>
-                    <div class="faction-requirements">
-                        <strong>Requisiti:</strong>
-                        <ul>
-                            <li>Età minima: 18 anni (nel gioco)</li>
-                            <li>Fedina penale pulita</li>
-                            <li>Superare l'addestramento</li>
-                        </ul>
+        <section class="faction-card faction-police" id="fazioni">
+            <div class="container">
+                <h2>👮 Fazioni Disponibili</h2>
+                <p class="section-subtitle">Unisciti a una fazione e inizia la tua carriera</p>
+                
+                <div class="factions-grid">
+                    <!-- Polizia di Stato -->
+                    <div class="faction-card police">
+                        <div class="faction-header">
+                            <div class="faction-icon">👮</div>
+                            <h3>Polizia di Stato</h3>
+                            <span class="faction-badge">Forze dell'Ordine</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Mantieni l'ordine pubblico, arresta i criminali e garantisci la sicurezza dei cittadini.</p>
+                            <ul class="faction-features">
+                                <li>🚔 Pattugliamento della città</li>
+                                <li>⚖️ Arresti e multe</li>
+                                <li>🔫 Interventi armati</li>
+                                <li>📋 Rapporti e investigazioni</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 18 anni (nel gioco)</li>
+                                    <li>Fedina penale pulita</li>
+                                    <li>Superare l'addestramento</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Polizia di Stato')">Candidati</button>
+                        </div>
                     </div>
-                    <button class="faction-apply-btn" onclick="applyFaction('Polizia di Stato')">Candidati</button>
+
+                    <!-- Arma dei Carabinieri -->
+                    <div class="faction-card faction-carabinieri">
+                        <div class="faction-header">
+                            <div class="faction-icon">🎖️</div>
+                            <h3>Arma dei Carabinieri</h3>
+                            <span class="faction-badge">Forze dell'Ordine</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Difendi la legge, proteggi i cittadini e mantieni l'ordine con onore e disciplina.</p>
+                            <ul class="faction-features">
+                                <li>🚓 Controllo del territorio</li>
+                                <li>⚖️ Indagini e operazioni</li>
+                                <li>🎖️ Pattuglie militari</li>
+                                <li>📋 Sicurezza pubblica</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 18 anni (nel gioco)</li>
+                                    <li>Fedina penale pulita</li>
+                                    <li>Disciplina e rispetto</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Arma dei Carabinieri')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Guardia di Finanza -->
+                    <div class="faction-card faction-gdf">
+                        <div class="faction-header">
+                            <div class="faction-icon">💰</div>
+                            <h3>Guardia di Finanza</h3>
+                            <span class="faction-badge">Forze dell'Ordine</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Contrasta l'evasione fiscale, combatti il contrabbando e tutela l'economia nazionale.</p>
+                            <ul class="faction-features">
+                                <li>💼 Controlli fiscali</li>
+                                <li>🚫 Contrasto al contrabbando</li>
+                                <li>🔍 Investigazioni economiche</li>
+                                <li>⚖️ Tutela della finanza pubblica</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 18 anni (nel gioco)</li>
+                                    <li>Fedina penale pulita</li>
+                                    <li>Conoscenze base economia</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Guardia di Finanza')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Polizia Locale -->
+                    <div class="faction-card faction-locale">
+                        <div class="faction-header">
+                            <div class="faction-icon">🚓</div>
+                            <h3>Polizia Locale</h3>
+                            <span class="faction-badge">Forze dell'Ordine</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Vigila sul territorio comunale, gestisci il traffico e garantisci la sicurezza urbana.</p>
+                            <ul class="faction-features">
+                                <li>🚦 Gestione traffico urbano</li>
+                                <li>📋 Controlli amministrativi</li>
+                                <li>🏙️ Sicurezza del territorio</li>
+                                <li>⚖️ Sanzioni e multe</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 18 anni (nel gioco)</li>
+                                    <li>Fedina penale pulita</li>
+                                    <li>Conoscenza del territorio</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Polizia Locale')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Polizia Penitenziaria -->
+                    <div class="faction-card faction-penitenziaria">
+                        <div class="faction-header">
+                            <div class="faction-icon">🔒</div>
+                            <h3>Polizia Penitenziaria</h3>
+                            <span class="faction-badge">Forze dell'Ordine</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Sorveglia le strutture penitenziarie, gestisci i detenuti e garantisci la sicurezza carceraria.</p>
+                            <ul class="faction-features">
+                                <li>🏢 Sorveglianza carceraria</li>
+                                <li>👮 Gestione detenuti</li>
+                                <li>🔐 Sicurezza perimetrale</li>
+                                <li>📋 Controlli e ispezioni</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 18 anni (nel gioco)</li>
+                                    <li>Fedina penale pulita</li>
+                                    <li>Autocontrollo e pazienza</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Polizia Penitenziaria')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Vigili del Fuoco -->
+                    <div class="faction-card faction-firefighter">
+                        <div class="faction-header">
+                            <div class="faction-icon">🚒</div>
+                            <h3>Vigili del Fuoco</h3>
+                            <span class="faction-badge">Protezione Civile</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Combatti gli incendi, effettua salvataggi e intervieni nelle emergenze.</p>
+                            <ul class="faction-features">
+                                <li>🔥 Spegnimento incendi</li>
+                                <li>🪜 Operazioni di salvataggio</li>
+                                <li>🚨 Interventi di emergenza</li>
+                                <li>⚠️ Prevenzione incendi</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 20 anni (nel gioco)</li>
+                                    <li>Buona forma fisica</li>
+                                    <li>Spirito di squadra</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Vigili del Fuoco')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Croce Rossa Italiana -->
+                    <div class="faction-card faction-medic">
+                        <div class="faction-header">
+                            <div class="faction-icon">🏥</div>
+                            <h3>Croce Rossa Italiana</h3>
+                            <span class="faction-badge">Emergenze Sanitarie</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Salva vite, cura i feriti e gestisci le emergenze mediche della città.</p>
+                            <ul class="faction-features">
+                                <li>🚑 Interventi di emergenza</li>
+                                <li>💊 Cure mediche</li>
+                                <li>🏥 Assistenza sanitaria</li>
+                                <li>🩺 Primo soccorso</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 21 anni (nel gioco)</li>
+                                    <li>Formazione medica di base</li>
+                                    <li>Pazienza e dedizione</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Croce Rossa Italiana')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Croce Verde -->
+                    <div class="faction-card faction-croceverde">
+                        <div class="faction-header">
+                            <div class="faction-icon">💚</div>
+                            <h3>Croce Verde</h3>
+                            <span class="faction-badge">Emergenze Sanitarie</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Offri assistenza sanitaria, trasporto infermi e interventi di primo soccorso.</p>
+                            <ul class="faction-features">
+                                <li>🚑 Ambulanze e soccorsi</li>
+                                <li>💊 Assistenza medica</li>
+                                <li>🏥 Trasporto sanitario</li>
+                                <li>🩺 Supporto emergenze</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 21 anni (nel gioco)</li>
+                                    <li>Formazione sanitaria</li>
+                                    <li>Empatia e professionalità</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('Croce Verde')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- ACI -->
+                    <div class="faction-card faction-aci">
+                        <div class="faction-header">
+                            <div class="faction-icon">🚗</div>
+                            <h3>ACI</h3>
+                            <span class="faction-badge">Assistenza Stradale</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Fornisci soccorso stradale, riparazioni d'emergenza e assistenza automobilistica.</p>
+                            <ul class="faction-features">
+                                <li>🚗 Soccorso stradale</li>
+                                <li>🛠️ Riparazioni d'emergenza</li>
+                                <li>🚙 Traino veicoli</li>
+                                <li>💼 Assistenza automobilisti</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Età minima: 18 anni (nel gioco)</li>
+                                    <li>Conoscenze meccanica base</li>
+                                    <li>Patente di guida</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="applyFaction('ACI')">Candidati</button>
+                        </div>
+                    </div>
+
+                    <!-- Civile -->
+                    <div class="faction-card faction-civilian">
+                        <div class="faction-header">
+                            <div class="faction-icon">👤</div>
+                            <h3>Civile</h3>
+                            <span class="faction-badge">Libero</span>
+                        </div>
+                        <div class="faction-body">
+                            <p class="faction-description">Vivi la tua vita come preferisci: apri un'attività, lavora o semplicemente esplora.</p>
+                            <ul class="faction-features">
+                                <li>🏪 Apertura negozi</li>
+                                <li>💼 Lavori vari</li>
+                                <li>🎨 Totale libertà</li>
+                                <li>🤝 Interazione sociale</li>
+                            </ul>
+                            <div class="faction-requirements">
+                                <strong>Requisiti:</strong>
+                                <ul>
+                                    <li>Nessun requisito</li>
+                                    <li>Rispetto delle regole</li>
+                                    <li>Roleplay di qualità</li>
+                                </ul>
+                            </div>
+                            <button class="faction-apply-btn" onclick="selectCivilian()">Inizia Subito</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faction-info-box">
+                    <h3>ℹ️ Come Funzionano le Candidature</h3>
+                    <ol class="process-list">
+                        <li><strong>Scegli la fazione</strong> - Clicca su "Candidati" nella fazione desiderata</li>
+                        <li><strong>Compila il form</strong> - Inserisci i tuoi dati e la motivazione</li>
+                        <li><strong>Attendi risposta</strong> - Lo staff esaminerà la tua richiesta</li>
+                        <li><strong>Addestramento</strong> - Se accettato, dovrai completare l'addestramento</li>
+                        <li><strong>Inizio servizio</strong> - Inizia a lavorare nella tua fazione!</li>
+                    </ol>
                 </div>
             </div>
-
-            <!-- 2. Arma dei Carabinieri -->
-            <div class="faction-card faction-carabinieri ">
-                <div class="faction-header">
-                    <div class="faction-icon">🎖️</div>
-                    <h3>Arma dei Carabinieri</h3>
-                    <span class="faction-badge">Forze dell'Ordine</span>
-                </div>
-                <div class="faction-body">
-                    <p class="faction-description">Difendi la legge, proteggi i cittadini e mantieni l'ordine con onore e disciplina.</p>
-                    <ul class="faction-features">
-                        <li>🚓 Controllo del territorio</li>
-                        <li>⚖️ Indagini e operazioni</li>
-                        <li>🎖️ Pattuglie militari</li>
-                        <li>📋 Sicurezza pubblica</li>
-                    </ul>
-                    <div class="faction-requirements">
-                        <strong>Requisiti:</strong>
-                        <ul>
-                            <li>Età minima: 18 anni (nel gioco)</li>
-                            <li>Fedina penale pulita</li>
-                            <li>Disciplina e rispetto</li>
-                        </ul>
-                    </div>
-                    <button class="faction-apply-btn" onclick="applyFaction('Arma dei Carabinieri')">Candidati</button>
-                </div>
-            </div>
-
-            <!-- 3. Guardia di Finanza -->
-            <div class="faction-card faction-gdf">
-                <div class="faction-header">
-                    <div class="faction-icon">💰</div>
-                    <h3>Guardia di Finanza</h3>
-                    <span class="faction-badge">Forze dell'Ordine</span>
-                </div>
-                <div class="faction-body">
-                    <p class="faction-description">Contrasta l'evasione fiscale, combatti il contrabbando e tutela l'economia nazionale.</p>
-                    <ul class="faction-features">
-                        <li>💼 Controlli fiscali</li>
-                        <li>🚫 Contrasto al contrabbando</li>
-                        <li>🔍 Investigazioni economiche</li>
-                        <li>⚖️ Tutela della finanza pubblica</li>
-                    </ul>
-                    <div class="faction-requirements">
-                        <strong>Requisiti:</strong>
-                        <ul>
-                            <li>Età minima: 18 anni (nel gioco)</li>
-                            <li>Fedina penale pulita</li>
-                            <li>Conoscenze base economia</li>
-                        </ul>
-                    </div>
-                    <button class="faction-apply-btn" onclick="applyFaction('Guardia di Finanza')">Candidati</button>
-                </div>
-            </div>
-
-            <!-- 4. Polizia Locale -->
-            <div class="faction-card faction-locale">
-                <div class="faction-header">
-                    <div class="faction-icon">🚓</div>
-                    <h3>Polizia Locale</h3>
-                    <span class="faction-badge">Forze dell'Ordine</span>
-                </div>
-                <div class="faction-body">
-                    <p class="faction-description">Vigila sul territorio comunale, gestisci il traffico e garantisci la sicurezza urbana.</p>
-                    <ul class="faction-features">
-                        <li>🚦 Gestione traffico urbano</li>
-                        <li>📋 Controlli amministrativi</li>
-                        <li>🏙️ Sicurezza del territorio</li>
-                        <li>⚖️ Sanzioni e multe</li>
-                    </ul>
-                    <div class="faction-requirements">
-                        <strong>Requisiti:</strong>
-                        <ul>
-                            <li>Età minima: 18 anni (nel gioco)</li>
-                            <li>Fedina penale pulita</li>
-                            <li>Conoscenza del territorio</li>
-                        </ul>
-                    </div>
-                    <button class="faction-apply-btn" onclick="applyFaction('Polizia Locale')">Candidati</button>
-                </div>
-            </div>
-
-            <!-- 5. Polizia Penitenziaria -->
-            <div class="faction-card faction-penitenziaria">
-                <div class="faction-header">
-                    <div class="faction-icon">🔒</div>
-                    <h3>Polizia Penitenziaria</h3>
-                    <span class="faction-badge">Forze dell'Ordine</span>
-                </div>
-                <div class="faction-body">
-                    <p class="faction-description">Sorveglia le strutture penitenziarie, gestisci i detenuti e garantisci la sicurezza carceraria.</p>
-                    <ul class="faction-features">
-                        <li>🏢 Sorveglianza carceraria</li>
-                        <li>👮 Gestione detenuti</li>
-                        <li>🔐 Sicurezza perimetrale</li>
-                        <li>📋 Controlli e ispezioni</li>
-                    </ul>
-                    <div class="faction-requirements">
-                        <strong>Requisiti:</strong>
-                        <ul>
-                            <li>Età minima: 18 anni (nel gioco)</li>
-                            <li>Fedina penale pulita</li>
-                            <li>Autocontrollo e pazienza</li>
-                        </ul>
-                    </div>
-                    <button class="faction-apply-btn" onclick="applyFaction('Polizia Penitenziaria')">Candidati</button>
-                </div>
-            </div>
-
-            <!-- 6. Vigili del Fuoco -->
-            <div class="faction-card faction-firefighter">
-                <div class="faction-header">
-                    <div class="faction-icon">🚒</div>
-                    <h3>Vigili del Fuoco</h3>
-                    <span class="faction-badge">Protezione Civile</span>
-                </div>
-                <div class="faction-body">
-                    <p class="faction-description">Combatti gli incendi, effettua salvataggi e intervieni nelle emergenze.</p>
-                    <ul class="faction-features">
-                        <li>🔥 Spegnimento incendi</li>
-                        <li>🪜 Operazioni di salvataggio</li>
-                        <li>🚨 Interventi di emergenza</li>
-                        <li>⚠️ Prevenzione incendi</li>
-                    </ul>
-                    <div class="faction-requirements">
-                        <strong>Requisiti:</strong>
-                        <ul>
-                            <li>Età minima: 20 anni (nel gioco)</li>
-                            <li>Buona forma fisica</li>
-                            <li>Spirito di squadra</li>
-                        </ul>
-                    </div>
-                    <button class="faction-apply-btn" onclick="applyFaction('Vigili del Fuoco')">Candidati</button>
-                </div>
-            </div>
-
-            <!-- 7. Croce Rossa Italiana -->
-            <div class="faction-card faction-medic">
-                <div class="faction-header">
-                    <div class="faction-icon">🏥</div>
-                    <h3>Croce Rossa Italiana</h3>
-                    <span class="faction-badge">Emergenze Sanitarie</span>
-                </div>
-                <div class="faction-body">
-                    <p class="faction-description">Salva vite, cura i feriti e gestisci le emergenze mediche della città.</p>
-                    <ul class="faction-features">
-                        <li>🚑 Interventi di emergenza</li>
-                        <li>💊 Cure mediche</li>
-                        <li>🏥 Assistenza sanitaria</li>
-                        <li>🩺 Primo soccorso</li>
-                    </ul>
-                    <div class="faction-requirements">
-                        <strong>Requisiti:</strong>
-                        <ul>
-                            <li>Età minima: 21 anni (nel gioco)</li>
-                            <li>Formazione medica di base</li>
-                            <li>Pazienza e dedizione</li>
-                        </ul>
-                    </div>
-                    <button class="faction-apply-btn" onclick="applyFaction('Croce Rossa Italiana')">Candidati</button>
-                </div>
-            </div>
-
-            <!-- 8. Croce Verde -->
-            <div class="faction-card faction-croceverde">
-                <div class="faction-header">
-                    <div class="faction-icon">💚</div>
-                    <h3>Croce Verde</h3>
-                    <span class="faction-badge">Emergenze Sanitarie</span>
-                </div>
-                <div class="faction-body">
-                    <p class="faction-description">Offri assistenza sanitaria, trasporto infermi e interventi di primo soccorso.</p>
-                    <ul class="faction-features">
-                        <li>🚑 Ambulanze e soccorsi</li>
-                        <li>💊 Assistenza medica</li>
-                        <li>🏥 Trasporto sanitario</li>
-                        <li>🩺 Supporto emergenze</li>
-                    </ul>
-                    <div class="faction-requirements">
-                        <strong>Requisiti:</strong>
-                        <ul>
-                            <li>Età minima: 21 anni (nel gioco)</li>
-                            <li>Formazione sanitaria</li>
-                            <li>Empatia e professionalità</li>
-                        </ul>
-                    </div>
-                    <button class="faction-apply-btn" onclick="applyFaction('Croce Verde')">Candidati</button>
-                </div>
-            </div>
-
-            <!-- 9. ACI -->
-            <div class="faction-card faction-aci">
-                <div class="faction-header">
-                    <div class="faction-icon">🚗</div>
-                    <h3>ACI</h3>
-                    <span class="faction-badge">Assistenza Stradale</span>
-                </div>
-                <div class="faction-body">
-                    <p class="faction-description">Fornisci soccorso stradale, riparazioni d'emergenza e assistenza automobilistica.</p>
-                    <ul class="faction-features">
-                        <li>🚗 Soccorso stradale</li>
-                        <li>🛠️ Riparazioni d'emergenza</li>
-                        <li>🚙 Traino veicoli</li>
-                        <li>💼 Assistenza automobilisti</li>
-                    </ul>
-                    <div class="faction-requirements">
-                        <strong>Requisiti:</strong>
-                        <ul>
-                            <li>Età minima: 18 anni (nel gioco)</li>
-                            <li>Conoscenze meccanica base</li>
-                            <li>Patente di guida</li>
-                        </ul>
-                    </div>
-                    <button class="faction-apply-btn" onclick="applyFaction('ACI')">Candidati</button>
-                </div>
-            </div>
-
-            <!-- 10. Civile -->
-            <div class="faction-card faction-civilian">
-                <div class="faction-header">
-                    <div class="faction-icon">👤</div>
-                    <h3>Civile</h3>
-                    <span class="faction-badge">Libero</span>
-                </div>
-                <div class="faction-body">
-                    <p class="faction-description">Vivi la tua vita come preferisci: apri un'attività, lavora o semplicemente esplora.</p>
-                    <ul class="faction-features">
-                        <li>🏪 Apertura negozi</li>
-                        <li>💼 Lavori vari</li>
-                        <li>🎨 Totale libertà</li>
-                        <li>🤝 Interazione sociale</li>
-                    </ul>
-                    <div class="faction-requirements">
-                        <strong>Requisiti:</strong>
-                        <ul>
-                            <li>Nessun requisito</li>
-                            <li>Rispetto delle regole</li>
-                            <li>Roleplay di qualità</li>
-                        </ul>
-                    </div>
-                    <button class="faction-apply-btn" onclick="selectCivilian()">Inizia Subito</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="faction-info-box">
-            <h3>ℹ️ Come Funzionano le Candidature</h3>
-            <ol class="process-list">
-                <li><strong>Scegli la fazione</strong> - Clicca su "Candidati" nella fazione desiderata</li>
-                <li><strong>Compila il form</strong> - Inserisci i tuoi dati e la motivazione</li>
-                <li><strong>Attendi risposta</strong> - Lo staff esaminerà la tua richiesta</li>
-                <li><strong>Addestramento</strong> - Se accettato, dovrai completare l'addestramento</li>
-                <li><strong>Inizio servizio</strong> - Inizia a lavorare nella tua fazione!</li>
-            </ol>
-        </div>
-    </div>
-</section>
+        </section>
 
         <!-- Sezione Regolamento -->
         <section class="section" id="regolamento">
@@ -732,6 +726,77 @@
             <p>Questa sezione è riservata solo agli amministratori.</p>
             <p>Se sei un membro dello staff, effettua il login dalla sezione "Amministratore" nella pagina di accesso.</p>
             <button class="modal-ok-btn" onclick="closeAccessModal()">Ok</button>
+        </div>
+    </div>
+
+    <!-- 🔥 PULSANTI FLOATING EVENTI/GUIDE (SOLO STAFF) -->
+    <div id="createEventsGuidesButtons" class="create-floating-buttons" style="display: none;">
+        <button class="create-floating-btn event-btn" onclick="openEventGuideModal('evento')">
+            🎉 Crea Evento
+        </button>
+        <button class="create-floating-btn guide-btn" onclick="openEventGuideModal('guida')">
+            📚 Crea Guida
+        </button>
+    </div>
+
+    <!-- 🔥 MODALE CREAZIONE EVENTI/GUIDE -->
+    <div id="eventGuideModal" class="event-guide-modal-overlay">
+        <div class="event-guide-modal-box">
+            <button class="modal-close-btn" onclick="closeEventGuideModal()">✕</button>
+            
+            <div class="modal-header-section">
+                <h2 id="modalHeaderTitle">🎉 Crea Nuovo Evento</h2>
+                <p id="modalHeaderSubtitle">Compila i campi e pubblica su Discord</p>
+            </div>
+
+            <form id="eventGuideForm">
+                <input type="hidden" id="eventGuideType" value="evento">
+                
+                <div class="form-field">
+                    <label for="eventGuideTitolo">📝 Titolo *</label>
+                    <input type="text" id="eventGuideTitolo" placeholder="Es: Grande Evento di Natale!" required maxlength="100">
+                </div>
+
+                <div class="form-field">
+                    <label for="eventGuideDescrizione">📄 Descrizione *</label>
+                    <textarea id="eventGuideDescrizione" placeholder="Descrivi in dettaglio..." required maxlength="2000" rows="6"></textarea>
+                    <small style="color: #888; font-size: 12px;">Max 2000 caratteri</small>
+                </div>
+
+                <div class="form-field" id="dataEventoField">
+                    <label for="eventGuideData">📅 Data e Ora Evento *</label>
+                    <input type="datetime-local" id="eventGuideData">
+                </div>
+
+                <div class="form-field">
+                    <label for="eventGuideImmagine">🖼️ URL Immagine (opzionale)</label>
+                    <input type="url" id="eventGuideImmagine" placeholder="https://esempio.com/immagine.png">
+                </div>
+
+                <div class="form-field">
+                    <label>🔔 Ping Discord</label>
+                    <div class="ping-options-grid">
+                        <label class="ping-option-label">
+                            <input type="radio" name="ping" value="none" checked>
+                            <span>❌ Nessun Ping</span>
+                        </label>
+                        <label class="ping-option-label">
+                            <input type="radio" name="ping" value="everyone">
+                            <span>👥 @everyone</span>
+                        </label>
+                        <label class="ping-option-label">
+                            <input type="radio" name="ping" value="here">
+                            <span>🟢 @here</span>
+                        </label>
+                        <label class="ping-option-label">
+                            <input type="radio" name="ping" value="both">
+                            <span>🔥 Entrambi</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="modal-submit-button" id="submitEventGuideBtn">🚀 Pubblica Evento</button>
+            </form>
         </div>
     </div>
 
