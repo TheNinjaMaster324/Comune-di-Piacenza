@@ -693,7 +693,7 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
                 console.log('⏰ Chiudo modale dopo 2 secondi...');
                 closeEventGuideModal();
                 document.getElementById('eventGuideForm').reset();
-            }, 2000);
+            }, 5000);
             
         } else {
             const errorText = await response.text();
