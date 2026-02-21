@@ -679,21 +679,64 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
         console.log('📡 Risposta:', response.status);
         
         if (response.ok) {
-            console.log('✅ SUCCESSO! Mostro alert e aspetto prima di chiudere...');
+            console.log('✅ WEBHOOK INVIATO!');
             
-            // PRIMA: Mostra alert
+            // 🔥 SALVA EVENTO/GUIDA IN LOCALSTORAGE IMMEDIATAMENTE!
+            if (type === 'evento') {
+                const events = JSON.parse(localStorage.getItem('pinnedEvents') || '[]');
+                const newEvent = {
+                    id: Date.now().toString(),
+                    title: titolo,
+                    description: descrizione,
+                    date: dataEvento,
+                    location: 'Server Roblox - Comune di Piacenza RP',
+                    author: userData.username || 'Staff',
+                    image: immagine || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&h=200&fit=crop',
+                    program: '',
+                    discordEventUrl: null,
+                    createdAt: new Date().toISOString()
+                };
+                events.unshift(newEvent);
+                localStorage.setItem('pinnedEvents', JSON.stringify(events));
+                console.log('💾 Evento salvato in localStorage!');
+                
+                // Ricarica eventi sul sito
+                loadEventsOnSite();
+                console.log('🔄 Eventi ricaricati!');
+            } else {
+                const guides = JSON.parse(localStorage.getItem('pinnedGuides') || '[]');
+                const newGuide = {
+                    id: Date.now().toString(),
+                    title: titolo,
+                    description: descrizione,
+                    author: userData.username || 'Staff',
+                    createdAt: new Date().toISOString()
+                };
+                guides.unshift(newGuide);
+                localStorage.setItem('pinnedGuides', JSON.stringify(guides));
+                console.log('💾 Guida salvata in localStorage!');
+                
+                // Ricarica guide sul sito
+                loadGuidesOnSite();
+                console.log('🔄 Guide ricaricate!');
+            }
+            
+            // Mostra alert di successo
             showCustomAlert('success', '✅ PUBBLICATO!', 
                 `${type === 'evento' ? '🎉 EVENTO' : '📚 GUIDA'} pubblicato con successo!\n\n` +
-                `"${titolo}"\n\n` +
-                `Controlla Discord!`
+                `📝 "${titolo}"\n\n` +
+                `✅ Visibile sul sito!\n` +
+                `✅ Inviato su Discord!`
             );
             
-            // DOPO: Aspetta 2 secondi e chiudi
+            console.log('⏰ Chiudo modale tra 3 secondi...');
+            
+            // Aspetta 3 secondi prima di chiudere
             setTimeout(() => {
-                console.log('⏰ Chiudo modale dopo 2 secondi...');
+                console.log('🔒 Chiudo modale!');
                 closeEventGuideModal();
                 document.getElementById('eventGuideForm').reset();
-            }, 5000);
+            }, 3000);
             
         } else {
             const errorText = await response.text();
