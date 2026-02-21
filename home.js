@@ -993,4 +993,3 @@ function addGuideManually() {
 
 console.log('✅ home.js caricato correttamente!');
 console.log('💡 Per testare: addEventManually() o addGuideManually() nella console');
-console.log('💡 Per testare: addEventManually() o addGuideManually() nella console');
