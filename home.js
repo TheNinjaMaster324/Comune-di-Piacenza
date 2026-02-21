@@ -763,3 +763,264 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
 });
 
 console.log('✅ Sistema Eventi/Guide caricato!');
+
+function loadEventsOnSite() {
+    const container = document.getElementById('eventsContainer');
+    if (!container) return;
+    
+    const events = JSON.parse(localStorage.getItem('pinnedEvents') || '[]');
+    
+    if (events.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:60px 20px;color:#999;grid-column:1/-1;">
+                <p style="font-size:18px;margin:0;">📅 Nessun evento in programma al momento</p>
+                <p style="font-size:14px;margin-top:10px;">Controlla Discord per gli ultimi aggiornamenti!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Ordina per data
+    events.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    container.innerHTML = events.map(event => {
+        const eventDate = new Date(event.date);
+        const now = new Date();
+        const isPast = eventDate < now;
+        
+        const formattedDate = eventDate.toLocaleString('it-IT', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        return `
+            <div class="event-card ${isPast ? 'past' : ''}">
+                <img src="${event.image || 'https://via.placeholder.com/400x200?text=Evento'}" alt="${event.title}">
+                <h3>🎉 ${event.title}</h3>
+                <p>${event.description.substring(0, 120)}...</p>
+                <p class="event-date">📅 ${formattedDate}</p>
+                <div class="event-buttons">
+                    ${!isPast ? `
+                        <button onclick="participateEvent('${event.id}', '${event.title.replace(/'/g, "\\'")}')" class="btn-participate">
+                            🎉 Partecipa
+                        </button>
+                    ` : ''}
+                    <button onclick="showEventDetails('${event.id}')" class="btn-details">
+                        ℹ️ Più Info
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function loadGuidesOnSite() {
+    const container = document.getElementById('guidesContainer');
+    if (!container) return;
+    
+    const guides = JSON.parse(localStorage.getItem('pinnedGuides') || '[]');
+    
+    if (guides.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:60px 20px;color:#999;grid-column:1/-1;">
+                <p style="font-size:18px;margin:0;">📖 Nessuna guida disponibile al momento</p>
+                <p style="font-size:14px;margin-top:10px;">Le guide verranno pubblicate presto!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = guides.map(guide => `
+        <div class="guide-card">
+            <h3>📚 ${guide.title}</h3>
+            <p>${guide.description.substring(0, 150).replace(/<[^>]*>/g, '')}...</p>
+            <p style="font-size:13px;color:#999;margin:10px 0;">👤 ${guide.author}</p>
+            <div class="guide-buttons">
+                <button onclick="showGuideDetails('${guide.id}')" class="btn-read">
+                    📖 Leggi Guida
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function participateEvent(eventId, eventTitle) {
+    const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    if (!user.username) {
+        showCustomAlert('warning', 'Login Richiesto', 'Devi essere loggato per partecipare!');
+        return;
+    }
+    
+    // Salva partecipazione locale
+    const participations = JSON.parse(localStorage.getItem('myParticipations') || '{}');
+    participations[eventId] = { title: eventTitle, date: new Date().toISOString() };
+    localStorage.setItem('myParticipations', JSON.stringify(participations));
+    
+    // Notifica bot
+    const WEBHOOK = 'https://discord.com/api/webhooks/INSERISCI_WEBHOOK_PARTECIPAZIONI'; // ⬅️ CAMBIA
+    
+    try {
+        await fetch(WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                content: 'PARTECIPA_TRIGGER',
+                embeds: [{
+                    title: '✅ Nuova Partecipazione',
+                    color: 0x27ae60,
+                    fields: [
+                        { name: 'Evento', value: eventTitle },
+                        { name: 'Username', value: user.username },
+                        { name: 'Event ID', value: eventId }
+                    ]
+                }]
+            })
+        });
+    } catch (err) {
+        console.log('⚠️ Webhook partecipazione fallito');
+    }
+    
+    showCustomAlert('success', '🎉 Iscritto!', 
+        `Parteciperai a "${eventTitle}"!\n\n` +
+        `Riceverai:\n` +
+        `• Messaggio 10 minuti prima\n` +
+        `• Messaggio quando inizia\n\n` +
+        `Controlla i DM Discord!`);
+}
+
+function showEventDetails(eventId) {
+    const events = JSON.parse(localStorage.getItem('pinnedEvents') || '[]');
+    const event = events.find(e => e.id === eventId);
+    if (!event) return;
+    
+    const eventDate = new Date(event.date);
+    const formattedDate = eventDate.toLocaleString('it-IT', {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    const modalBody = `
+        <img src="${event.image || 'https://via.placeholder.com/600x300?text=Evento'}" style="width:100%;border-radius:10px;margin-bottom:20px;">
+        <h2>🎉 ${event.title}</h2>
+        <p style="line-height:1.8;color:#555;">${event.description}</p>
+        <hr>
+        <h3>📋 Dettagli Evento</h3>
+        <p><strong>📅 Quando:</strong> ${formattedDate}</p>
+        <p><strong>📍 Dove:</strong> ${event.location || 'Server Roblox - Comune di Piacenza RP'}</p>
+        <p><strong>👤 Organizzatore:</strong> ${event.author || 'Staff'}</p>
+        ${event.program ? `<p><strong>🎯 Programma:</strong><br>${event.program.replace(/\n/g, '<br>')}</p>` : ''}
+        <hr>
+        <button onclick="participateEvent('${event.id}', '${event.title.replace(/'/g, "\\'")}')" class="btn-participate" style="width:100%;padding:15px;font-size:16px;">
+            🎉 Partecipa all'Evento
+        </button>
+    `;
+    
+    document.getElementById('detailsModalBody').innerHTML = modalBody;
+    document.getElementById('detailsModal').classList.add('show');
+}
+
+function showGuideDetails(guideId) {
+    const guides = JSON.parse(localStorage.getItem('pinnedGuides') || '[]');
+    const guide = guides.find(g => g.id === guideId);
+    if (!guide) return;
+    
+    const modalBody = `
+        <h2>📚 ${guide.title}</h2>
+        <div style="text-align:left;line-height:1.8;color:#555;margin:20px 0;">
+            ${guide.description}
+        </div>
+        <hr>
+        <p style="font-size:14px;color:#999;">
+            <strong>👤 Autore:</strong> ${guide.author || 'Staff'}<br>
+            <strong>📅 Pubblicata:</strong> ${new Date(guide.createdAt).toLocaleDateString('it-IT')}
+        </p>
+    `;
+    
+    document.getElementById('detailsModalBody').innerHTML = modalBody;
+    document.getElementById('detailsModal').classList.add('show');
+}
+
+function closeDetailsModal() {
+    document.getElementById('detailsModal').classList.remove('show');
+}
+
+// ==================== FUNZIONI MANUALI DI TEST ====================
+
+function addEventManually() {
+    const events = JSON.parse(localStorage.getItem('pinnedEvents') || '[]');
+    
+    const newEvent = {
+        id: Date.now().toString(),
+        title: 'Grande Festa di Natale 🎄',
+        description: 'Vieni a festeggiare il Natale con noi! Premi esclusivi, minigiochi e tanto divertimento per tutta la community!',
+        date: '2026-12-25T18:00:00',
+        location: 'Server Roblox - Comune di Piacenza RP',
+        author: 'Ninja',
+        image: 'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=400',
+        program: '18:00 - Inizio evento\n18:30 - Minigiochi a squadre\n19:00 - Premiazioni\n19:30 - Festa finale',
+        discordEventUrl: null,
+        createdAt: new Date().toISOString()
+    };
+    
+    events.unshift(newEvent);
+    localStorage.setItem('pinnedEvents', JSON.stringify(events));
+    loadEventsOnSite();
+    
+    showCustomAlert('success', 'Evento Aggiunto!', 'Evento di test aggiunto con successo!');
+}
+
+function addGuideManually() {
+    const guides = JSON.parse(localStorage.getItem('pinnedGuides') || '[]');
+    
+    const newGuide = {
+        id: Date.now().toString(),
+        title: 'Come Iniziare a Giocare',
+        description: `
+            <h3>🎮 Benvenuto in Comune di Piacenza RP!</h3>
+            <p>Questa guida ti aiuterà a muovere i primi passi nel nostro server.</p>
+            
+            <h4>1️⃣ Crea il tuo personaggio</h4>
+            <p>Scegli nome, aspetto e storia del tuo personaggio. Ricorda: il roleplay è importante!</p>
+            
+            <h4>2️⃣ Scegli una fazione</h4>
+            <p>Puoi unirti a Polizia, Medici, Vigili del Fuoco o rimanere civile.</p>
+            
+            <h4>3️⃣ Leggi il regolamento</h4>
+            <p>È fondamentale conoscere le regole del server per evitare sanzioni.</p>
+            
+            <h4>4️⃣ Inizia a giocare!</h4>
+            <p>Entra nel server Roblox e divertiti con la community!</p>
+            
+            <p><strong>💡 Suggerimento:</strong> Chiedi aiuto agli admin se hai dubbi!</p>
+        `,
+        author: 'Staff',
+        createdAt: new Date().toISOString()
+    };
+    
+    guides.unshift(newGuide);
+    localStorage.setItem('pinnedGuides', JSON.stringify(guides));
+    loadGuidesOnSite();
+    
+    showCustomAlert('success', 'Guida Aggiunta!', 'Guida di test aggiunta con successo!');
+}
+
+// Carica eventi/guide all'avvio (modifica il tuo window.addEventListener('load') esistente)
+// AGGIUNGI queste due righe nel tuo load listener esistente:
+//     loadEventsOnSite();
+//     loadGuidesOnSite();
+
+// Oppure crea un nuovo listener (se preferisci):
+document.addEventListener('DOMContentLoaded', function() {
+    loadEventsOnSite();
+    loadGuidesOnSite();
+});
+
+console.log('✅ Sistema eventi/guide caricato!');
+console.log('💡 Per testare: addEventManually() o addGuideManually() nella console');

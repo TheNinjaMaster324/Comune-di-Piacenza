@@ -580,12 +580,55 @@
         </section>
 
         <!-- Sezione Guide -->
-        <section class="section" id="guide">
+        <!-- ==================== COPIA QUESTO CODICE IN home.html ==================== -->
+
+<!-- 1️⃣ SOSTITUISCI LA SEZIONE GUIDE CON QUESTO: -->
+
+        <!-- Sezione Guide -->
+        <section class="section" id="guide" style="background:#f9f9f9;">
             <div class="container">
-                <h2>📚 Guide</h2>
-                <p>Le guide per iniziare a giocare saranno pubblicate presto.</p>
+                <h2>📚 Guide Ufficiali</h2>
+                <p class="section-subtitle">Impara tutto quello che c'è da sapere!</p>
+                
+                <div id="guidesContainer">
+                    <div style="text-align:center;padding:60px 20px;color:#999;grid-column:1/-1;">
+                        <p style="font-size:18px;margin:0;">📖 Nessuna guida disponibile al momento</p>
+                        <p style="font-size:14px;margin-top:10px;">Le guide verranno pubblicate presto!</p>
+                    </div>
+                </div>
             </div>
         </section>
+
+<!-- 2️⃣ SOSTITUISCI LA SEZIONE EVENTI CON QUESTO: -->
+
+        <!-- Sezione Eventi -->
+        <section class="section" id="eventi">
+            <div class="container">
+                <h2>🎉 Eventi in Programma</h2>
+                <p class="section-subtitle">Partecipa ai nostri eventi esclusivi!</p>
+                
+                <div id="eventsContainer">
+                    <div style="text-align:center;padding:60px 20px;color:#999;grid-column:1/-1;">
+                        <p style="font-size:18px;margin:0;">📅 Nessun evento in programma al momento</p>
+                        <p style="font-size:14px;margin-top:10px;">Controlla Discord per gli ultimi aggiornamenti!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<!-- 3️⃣ AGGIUNGI QUESTO PRIMA DI </body>: -->
+
+    <!-- MODALE DETTAGLI EVENTI/GUIDE -->
+    <div id="detailsModal" class="details-modal-overlay">
+        <div class="details-modal-content">
+            <span class="details-modal-close" onclick="closeDetailsModal()">×</span>
+            <div id="detailsModalBody"></div>
+        </div>
+    </div>
+
+    <script src="home.js"></script>
+<!-- FATTO! home.html è pronto! -->
+
 
         <!-- Sezione Eventi -->
         <section class="section" id="eventi">
