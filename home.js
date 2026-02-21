@@ -8,11 +8,9 @@ function showCustomAlert(type, title, message) {
     const alertDate = document.getElementById('alertDate');
     const alertIcon = document.getElementById('alertIcon');
     
-    // Rimuovi classi precedenti
     alertBox.classList.remove('warning', 'error', 'success', 'info', 'submission');
     alertBox.classList.add(type);
     
-    // Icone
     const icons = {
         'warning': '⚠️',
         'error': '❌',
@@ -25,13 +23,11 @@ function showCustomAlert(type, title, message) {
     alertTitle.textContent = title;
     alertMessage.textContent = message;
     
-    // Data e ora
     const now = new Date();
     const dateStr = now.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     alertDate.textContent = `Data: ${dateStr}, ${timeStr}`;
     
-    // Mostra alert
     alertOverlay.classList.add('show');
 }
 
@@ -40,19 +36,16 @@ function closeCustomAlert() {
     alertOverlay.classList.remove('show');
 }
 
-// Chiudi con ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeCustomAlert();
 });
 
-// Chiudi cliccando fuori
 document.getElementById('customAlert')?.addEventListener('click', function(e) {
     if (e.target === this) closeCustomAlert();
 });
 
 // ==================== TRACCIAMENTO UTENTI ONLINE ====================
 
-// Funzione per aggiornare l'heartbeat dell'utente
 function updateUserHeartbeat() {
     const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     if (!user.username) return;
@@ -70,11 +63,10 @@ function updateUserHeartbeat() {
     localStorage.setItem('onlineUsers', JSON.stringify(onlineUsers));
 }
 
-// Funzione per pulire utenti offline (ultimo heartbeat > 5 minuti)
 function cleanOfflineUsers() {
     const onlineUsers = JSON.parse(localStorage.getItem('onlineUsers') || '{}');
     const now = new Date().getTime();
-    const timeout = 5 * 60 * 1000; // 5 minuti
+    const timeout = 5 * 60 * 1000;
     
     let cleaned = false;
     Object.keys(onlineUsers).forEach(username => {
@@ -90,7 +82,6 @@ function cleanOfflineUsers() {
     }
 }
 
-// Funzione per contare gli utenti online
 function getOnlineUsersCount() {
     cleanOfflineUsers();
     const onlineUsers = JSON.parse(localStorage.getItem('onlineUsers') || '{}');
@@ -106,7 +97,6 @@ function getOnlineUsersCount() {
     return { totalOnline, adminsOnline };
 }
 
-// 🔥 Funzione per aggiornare le statistiche (chiamata dal bottone)
 function refreshHomeStats() {
     const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
     const { totalOnline, adminsOnline } = getOnlineUsersCount();
@@ -122,7 +112,6 @@ function refreshHomeStats() {
     console.log(`📊 Stats aggiornate: ${users.length} utenti, ${totalOnline} online (${adminsOnline} admin)`);
 }
 
-// Aggiorna statistiche admin (se presente)
 function updateAdminStats() {
     const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
     const totalUsersElement = document.getElementById('totalUsers');
@@ -131,15 +120,12 @@ function updateAdminStats() {
         totalUsersElement.textContent = users.length;
     }
     
-    // Aggiorna anche online users
     refreshHomeStats();
 }
 
-// Avvia heartbeat ogni 30 secondi
 setInterval(updateUserHeartbeat, 30000);
 setInterval(refreshHomeStats, 30000);
 
-// Cleanup quando l'utente chiude la pagina
 window.addEventListener('beforeunload', function() {
     const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     if (user.username) {
@@ -159,28 +145,30 @@ window.addEventListener('load', function() {
         return;
     }
     
-    // Carica i dati dell'utente
     const userData = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     
     if (userData.username) {
-        // Mostra il messaggio di benvenuto
         document.getElementById('welcomeMessage').textContent = `Benvenuto, ${userData.username}!`;
         
-        // ⭐ AVVIA TRACCIAMENTO UTENTE ONLINE
         updateUserHeartbeat();
         
-        // Se è admin, mostra la sezione staff
         if (userData.isAdmin) {
             const staffSection = document.getElementById('staff');
             if (staffSection) {
                 staffSection.style.display = 'block';
             }
             updateAdminStats();
-            refreshHomeStats(); // Aggiorna stats subito
+            refreshHomeStats();
             loadQuickActions();
+            
+            // 🔥 MOSTRA PULSANTI FLOATING PER ADMIN
+            const buttons = document.getElementById('createEventsGuidesButtons');
+            if (buttons) {
+                buttons.style.display = 'flex';
+                console.log('✅ Pulsanti floating mostrati!');
+            }
         }
         
-        // Se è esponente istituzionale, mostra link gestione
         if (userData.isInstitutional) {
             const gestioneLink = document.getElementById('gestioneLink');
             if (gestioneLink) {
@@ -188,6 +176,10 @@ window.addEventListener('load', function() {
             }
         }
     }
+    
+    // 🔥 CARICA EVENTI E GUIDE
+    loadEventsOnSite();
+    loadGuidesOnSite();
 });
 
 // ==================== LOGOUT ====================
@@ -195,14 +187,8 @@ window.addEventListener('load', function() {
 function logout() {
     if (confirm('Sei sicuro di voler uscire?')) {
         console.log('👋 Logout in corso...');
-        
-        // Cancella TUTTI i dati di sessione
         sessionStorage.clear();
-        
-        // Cancella cookie auto-login
         localStorage.removeItem('piacenza_auto_login');
-        
-        // Reindirizza a index.html
         window.location.href = 'index.html';
     }
 }
@@ -214,7 +200,6 @@ function toggleMobileMenu() {
     navMenu.classList.toggle('active');
 }
 
-// Chiudi menu mobile quando si clicca su un link
 document.querySelectorAll('.nav-menu a').forEach(link => {
     link.addEventListener('click', function() {
         const navMenu = document.getElementById('navMenu');
@@ -268,9 +253,9 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// ==================== FORM CONTATTI → DISCORD WEBHOOK ====================
+// ==================== FORM CONTATTI ====================
 
-document.getElementById('contactForm').addEventListener('submit', async function(e) {
+document.getElementById('contactForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const name = document.getElementById('contactName').value.trim();
@@ -299,8 +284,6 @@ document.getElementById('contactForm').addEventListener('submit', async function
     };
     
     try {
-        console.log('📤 Invio messaggio al webhook Discord...');
-        
         const response = await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -312,11 +295,10 @@ document.getElementById('contactForm').addEventListener('submit', async function
         });
         
         if (response.ok) {
-            console.log('✅ Messaggio inviato con successo!');
             alert('✅ Messaggio inviato con successo!\n\nGrazie per averci contattato, ' + name + '!\nRiceverai una risposta entro 24-48 ore.');
             this.reset();
         } else {
-            throw new Error('Errore risposta webhook: ' + response.status);
+            throw new Error('Errore risposta webhook');
         }
         
     } catch (error) {
@@ -348,7 +330,7 @@ function applyFaction(factionName) {
     
     const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     if (!user.username) {
-        showCustomAlert('warning', 'Accesso Richiesto', 'Devi essere loggato per candidarti! Effettua il login dalla pagina principale.');
+        showCustomAlert('warning', 'Accesso Richiesto', 'Devi essere loggato per candidarti!');
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 3000);
@@ -357,7 +339,7 @@ function applyFaction(factionName) {
     
     const schedule = JSON.parse(localStorage.getItem(`schedule_${fullFactionName}`) || '{}');
     if (schedule.status !== 'open') {
-        showCustomAlert('warning', 'Le candidature sono chiuse!', `Al momento non è possibile inviare candidature per ${fullFactionName}. Riprova più tardi quando verranno riaperte.`);
+        showCustomAlert('warning', 'Le candidature sono chiuse!', `Al momento non è possibile inviare candidature per ${fullFactionName}.`);
         return;
     }
     
@@ -376,7 +358,7 @@ function applyFaction(factionName) {
             minute: '2-digit'
         });
         
-        showCustomAlert('warning', 'HAI GIÀ INVIATO UNA CANDIDATURA!', `Hai già inviato una candidatura per ${fullFactionName}.\n\nData invio: ${dataInvio}\n\nPuoi candidarti solo una volta per apertura. Attendi la valutazione dello staff.`);
+        showCustomAlert('warning', 'HAI GIÀ INVIATO UNA CANDIDATURA!', `Hai già inviato una candidatura per ${fullFactionName}.\n\nData invio: ${dataInvio}`);
         return;
     }
     
@@ -392,11 +374,9 @@ function selectCivilian() {
     }
     
     alert(`✅ Benvenuto come Civile!\n\nPuoi iniziare subito a giocare.\nEntra nel server Roblox e divertiti!`);
-    
-    console.log('👤 Utente diventato civile:', user.username);
 }
 
-// ==================== NAVBAR SCROLL EFFECT ====================
+// ==================== NAVBAR SCROLL ====================
 
 let lastScroll = 0;
 const navbar = document.querySelector('.navbar');
@@ -405,9 +385,9 @@ window.addEventListener('scroll', () => {
     const currentScroll = window.pageYOffset;
     
     if (currentScroll > 100) {
-        navbar.classList.add('scrolled');
+        navbar?.classList.add('scrolled');
     } else {
-        navbar.classList.remove('scrolled');
+        navbar?.classList.remove('scrolled');
     }
     
     lastScroll = currentScroll;
@@ -436,18 +416,7 @@ document.querySelectorAll('.card').forEach(card => {
     observer.observe(card);
 });
 
-// ==================== GESTIONE BOTTONI ADMIN ====================
-// ⭐ ESCLUDI il bottone "🔄 Aggiorna" dall'alert
-
-document.querySelectorAll('.admin-btn').forEach(btn => {
-    // Salta il bottone con onclick="refreshHomeStats()"
-    if (btn.getAttribute('onclick') === 'refreshHomeStats()') {
-        return; // Non aggiungere l'alert a questo bottone
-    }
-});
-
-
-// ==================== AZIONI RAPIDE - CARICAMENTO DINAMICO ====================
+// ==================== AZIONI RAPIDE ====================
 
 function loadQuickActions() {
     const container = document.getElementById('quickActionsContent');
@@ -522,7 +491,7 @@ function toggleMaintenance() {
     const checkbox = document.getElementById('toggleMaintenance');
     const enabled = checkbox.checked;
     
-    if (enabled && !confirm('⚠️ Attivare la modalità manutenzione?\n\n• Gli utenti non potranno fare login\n• Banner pubblico visibile\n• Solo admin possono accedere\n\nConfermi?')) {
+    if (enabled && !confirm('⚠️ Attivare la modalità manutenzione?\n\n• Gli utenti non potranno fare login\n• Solo admin possono accedere\n\nConfermi?')) {
         checkbox.checked = false;
         return;
     }
@@ -534,7 +503,7 @@ function toggleMaintenance() {
     updateMaintStatus(enabled);
     showCustomAlert(enabled ? 'warning' : 'success', 
                      enabled ? '🚨 Manutenzione Attivata' : '✅ Manutenzione Disattivata',
-                     enabled ? 'Server in manutenzione. Solo admin possono accedere.' : 'Server tornato online.');
+                     enabled ? 'Server in manutenzione.' : 'Server tornato online.');
 }
 
 function updateMaintStatus(enabled) {
@@ -548,7 +517,7 @@ function updateMaintStatus(enabled) {
 }
 
 function forceLogoutAll() {
-    if (!confirm('⚠️ Espellere TUTTI gli utenti?\n\n• Invalida tutte le sessioni\n• Gli utenti dovranno rifare login\n• Tu resti connesso\n\nConfermi?')) {
+    if (!confirm('⚠️ Espellere TUTTI gli utenti?\n\nConfermi?')) {
         return;
     }
     
@@ -566,12 +535,12 @@ function forceLogoutAll() {
     localStorage.setItem('onlineUsers', JSON.stringify(onlineUsers));
     localStorage.setItem('force_logout_timestamp', Date.now().toString());
     
-    showCustomAlert('success', '📤 Logout Forzato', `${count} utenti espulsi dal server.`);
+    showCustomAlert('success', '📤 Logout Forzato', `${count} utenti espulsi.`);
     refreshHomeStats();
 }
 
 function clearCache() {
-    if (!confirm('🧹 Pulire la cache?\n\n• Log temporanei\n• Dati scaduti\n• Utenti offline\n\nConfermi?')) {
+    if (!confirm('🧹 Pulire la cache?\n\nConfermi?')) {
         return;
     }
     
@@ -590,34 +559,12 @@ function clearCache() {
     
     localStorage.setItem('onlineUsers', JSON.stringify(onlineUsers));
     
-    const logs = JSON.parse(localStorage.getItem('adminLogs') || '[]');
-    if (logs.length > 500) {
-        const newLogs = logs.slice(-500);
-        localStorage.setItem('adminLogs', JSON.stringify(newLogs));
-        cleaned += logs.length - 500;
-    }
-    
     showCustomAlert('success', '🧹 Cache Pulita', `${cleaned} elementi rimossi.`);
     refreshHomeStats();
 }
 
-console.log('✅ home.js caricato correttamente!');
+// ==================== MODALE EVENTI/GUIDE ====================
 
-// ==================== GESTIONE MODALE EVENTI/GUIDE ====================
-
-// Mostra pulsanti solo per staff
-window.addEventListener('load', function() {
-    const userData = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-    
-    if (userData.isAdmin) {
-        const buttons = document.getElementById('createEventsGuidesButtons');
-        if (buttons) {
-            buttons.style.display = 'flex';
-        }
-    }
-});
-
-// Apri modale
 function openEventGuideModal(type) {
     const modal = document.getElementById('eventGuideModal');
     const typeInput = document.getElementById('eventGuideType');
@@ -646,21 +593,18 @@ function openEventGuideModal(type) {
     modal.classList.add('show');
 }
 
-// Chiudi modale
 function closeEventGuideModal() {
     const modal = document.getElementById('eventGuideModal');
     modal.classList.remove('show');
     document.getElementById('eventGuideForm').reset();
 }
 
-// Chiudi con ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeEventGuideModal();
     }
 });
 
-// Chiudi cliccando fuori
 document.getElementById('eventGuideModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
         closeEventGuideModal();
@@ -668,7 +612,6 @@ document.getElementById('eventGuideModal')?.addEventListener('click', function(e
 });
 
 // ==================== INVIO FORM EVENTI/GUIDE ====================
-// ✅ FIXATO - Data inviata in formato RAW
 
 document.getElementById('eventGuideForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -681,7 +624,6 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
     const immagine = document.getElementById('eventGuideImmagine').value.trim();
     const ping = document.querySelector('input[name="ping"]:checked').value;
     
-    // Validazione
     if (!titolo || !descrizione) {
         showCustomAlert('warning', 'Campi Obbligatori', 'Compila titolo e descrizione!');
         return;
@@ -692,28 +634,10 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
         return;
     }
     
-    // Prepara dati
-    const data = {
-        type: type,
-        titolo: titolo,
-        descrizione: descrizione,
-        dataEvento: type === 'evento' ? dataEvento : null,
-        immagine: immagine || null,
-        ping: ping,
-        autore: userData.username,
-        timestamp: new Date().toISOString()
-    };
+    const WEBHOOK_EVENTI = 'https://discord.com/api/webhooks/1474735824380887140/DcvoHY6FSpxUwyQcc8KLVZI2eWe1fHt2mP74UXzOWKBNyU0JGwYi0iiljjjeJGaD8uQP';
+    const WEBHOOK_GUIDE = 'https://discord.com/api/webhooks/1474731676860154079/2qOLrr5D711JqjRM9ApH3Y1SFRwdfJteOeVtrSET3ivy6U_Wfjs255gFWQOcm1SIziKY';
     
-    console.log('📤 Invio dati al bot Discord:', data);
-    
-    // 🔥 WEBHOOK SEPARATI PER EVENTI E GUIDE
-    const WEBHOOK_EVENTI = 'https://discord.com/api/webhooks/1474735824380887140/DcvoHY6FSpxUwyQcc8KLVZI2eWe1fHt2mP74UXzOWKBNyU0JGwYi0iiljjjeJGaD8uQP'; // ⬅️ Webhook canale EVENTI
-    const WEBHOOK_GUIDE = 'https://discord.com/api/webhooks/1474731676860154079/2qOLrr5D711JqjRM9ApH3Y1SFRwdfJteOeVtrSET3ivy6U_Wfjs255gFWQOcm1SIziKY';   // ⬅️ Webhook canale GUIDE
-    
-    // Scegli il webhook in base al tipo
     const WEBHOOK_URL = type === 'evento' ? WEBHOOK_EVENTI : WEBHOOK_GUIDE;
-    
-    console.log(`📍 Uso webhook: ${type === 'evento' ? 'EVENTI' : 'GUIDE'}`);
     
     try {
         const response = await fetch(WEBHOOK_URL, {
@@ -729,14 +653,11 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
                     fields: [
                         { name: '📝 Titolo', value: titolo, inline: false },
                         { name: '📄 Descrizione', value: descrizione.substring(0, 1024), inline: false },
-                        
-                        // ✅ FIX APPLICATO: Manda data RAW invece di timestamp Discord
                         type === 'evento' && dataEvento ? { 
                             name: '📅 Data Evento', 
-                            value: dataEvento,  // ⬅️ FIXATO: "2026-02-21T18:00" invece di "<t:1771676280:F>"
+                            value: dataEvento,
                             inline: false 
                         } : null,
-                        
                         immagine ? { name: '🖼️ Immagine', value: immagine, inline: false } : null,
                         { name: '🔔 Ping', value: ping, inline: true },
                         { name: '👤 Autore', value: userData.username, inline: true },
@@ -750,7 +671,7 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
         });
         
         if (response.ok) {
-            showCustomAlert('success', 'Pubblicato!', `${type === 'evento' ? 'Evento' : 'Guida'} pubblicato su Discord con successo!`);
+            showCustomAlert('success', 'Pubblicato!', `${type === 'evento' ? 'Evento' : 'Guida'} pubblicato su Discord!`);
             closeEventGuideModal();
             this.reset();
         } else {
@@ -762,7 +683,7 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
     }
 });
 
-console.log('✅ Sistema Eventi/Guide caricato!');
+// ==================== SEZIONE EVENTI/GUIDE SUL SITO ====================
 
 function loadEventsOnSite() {
     const container = document.getElementById('eventsContainer');
@@ -780,7 +701,6 @@ function loadEventsOnSite() {
         return;
     }
     
-    // Ordina per data
     events.sort((a, b) => new Date(a.date) - new Date(b.date));
     
     container.innerHTML = events.map(event => {
@@ -797,8 +717,8 @@ function loadEventsOnSite() {
         });
         
         return `
-            <div class="event-card ${isPast ? 'past' : ''}">
-                <img src="${event.image || 'https://via.placeholder.com/400x200?text=Evento'}" alt="${event.title}">
+            <div class="event-card ${isPast ? 'past-event' : ''}">
+                <img src="${event.image || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400&h=200&fit=crop'}" alt="${event.title}">
                 <h3>🎉 ${event.title}</h3>
                 <p>${event.description.substring(0, 120)}...</p>
                 <p class="event-date">📅 ${formattedDate}</p>
@@ -833,18 +753,25 @@ function loadGuidesOnSite() {
         return;
     }
     
-    container.innerHTML = guides.map(guide => `
-        <div class="guide-card">
-            <h3>📚 ${guide.title}</h3>
-            <p>${guide.description.substring(0, 150).replace(/<[^>]*>/g, '')}...</p>
-            <p style="font-size:13px;color:#999;margin:10px 0;">👤 ${guide.author}</p>
-            <div class="guide-buttons">
-                <button onclick="showGuideDetails('${guide.id}')" class="btn-read">
-                    📖 Leggi Guida
-                </button>
+    guides.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    container.innerHTML = guides.map((guide, index) => {
+        const isPinned = index < 3;
+        
+        return `
+            <div class="guide-card ${isPinned ? 'pinned-guide' : ''}">
+                ${isPinned ? '<div class="pin-badge">📌 Fissata</div>' : ''}
+                <h3>📚 ${guide.title}</h3>
+                <p>${guide.description.substring(0, 150).replace(/<[^>]*>/g, '')}...</p>
+                <p style="font-size:13px;color:#999;margin:10px 20px;">👤 ${guide.author}</p>
+                <div class="guide-buttons">
+                    <button onclick="showGuideDetails('${guide.id}')" class="btn-read">
+                        📖 Leggi Guida
+                    </button>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 async function participateEvent(eventId, eventTitle) {
@@ -854,13 +781,11 @@ async function participateEvent(eventId, eventTitle) {
         return;
     }
     
-    // Salva partecipazione locale
     const participations = JSON.parse(localStorage.getItem('myParticipations') || '{}');
     participations[eventId] = { title: eventTitle, date: new Date().toISOString() };
     localStorage.setItem('myParticipations', JSON.stringify(participations));
     
-    // Notifica bot
-    const WEBHOOK = 'https://discord.com/api/webhooks/INSERISCI_WEBHOOK_PARTECIPAZIONI'; // ⬅️ CAMBIA
+    const WEBHOOK = 'https://discord.com/api/webhooks/INSERISCI_WEBHOOK_PARTECIPAZIONI';
     
     try {
         await fetch(WEBHOOK, {
@@ -884,11 +809,7 @@ async function participateEvent(eventId, eventTitle) {
     }
     
     showCustomAlert('success', '🎉 Iscritto!', 
-        `Parteciperai a "${eventTitle}"!\n\n` +
-        `Riceverai:\n` +
-        `• Messaggio 10 minuti prima\n` +
-        `• Messaggio quando inizia\n\n` +
-        `Controlla i DM Discord!`);
+        `Parteciperai a "${eventTitle}"!\n\nControlla i DM Discord!`);
 }
 
 function showEventDetails(eventId) {
@@ -907,7 +828,7 @@ function showEventDetails(eventId) {
     });
     
     const modalBody = `
-        <img src="${event.image || 'https://via.placeholder.com/600x300?text=Evento'}" style="width:100%;border-radius:10px;margin-bottom:20px;">
+        <img src="${event.image || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&h=300&fit=crop'}" style="width:100%;border-radius:10px;margin-bottom:20px;">
         <h2>🎉 ${event.title}</h2>
         <p style="line-height:1.8;color:#555;">${event.description}</p>
         <hr>
@@ -959,13 +880,12 @@ function addEventManually() {
     const newEvent = {
         id: Date.now().toString(),
         title: 'Grande Festa di Natale 🎄',
-        description: 'Vieni a festeggiare il Natale con noi! Premi esclusivi, minigiochi e tanto divertimento per tutta la community!',
+        description: 'Vieni a festeggiare il Natale con noi! Premi esclusivi, minigiochi e tanto divertimento!',
         date: '2026-12-25T18:00:00',
         location: 'Server Roblox - Comune di Piacenza RP',
         author: 'Ninja',
         image: 'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=400',
-        program: '18:00 - Inizio evento\n18:30 - Minigiochi a squadre\n19:00 - Premiazioni\n19:30 - Festa finale',
-        discordEventUrl: null,
+        program: '18:00 - Inizio\n19:00 - Minigiochi\n20:00 - Premiazioni',
         createdAt: new Date().toISOString()
     };
     
@@ -973,7 +893,7 @@ function addEventManually() {
     localStorage.setItem('pinnedEvents', JSON.stringify(events));
     loadEventsOnSite();
     
-    showCustomAlert('success', 'Evento Aggiunto!', 'Evento di test aggiunto con successo!');
+    showCustomAlert('success', 'Evento Aggiunto!', 'Evento di test creato!');
 }
 
 function addGuideManually() {
@@ -983,22 +903,14 @@ function addGuideManually() {
         id: Date.now().toString(),
         title: 'Come Iniziare a Giocare',
         description: `
-            <h3>🎮 Benvenuto in Comune di Piacenza RP!</h3>
-            <p>Questa guida ti aiuterà a muovere i primi passi nel nostro server.</p>
-            
-            <h4>1️⃣ Crea il tuo personaggio</h4>
-            <p>Scegli nome, aspetto e storia del tuo personaggio. Ricorda: il roleplay è importante!</p>
-            
-            <h4>2️⃣ Scegli una fazione</h4>
-            <p>Puoi unirti a Polizia, Medici, Vigili del Fuoco o rimanere civile.</p>
-            
-            <h4>3️⃣ Leggi il regolamento</h4>
-            <p>È fondamentale conoscere le regole del server per evitare sanzioni.</p>
-            
-            <h4>4️⃣ Inizia a giocare!</h4>
-            <p>Entra nel server Roblox e divertiti con la community!</p>
-            
-            <p><strong>💡 Suggerimento:</strong> Chiedi aiuto agli admin se hai dubbi!</p>
+            <h3>🎮 Benvenuto!</h3>
+            <p>Questa guida ti aiuterà a iniziare.</p>
+            <h4>1️⃣ Crea personaggio</h4>
+            <p>Scegli nome e aspetto.</p>
+            <h4>2️⃣ Scegli fazione</h4>
+            <p>Unisciti a Polizia, Medici o Vigili del Fuoco.</p>
+            <h4>3️⃣ Leggi regolamento</h4>
+            <p>Fondamentale per evitare sanzioni!</p>
         `,
         author: 'Staff',
         createdAt: new Date().toISOString()
@@ -1008,19 +920,8 @@ function addGuideManually() {
     localStorage.setItem('pinnedGuides', JSON.stringify(guides));
     loadGuidesOnSite();
     
-    showCustomAlert('success', 'Guida Aggiunta!', 'Guida di test aggiunta con successo!');
+    showCustomAlert('success', 'Guida Aggiunta!', 'Guida di test creata!');
 }
 
-// Carica eventi/guide all'avvio (modifica il tuo window.addEventListener('load') esistente)
-// AGGIUNGI queste due righe nel tuo load listener esistente:
-//     loadEventsOnSite();
-//     loadGuidesOnSite();
-
-// Oppure crea un nuovo listener (se preferisci):
-document.addEventListener('DOMContentLoaded', function() {
-    loadEventsOnSite();
-    loadGuidesOnSite();
-});
-
-console.log('✅ Sistema eventi/guide caricato!');
+console.log('✅ home.js caricato correttamente!');
 console.log('💡 Per testare: addEventManually() o addGuideManually() nella console');
