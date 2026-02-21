@@ -159,30 +159,28 @@ window.addEventListener('load', function() {
         return;
     }
     
+    // Carica i dati dell'utente
     const userData = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     
     if (userData.username) {
+        // Mostra il messaggio di benvenuto
         document.getElementById('welcomeMessage').textContent = `Benvenuto, ${userData.username}!`;
         
+        // ⭐ AVVIA TRACCIAMENTO UTENTE ONLINE
         updateUserHeartbeat();
         
+        // Se è admin, mostra la sezione staff
         if (userData.isAdmin) {
             const staffSection = document.getElementById('staff');
             if (staffSection) {
                 staffSection.style.display = 'block';
             }
             updateAdminStats();
-            refreshHomeStats();
+            refreshHomeStats(); // Aggiorna stats subito
             loadQuickActions();
-            
-            // 🔥 AGGIUNGI QUESTE RIGHE:
-            const buttons = document.getElementById('createEventsGuidesButtons');
-            if (buttons) {
-                buttons.style.display = 'flex';
-                console.log('✅ Pulsanti floating mostrati!');
-            }
         }
         
+        // Se è esponente istituzionale, mostra link gestione
         if (userData.isInstitutional) {
             const gestioneLink = document.getElementById('gestioneLink');
             if (gestioneLink) {
@@ -190,10 +188,6 @@ window.addEventListener('load', function() {
             }
         }
     }
-    
-    // 🔥 AGGIUNGI QUESTE 2 RIGHE ALLA FINE:
-    loadEventsOnSite();
-    loadGuidesOnSite();
 });
 
 // ==================== LOGOUT ====================
