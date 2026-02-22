@@ -616,11 +616,9 @@ document.getElementById('eventGuideModal')?.addEventListener('click', function(e
 
 // ==================== INVIO FORM EVENTI/GUIDE ====================
 
-document.getElementById('eventGuideForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log('📋 Form submit avviato (preventDefault attivo)...');
+// Funzione chiamata dal pulsante (NON da submit form!)
+window.submitEventGuide = function() {
+    console.log('📋 submitEventGuide() chiamata');
     
     const userData = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     const type = document.getElementById('eventGuideType').value;
@@ -684,7 +682,7 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', function(e
         if (response.ok) {
             console.log('✅ WEBHOOK INVIATO!');
             
-            // 🔥 SALVA EVENTO/GUIDA IN LOCALSTORAGE IMMEDIATAMENTE!
+            // SALVA EVENTO/GUIDA
             if (type === 'evento') {
                 const events = JSON.parse(localStorage.getItem('pinnedEvents') || '[]');
                 const newEvent = {
@@ -701,9 +699,8 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', function(e
                 };
                 events.unshift(newEvent);
                 localStorage.setItem('pinnedEvents', JSON.stringify(events));
-                console.log('💾 Evento salvato in localStorage!');
+                console.log('💾 Evento salvato!');
                 
-                // Ricarica eventi FISSATI
                 loadPinnedEventsGuides();
                 console.log('🔄 Eventi fissati ricaricati!');
             } else {
@@ -717,14 +714,13 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', function(e
                 };
                 guides.unshift(newGuide);
                 localStorage.setItem('pinnedGuides', JSON.stringify(guides));
-                console.log('💾 Guida salvata in localStorage!');
+                console.log('💾 Guida salvata!');
                 
-                // Ricarica guide FISSATE
                 loadPinnedEventsGuides();
                 console.log('🔄 Guide fissate ricaricate!');
             }
             
-            // Mostra alert di successo
+            // Alert
             showCustomAlert('success', '✅ PUBBLICATO!', 
                 `${type === 'evento' ? '🎉 EVENTO' : '📚 GUIDA'} pubblicato con successo!\n\n` +
                 `📝 "${titolo}"\n\n` +
@@ -734,7 +730,6 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', function(e
             
             console.log('⏰ Chiudo modale tra 3 secondi...');
             
-            // Aspetta 3 secondi prima di chiudere
             setTimeout(() => {
                 console.log('🔒 Chiudo modale!');
                 closeEventGuideModal();
@@ -747,10 +742,17 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', function(e
     .catch(error => {
         console.error('❌ ERRORE:', error);
         showCustomAlert('error', '❌ Errore!', 
-            `Impossibile pubblicare!\n\n${error.message}\n\nRiprova o contatta lo staff.`
+            `Impossibile pubblicare!\n\n${error.message}`
         );
     });
-    
+};
+
+// Listener del form (backup, non dovrebbe mai essere chiamato)
+document.getElementById('eventGuideForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('⚠️ Form submit intercettato (non dovrebbe succedere con type="button")');
+    submitEventGuide();
     return false;
 }, false);
 
