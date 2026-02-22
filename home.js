@@ -180,6 +180,9 @@ window.addEventListener('load', function() {
     // 🔥 CARICA EVENTI E GUIDE
     loadEventsOnSite();
     loadGuidesOnSite();
+    
+    // 🔥 CARICA EVENTI/GUIDE FISSATI IN ALTO
+    loadPinnedEventsGuides();
 });
 
 // ==================== LOGOUT ====================
@@ -613,10 +616,11 @@ document.getElementById('eventGuideModal')?.addEventListener('click', function(e
 
 // ==================== INVIO FORM EVENTI/GUIDE ====================
 
-document.getElementById('eventGuideForm')?.addEventListener('submit', async function(e) {
+document.getElementById('eventGuideForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
+    e.stopPropagation();
     
-    console.log('📋 Form submit avviato...');
+    console.log('📋 Form submit avviato (preventDefault attivo)...');
     
     const userData = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     const type = document.getElementById('eventGuideType').value;
@@ -630,12 +634,12 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
     
     if (!titolo || !descrizione) {
         showCustomAlert('warning', 'Campi Obbligatori', 'Compila titolo e descrizione!');
-        return;
+        return false;
     }
     
     if (type === 'evento' && !dataEvento) {
         showCustomAlert('warning', 'Data Mancante', 'Inserisci la data dell\'evento!');
-        return;
+        return false;
     }
     
     const WEBHOOK_EVENTI = 'https://discord.com/api/webhooks/1474735824380887140/DcvoHY6FSpxUwyQcc8KLVZI2eWe1fHt2mP74UXzOWKBNyU0JGwYi0iiljjjeJGaD8uQP';
@@ -645,37 +649,36 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
     
     console.log('🚀 Invio a webhook...');
     
-    try {
-        const response = await fetch(WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username: 'Sistema Eventi/Guide - Piacenza RP',
-                avatar_url: 'https://theninjamaster324.github.io/Comune-di-Piacenza/Place.png',
-                content: `EVENTO_GUIDA_TRIGGER`,
-                embeds: [{
-                    title: `📋 ${type === 'evento' ? 'Nuovo Evento' : 'Nuova Guida'}`,
-                    color: type === 'evento' ? 0x667eea : 0x27ae60,
-                    fields: [
-                        { name: '📝 Titolo', value: titolo, inline: false },
-                        { name: '📄 Descrizione', value: descrizione.substring(0, 1024), inline: false },
-                        type === 'evento' && dataEvento ? { 
-                            name: '📅 Data Evento', 
-                            value: dataEvento,
-                            inline: false 
-                        } : null,
-                        immagine ? { name: '🖼️ Immagine', value: immagine, inline: false } : null,
-                        { name: '🔔 Ping', value: ping, inline: true },
-                        { name: '👤 Autore', value: userData.username, inline: true },
-                        { name: '🆔 Tipo', value: type, inline: true }
-                    ].filter(Boolean),
-                    thumbnail: immagine ? { url: immagine } : null,
-                    timestamp: new Date().toISOString(),
-                    footer: { text: 'Comune di Piacenza RP' }
-                }]
-            })
-        });
-        
+    fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: 'Sistema Eventi/Guide - Piacenza RP',
+            avatar_url: 'https://theninjamaster324.github.io/Comune-di-Piacenza/Place.png',
+            content: `EVENTO_GUIDA_TRIGGER`,
+            embeds: [{
+                title: `📋 ${type === 'evento' ? 'Nuovo Evento' : 'Nuova Guida'}`,
+                color: type === 'evento' ? 0x667eea : 0x27ae60,
+                fields: [
+                    { name: '📝 Titolo', value: titolo, inline: false },
+                    { name: '📄 Descrizione', value: descrizione.substring(0, 1024), inline: false },
+                    type === 'evento' && dataEvento ? { 
+                        name: '📅 Data Evento', 
+                        value: dataEvento,
+                        inline: false 
+                    } : null,
+                    immagine ? { name: '🖼️ Immagine', value: immagine, inline: false } : null,
+                    { name: '🔔 Ping', value: ping, inline: true },
+                    { name: '👤 Autore', value: userData.username, inline: true },
+                    { name: '🆔 Tipo', value: type, inline: true }
+                ].filter(Boolean),
+                thumbnail: immagine ? { url: immagine } : null,
+                timestamp: new Date().toISOString(),
+                footer: { text: 'Comune di Piacenza RP' }
+            }]
+        })
+    })
+    .then(response => {
         console.log('📡 Risposta:', response.status);
         
         if (response.ok) {
@@ -700,9 +703,9 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
                 localStorage.setItem('pinnedEvents', JSON.stringify(events));
                 console.log('💾 Evento salvato in localStorage!');
                 
-                // Ricarica eventi sul sito
-                loadEventsOnSite();
-                console.log('🔄 Eventi ricaricati!');
+                // Ricarica eventi FISSATI
+                loadPinnedEventsGuides();
+                console.log('🔄 Eventi fissati ricaricati!');
             } else {
                 const guides = JSON.parse(localStorage.getItem('pinnedGuides') || '[]');
                 const newGuide = {
@@ -716,16 +719,16 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
                 localStorage.setItem('pinnedGuides', JSON.stringify(guides));
                 console.log('💾 Guida salvata in localStorage!');
                 
-                // Ricarica guide sul sito
-                loadGuidesOnSite();
-                console.log('🔄 Guide ricaricate!');
+                // Ricarica guide FISSATE
+                loadPinnedEventsGuides();
+                console.log('🔄 Guide fissate ricaricate!');
             }
             
             // Mostra alert di successo
             showCustomAlert('success', '✅ PUBBLICATO!', 
                 `${type === 'evento' ? '🎉 EVENTO' : '📚 GUIDA'} pubblicato con successo!\n\n` +
                 `📝 "${titolo}"\n\n` +
-                `✅ Visibile sul sito!\n` +
+                `✅ Visibile FISSATO in alto!\n` +
                 `✅ Inviato su Discord!`
             );
             
@@ -737,19 +740,19 @@ document.getElementById('eventGuideForm')?.addEventListener('submit', async func
                 closeEventGuideModal();
                 document.getElementById('eventGuideForm').reset();
             }, 3000);
-            
         } else {
-            const errorText = await response.text();
-            console.error('❌ Errore webhook:', response.status, errorText);
             throw new Error(`Webhook error: ${response.status}`);
         }
-    } catch (error) {
+    })
+    .catch(error => {
         console.error('❌ ERRORE:', error);
         showCustomAlert('error', '❌ Errore!', 
             `Impossibile pubblicare!\n\n${error.message}\n\nRiprova o contatta lo staff.`
         );
-    }
-});
+    });
+    
+    return false;
+}, false);
 
 // ==================== SEZIONE EVENTI/GUIDE SUL SITO ====================
 
@@ -989,6 +992,213 @@ function addGuideManually() {
     loadGuidesOnSite();
     
     showCustomAlert('success', 'Guida Aggiunta!', 'Guida di test creata!');
+}
+
+// ==================== EVENTI/GUIDE FISSATI IN ALTO ====================
+
+function loadPinnedEventsGuides() {
+    const section = document.getElementById('pinnedEventsGuidesSection');
+    const eventsContainer = document.getElementById('pinnedEventsContainer');
+    const guidesContainer = document.getElementById('pinnedGuidesContainer');
+    
+    if (!section || !eventsContainer || !guidesContainer) {
+        console.log('⚠️ Container eventi/guide fissati non trovato in HTML');
+        return;
+    }
+    
+    const events = JSON.parse(localStorage.getItem('pinnedEvents') || '[]');
+    const guides = JSON.parse(localStorage.getItem('pinnedGuides') || '[]');
+    
+    let hasContent = false;
+    
+    // EVENTI FISSATI (primi 3)
+    if (events.length > 0) {
+        hasContent = true;
+        
+        const eventsHTML = events.slice(0, 3).map(event => {
+            const eventDate = new Date(event.date);
+            const isPast = eventDate < new Date();
+            const formatted = eventDate.toLocaleString('it-IT', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            return `
+                <div style="background:#fff; border-radius:15px; overflow:hidden; box-shadow:0 8px 20px rgba(102,126,234,0.2); border:3px solid #667eea;">
+                    <div style="background:linear-gradient(135deg,#667eea,#764ba2); color:white; padding:10px 20px; font-weight:700; font-size:14px;">
+                        📌 EVENTO FISSATO
+                    </div>
+                    <img src="${event.image}" alt="${event.title}" style="width:100%; height:200px; object-fit:cover;">
+                    <div style="padding:20px;">
+                        <h3 style="margin:0 0 10px 0; color:#333; font-size:1.3em;">🎉 ${event.title}</h3>
+                        <p style="color:#666; margin:10px 0; line-height:1.6;">${event.description.substring(0, 120)}...</p>
+                        <p style="font-size:14px; color:#999; margin:10px 0;">📅 ${formatted}</p>
+                        <div style="display:flex; gap:10px; margin-top:15px;">
+                            ${!isPast ? `
+                                <button onclick="participateEventFixed('${event.id}', '${event.title.replace(/'/g, "\\'")}')" 
+                                        style="flex:1; padding:12px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; transition:all 0.3s;">
+                                    🎉 Partecipa
+                                </button>
+                            ` : ''}
+                            <button onclick="showEventDetailsFixed('${event.id}')" 
+                                    style="flex:1; padding:12px; background:white; color:#667eea; border:2px solid #667eea; border-radius:8px; font-weight:600; cursor:pointer; transition:all 0.3s;">
+                                ℹ️ Più Info
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        eventsContainer.innerHTML = `
+            <h2 style="text-align:center; margin-bottom:30px; color:#667eea; font-size:32px;">
+                🎉 Eventi in Programma
+            </h2>
+            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:25px;">
+                ${eventsHTML}
+            </div>
+        `;
+        
+        console.log(`📌 ${events.length} eventi fissati caricati (mostrando primi 3)`);
+    } else {
+        eventsContainer.innerHTML = '';
+    }
+    
+    // GUIDE FISSATE (prime 3)
+    if (guides.length > 0) {
+        hasContent = true;
+        
+        const guidesHTML = guides.slice(0, 3).map(guide => `
+            <div style="background:#fff; border-radius:15px; padding:20px; box-shadow:0 8px 20px rgba(39,174,96,0.2); border:3px solid #27ae60;">
+                <div style="background:linear-gradient(135deg,#27ae60,#1a8f4d); color:white; padding:8px 16px; border-radius:20px; display:inline-block; margin-bottom:15px; font-weight:700; font-size:12px;">
+                    📌 GUIDA FISSATA
+                </div>
+                <h3 style="margin:10px 0; color:#333; font-size:1.2em;">📚 ${guide.title}</h3>
+                <p style="color:#666; margin:15px 0; line-height:1.6;">${guide.description.substring(0, 150).replace(/<[^>]*>/g, '')}...</p>
+                <p style="font-size:13px; color:#999; margin:10px 0;">👤 ${guide.author}</p>
+                <button onclick="showGuideDetailsFixed('${guide.id}')" 
+                        style="width:100%; padding:12px; background:linear-gradient(135deg,#27ae60,#1a8f4d); color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; margin-top:10px; transition:all 0.3s;">
+                    📖 Leggi Guida
+                </button>
+            </div>
+        `).join('');
+        
+        guidesContainer.innerHTML = `
+            <h2 style="text-align:center; margin:40px 0 30px 0; color:#27ae60; font-size:32px;">
+                📚 Guide Ufficiali
+            </h2>
+            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:25px;">
+                ${guidesHTML}
+            </div>
+        `;
+        
+        console.log(`📌 ${guides.length} guide fissate caricate (mostrando prime 3)`);
+    } else {
+        guidesContainer.innerHTML = '';
+    }
+    
+    // Mostra/nascondi sezione
+    if (hasContent) {
+        section.style.display = 'block';
+        console.log('✅ Sezione eventi/guide fissati visibile');
+    } else {
+        section.style.display = 'none';
+        console.log('⚠️ Nessun evento/guida da fissare');
+    }
+}
+
+function participateEventFixed(eventId, eventTitle) {
+    console.log('🎉 Partecipazione evento:', eventId);
+    
+    const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    if (!user.username) {
+        showCustomAlert('warning', 'Login Richiesto', 'Devi essere loggato per partecipare agli eventi!');
+        return;
+    }
+    
+    // Salva partecipazione in localStorage
+    const participations = JSON.parse(localStorage.getItem('myParticipations') || '{}');
+    participations[eventId] = {
+        title: eventTitle,
+        date: new Date().toISOString(),
+        username: user.username
+    };
+    localStorage.setItem('myParticipations', JSON.stringify(participations));
+    
+    showCustomAlert('success', '🎉 Iscritto all\'Evento!', 
+        `Parteciperai a:\n"${eventTitle}"\n\n✅ Riceverai notifiche su Discord!`
+    );
+}
+
+function showEventDetailsFixed(eventId) {
+    console.log('ℹ️ Mostra dettagli evento:', eventId);
+    
+    const events = JSON.parse(localStorage.getItem('pinnedEvents') || '[]');
+    const event = events.find(e => e.id === eventId);
+    
+    if (!event) {
+        console.error('Evento non trovato:', eventId);
+        return;
+    }
+    
+    const eventDate = new Date(event.date);
+    const formatted = eventDate.toLocaleString('it-IT', {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    const modalBody = `
+        <img src="${event.image}" alt="${event.title}" style="width:100%; border-radius:10px; margin-bottom:20px;">
+        <h2 style="color:#333;">🎉 ${event.title}</h2>
+        <p style="line-height:1.8; color:#555; margin:20px 0;">${event.description}</p>
+        <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+        <h3 style="color:#667eea; margin-bottom:15px;">📋 Dettagli Evento</h3>
+        <p style="margin:10px 0;"><strong>📅 Quando:</strong> ${formatted}</p>
+        <p style="margin:10px 0;"><strong>📍 Dove:</strong> ${event.location || 'Server Roblox - Comune di Piacenza RP'}</p>
+        <p style="margin:10px 0;"><strong>👤 Organizzatore:</strong> ${event.author || 'Staff'}</p>
+        ${event.program ? `<p style="margin:10px 0;"><strong>🎯 Programma:</strong><br>${event.program.replace(/\n/g, '<br>')}</p>` : ''}
+    `;
+    
+    document.getElementById('detailsModalBody').innerHTML = modalBody;
+    document.getElementById('detailsModal').classList.add('show');
+}
+
+function showGuideDetailsFixed(guideId) {
+    console.log('📖 Mostra dettagli guida:', guideId);
+    
+    const guides = JSON.parse(localStorage.getItem('pinnedGuides') || '[]');
+    const guide = guides.find(g => g.id === guideId);
+    
+    if (!guide) {
+        console.error('Guida non trovata:', guideId);
+        return;
+    }
+    
+    const modalBody = `
+        <h2 style="color:#333;">📚 ${guide.title}</h2>
+        <div style="line-height:1.8; color:#555; margin:20px 0; text-align:left;">
+            ${guide.description}
+        </div>
+        <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+        <p style="font-size:14px; color:#999;">
+            <strong>👤 Autore:</strong> ${guide.author || 'Staff'}<br>
+            <strong>📅 Pubblicata:</strong> ${new Date(guide.createdAt).toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            })}
+        </p>
+    `;
+    
+    document.getElementById('detailsModalBody').innerHTML = modalBody;
+    document.getElementById('detailsModal').classList.add('show');
 }
 
 console.log('✅ home.js caricato correttamente!');
