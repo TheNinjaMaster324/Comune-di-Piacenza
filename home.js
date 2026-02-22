@@ -1010,6 +1010,8 @@ function loadPinnedEventsGuides() {
     
     const events = JSON.parse(localStorage.getItem('pinnedEvents') || '[]');
     const guides = JSON.parse(localStorage.getItem('pinnedGuides') || '[]');
+    const userData = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    const isAdmin = userData.isAdmin === true;
     
     let hasContent = false;
     
@@ -1029,7 +1031,15 @@ function loadPinnedEventsGuides() {
             });
             
             return `
-                <div style="background:#fff; border-radius:15px; overflow:hidden; box-shadow:0 8px 20px rgba(102,126,234,0.2); border:3px solid #667eea;">
+                <div style="background:#fff; border-radius:15px; overflow:hidden; box-shadow:0 8px 20px rgba(102,126,234,0.2); border:3px solid #667eea; position:relative;">
+                    ${isAdmin ? `
+                        <button onclick="deleteEventFixed('${event.id}')" 
+                                style="position:absolute; top:10px; right:10px; background:#ff4444; color:white; border:none; border-radius:50%; width:36px; height:36px; cursor:pointer; font-size:18px; z-index:10; box-shadow:0 2px 8px rgba(255,68,68,0.3); transition:all 0.3s;"
+                                onmouseover="this.style.background='#ff0000'; this.style.transform='scale(1.1)'"
+                                onmouseout="this.style.background='#ff4444'; this.style.transform='scale(1)'">
+                            🗑️
+                        </button>
+                    ` : ''}
                     <div style="background:linear-gradient(135deg,#667eea,#764ba2); color:white; padding:10px 20px; font-weight:700; font-size:14px;">
                         📌 EVENTO FISSATO
                     </div>
@@ -1074,7 +1084,15 @@ function loadPinnedEventsGuides() {
         hasContent = true;
         
         const guidesHTML = guides.slice(0, 3).map(guide => `
-            <div style="background:#fff; border-radius:15px; padding:20px; box-shadow:0 8px 20px rgba(39,174,96,0.2); border:3px solid #27ae60;">
+            <div style="background:#fff; border-radius:15px; padding:20px; box-shadow:0 8px 20px rgba(39,174,96,0.2); border:3px solid #27ae60; position:relative;">
+                ${isAdmin ? `
+                    <button onclick="deleteGuideFixed('${guide.id}')" 
+                            style="position:absolute; top:15px; right:15px; background:#ff4444; color:white; border:none; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px; z-index:10; box-shadow:0 2px 8px rgba(255,68,68,0.3); transition:all 0.3s;"
+                            onmouseover="this.style.background='#ff0000'; this.style.transform='scale(1.1)'"
+                            onmouseout="this.style.background='#ff4444'; this.style.transform='scale(1)'">
+                        🗑️
+                    </button>
+                ` : ''}
                 <div style="background:linear-gradient(135deg,#27ae60,#1a8f4d); color:white; padding:8px 16px; border-radius:20px; display:inline-block; margin-bottom:15px; font-weight:700; font-size:12px;">
                     📌 GUIDA FISSATA
                 </div>
@@ -1121,7 +1139,7 @@ function participateEventFixed(eventId, eventTitle) {
         return;
     }
     
-    // Salva partecipazione in localStorage
+    // Salva partecipazione
     const participations = JSON.parse(localStorage.getItem('myParticipations') || '{}');
     participations[eventId] = {
         title: eventTitle,
@@ -1130,8 +1148,120 @@ function participateEventFixed(eventId, eventTitle) {
     };
     localStorage.setItem('myParticipations', JSON.stringify(participations));
     
+    // WEBHOOK PER DM (il bot Discord deve ascoltare questo)
+    const WEBHOOK_PARTECIPAZIONI = 'https://discord.com/api/webhooks/1475199536539369483/zw5OBB40QzrdmXJ6PWKkqMSeDuupytJu9qiLQjYkiBKiCy0NsX3J8sdC1L4hm0G-3Fay'; // ← CONFIGURA QUESTO!
+    
+    fetch(WEBHOOK_PARTECIPAZIONI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: 'Sistema Partecipazioni',
+            content: 'PARTECIPAZIONE_EVENTO',
+            embeds: [{
+                title: '✅ Nuova Partecipazione',
+                color: 0x27ae60,
+                fields: [
+                    { name: '👤 Utente', value: user.username, inline: true },
+                    { name: '🎉 Evento', value: eventTitle, inline: true },
+                    { name: '🆔 User ID Discord', value: user.discordId || 'N/A', inline: true }
+                ],
+                timestamp: new Date().toISOString()
+            }]
+        })
+    }).catch(err => console.log('⚠️ Webhook partecipazioni non configurato'));
+    
     showCustomAlert('success', '🎉 Iscritto all\'Evento!', 
         `Parteciperai a:\n"${eventTitle}"\n\n✅ Riceverai notifiche su Discord!`
+    );
+}
+
+function deleteEventFixed(eventId) {
+    console.log('🗑️ Eliminazione evento:', eventId);
+    
+    const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    if (!user.isAdmin) {
+        showCustomAlert('error', 'Accesso Negato', 'Solo gli admin possono eliminare eventi!');
+        return;
+    }
+    
+    if (!confirm('⚠️ Sei sicuro di voler eliminare questo evento?\n\nL\'evento verrà rimosso dal sito E da Discord!')) {
+        return;
+    }
+    
+    // Rimuovi da localStorage
+    const events = JSON.parse(localStorage.getItem('pinnedEvents') || '[]');
+    const eventIndex = events.findIndex(e => e.id === eventId);
+    
+    if (eventIndex === -1) {
+        showCustomAlert('error', 'Errore', 'Evento non trovato!');
+        return;
+    }
+    
+    const event = events[eventIndex];
+    events.splice(eventIndex, 1);
+    localStorage.setItem('pinnedEvents', JSON.stringify(events));
+    
+    // Notifica Discord per cancellazione
+    const WEBHOOK_CANCELLAZIONI = 'https://discord.com/api/webhooks/1475199612490092674/JYS78dujCSP5nk3V15F6oxoY7XqBFb6TfGeX1QewHw_3nNz6wxbZfswgij0t9riL_Gfh'; // ← CONFIGURA!
+    
+    fetch(WEBHOOK_CANCELLAZIONI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: 'Sistema Cancellazioni',
+            content: 'EVENTO_CANCELLATO',
+            embeds: [{
+                title: '🗑️ Evento Cancellato',
+                color: 0xff0000,
+                fields: [
+                    { name: '📝 Titolo', value: event.title, inline: false },
+                    { name: '👤 Cancellato da', value: user.username, inline: true },
+                    { name: '🆔 Event ID', value: eventId, inline: true }
+                ],
+                timestamp: new Date().toISOString()
+            }]
+        })
+    }).catch(err => console.log('⚠️ Webhook cancellazioni non configurato'));
+    
+    // Ricarica eventi
+    loadPinnedEventsGuides();
+    
+    showCustomAlert('success', '✅ Evento Eliminato!', 
+        `L'evento "${event.title}" è stato rimosso!\n\n🗑️ Rimosso dal sito\n📢 Notifica inviata su Discord`
+    );
+}
+
+function deleteGuideFixed(guideId) {
+    console.log('🗑️ Eliminazione guida:', guideId);
+    
+    const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+    if (!user.isAdmin) {
+        showCustomAlert('error', 'Accesso Negato', 'Solo gli admin possono eliminare guide!');
+        return;
+    }
+    
+    if (!confirm('⚠️ Sei sicuro di voler eliminare questa guida?')) {
+        return;
+    }
+    
+    // Rimuovi da localStorage
+    const guides = JSON.parse(localStorage.getItem('pinnedGuides') || '[]');
+    const guideIndex = guides.findIndex(g => g.id === guideId);
+    
+    if (guideIndex === -1) {
+        showCustomAlert('error', 'Errore', 'Guida non trovata!');
+        return;
+    }
+    
+    const guide = guides[guideIndex];
+    guides.splice(guideIndex, 1);
+    localStorage.setItem('pinnedGuides', JSON.stringify(guides));
+    
+    // Ricarica guide
+    loadPinnedEventsGuides();
+    
+    showCustomAlert('success', '✅ Guida Eliminata!', 
+        `La guida "${guide.title}" è stata rimossa!`
     );
 }
 
