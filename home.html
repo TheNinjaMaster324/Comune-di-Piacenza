@@ -63,19 +63,14 @@
         </div>
     </section>
 
+    <!-- Sezione Eventi/Guide Fissati -->
+    <section id="pinnedEventsGuidesSection" style="display:none; background:#fff; padding:40px 20px;">
+        <div class="container">
+            <div id="pinnedEventsContainer" style="margin-bottom:40px;"></div>
+            <div id="pinnedGuidesContainer"></div>
+        </div>
+    </section>
 
-<!-- Sezione Eventi/Guide Fissati (nascosta se vuota, mostrata da JavaScript) -->
-<section id="pinnedEventsGuidesSection" style="display:none; background:#fff; padding:40px 20px;">
-    <div class="container">
-        <!-- Container Eventi Fissati -->
-        <div id="pinnedEventsContainer" style="margin-bottom:40px;"></div>
-        
-        <!-- Container Guide Fissate -->
-        <div id="pinnedGuidesContainer"></div>
-    </div>
-</section>
-
-<!-- ==================== FINE SEZIONE EVENTI/GUIDE FISSATI ==================== -->
     <!-- Main Content -->
     <main class="main-content">
         <!-- Info Cards -->
@@ -593,11 +588,6 @@
         </section>
 
         <!-- Sezione Guide -->
-        <!-- ==================== COPIA QUESTO CODICE IN home.html ==================== -->
-
-<!-- 1️⃣ SOSTITUISCI LA SEZIONE GUIDE CON QUESTO: -->
-
-        <!-- Sezione Guide -->
         <section class="section" id="guide" style="background:#f9f9f9;">
             <div class="container" style="text-align:center;padding:60px 20px;color:#999;grid-column:1/-1;">
                 <h2>📚 Guide Ufficiali</h2>
@@ -612,11 +602,9 @@
             </div>
         </section>
 
-<!-- 2️⃣ SOSTITUISCI LA SEZIONE EVENTI CON QUESTO: -->
-
         <!-- Sezione Eventi -->
         <section class="section" id="eventi">
-            <div class="container" style = "text-align:center;padding:60px 20px;color:#999;grid-column:1/-1;">
+            <div class="container" style="text-align:center;padding:60px 20px;color:#999;grid-column:1/-1;">
                 <h2>🎉 Eventi in Programma</h2>
                 <p class="section-subtitle">Partecipa ai nostri eventi esclusivi!</p>
                 
@@ -626,28 +614,6 @@
                         <p style="font-size:14px;margin-top:10px;">Controlla Discord per gli ultimi aggiornamenti!</p>
                     </div>
                 </div>
-            </div>
-        </section>
-
-<!-- 3️⃣ AGGIUNGI QUESTO PRIMA DI </body>: -->
-
-    <!-- MODALE DETTAGLI EVENTI/GUIDE -->
-    <div id="detailsModal" class="details-modal-overlay">
-        <div class="details-modal-content">
-            <span class="details-modal-close" onclick="closeDetailsModal()">×</span>
-            <div id="detailsModalBody"></div>
-        </div>
-    </div>
-
-    <script src="home.js"></script>
-<!-- FATTO! home.html è pronto! -->
-
-
-        <!-- Sezione Eventi -->
-        <section class="section" id="eventi">
-            <div class="container" style = "text-align:center;padding:60px 20px;color:#999;grid-column:1/-1;">
-                <h2>🎉 Eventi</h2>
-                <p style = "font-size:14px;margin-top:10px;">Tieni d'occhio questa sezione per i prossimi eventi in programma!</p>
             </div>
         </section>
     </main>
@@ -785,7 +751,15 @@
         </div>
     </div>
 
-    <!-- 🔥 PULSANTI FLOATING EVENTI/GUIDE (SOLO STAFF) -->
+    <!-- MODALE DETTAGLI -->
+    <div id="detailsModal" class="details-modal-overlay">
+        <div class="details-modal-content">
+            <span class="details-modal-close" onclick="closeDetailsModal()">×</span>
+            <div id="detailsModalBody"></div>
+        </div>
+    </div>
+
+    <!-- PULSANTI FLOATING EVENTI/GUIDE -->
     <div id="createEventsGuidesButtons" class="create-floating-buttons" style="display: none;">
         <button class="create-floating-btn event-btn" onclick="openEventGuideModal('evento')">
             🎉 Crea Evento
@@ -795,7 +769,7 @@
         </button>
     </div>
 
-    <!-- 🔥 MODALE CREAZIONE EVENTI/GUIDE -->
+    <!-- MODALE CREAZIONE EVENTI/GUIDE -->
     <div id="eventGuideModal" class="event-guide-modal-overlay">
         <div class="event-guide-modal-box">
             <button class="modal-close-btn" onclick="closeEventGuideModal()">✕</button>
@@ -805,7 +779,7 @@
                 <p id="modalHeaderSubtitle">Compila i campi e pubblica su Discord</p>
             </div>
 
-            <form id="eventGuideForm">
+            <form id="eventGuideForm" onsubmit="return false;">
                 <input type="hidden" id="eventGuideType" value="evento">
                 
                 <div class="form-field">
@@ -851,10 +825,26 @@
                     </div>
                 </div>
 
-                <button type="submit" class="modal-submit-button" id="submitEventGuideBtn">🚀 Pubblica Evento</button>
+                <button type="button" onclick="handleFormSubmit()" class="modal-submit-button" id="submitEventGuideBtn">🚀 Pubblica Evento</button>
             </form>
         </div>
     </div>
+
+    <!-- SCRIPT INLINE HANDLER -->
+    <script>
+    console.log('🔧 [FIX] Handler form caricato');
+    
+    function handleFormSubmit() {
+        console.log('📋 [HANDLER] Pulsante cliccato');
+        
+        if (typeof submitEventGuide === 'function') {
+            submitEventGuide();
+        } else {
+            console.error('❌ submitEventGuide non trovata!');
+            alert('Errore: ricarica la pagina');
+        }
+    }
+    </script>
 
     <script src="home.js"></script>
 
