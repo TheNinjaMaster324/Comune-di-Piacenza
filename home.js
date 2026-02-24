@@ -175,6 +175,15 @@ window.addEventListener('load', function() {
                         userData.discordId = discordId.trim();
                         sessionStorage.setItem('currentUser', JSON.stringify(userData));
                         
+                        // ✅ SALVA IN PIACENZA USERS PER SCHEDULER
+                        const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
+                        const userIndex = users.findIndex(u => u.username === userData.username);
+                        if (userIndex !== -1) {
+                            users[userIndex].discordId = discordId.trim();
+                            localStorage.setItem('piacenzaUsers', JSON.stringify(users));
+                            console.log('✅ Discord ID salvato in piacenzaUsers!');
+                        }
+                        
                         showCustomAlert('success', '✅ Discord ID Salvato!', 
                             `Riceverai notifiche DM per gli eventi!\n\n🆔 Discord ID: ${discordId.trim()}`);
                         
@@ -688,6 +697,10 @@ window.submitEventGuide = function() {
         return false;
     }
     
+    // ✅ GENERA EVENT ID UNICO
+    const eventId = Date.now().toString();
+    console.log(`🆔 Event ID generato: ${eventId}`);
+    
     const WEBHOOK_EVENTI = 'https://discord.com/api/webhooks/1474735824380887140/DcvoHY6FSpxUwyQcc8KLVZI2eWe1fHt2mP74UXzOWKBNyU0JGwYi0iiljjjeJGaD8uQP';
     const WEBHOOK_GUIDE = 'https://discord.com/api/webhooks/1474731676860154079/2qOLrr5D711JqjRM9ApH3Y1SFRwdfJteOeVtrSET3ivy6U_Wfjs255gFWQOcm1SIziKY';
     
@@ -706,6 +719,7 @@ window.submitEventGuide = function() {
                 title: `📋 ${type === 'evento' ? 'Nuovo Evento' : 'Nuova Guida'}`,
                 color: type === 'evento' ? 0x667eea : 0x27ae60,
                 fields: [
+                    { name: '🆔 Event ID', value: eventId, inline: true },
                     { name: '📝 Titolo', value: titolo, inline: false },
                     { name: '📄 Descrizione', value: descrizione.substring(0, 1024), inline: false },
                     type === 'evento' && dataEvento ? { 
@@ -730,11 +744,11 @@ window.submitEventGuide = function() {
         if (response.ok) {
             console.log('✅ WEBHOOK INVIATO!');
             
-            // SALVA EVENTO/GUIDA
+            // SALVA EVENTO/GUIDA CON EVENT ID
             if (type === 'evento') {
                 const events = JSON.parse(localStorage.getItem('pinnedEvents') || '[]');
                 const newEvent = {
-                    id: Date.now().toString(),
+                    id: eventId, // ✅ USA LO STESSO EVENT ID
                     title: titolo,
                     description: descrizione,
                     date: dataEvento,
@@ -747,14 +761,14 @@ window.submitEventGuide = function() {
                 };
                 events.unshift(newEvent);
                 localStorage.setItem('pinnedEvents', JSON.stringify(events));
-                console.log('💾 Evento salvato!');
+                console.log(`💾 Evento salvato con ID: ${eventId}`);
                 
                 loadPinnedEventsGuides();
                 console.log('🔄 Eventi fissati ricaricati!');
             } else {
                 const guides = JSON.parse(localStorage.getItem('pinnedGuides') || '[]');
                 const newGuide = {
-                    id: Date.now().toString(),
+                    id: eventId,
                     title: titolo,
                     description: descrizione,
                     author: userData.username || 'Staff',
@@ -771,7 +785,8 @@ window.submitEventGuide = function() {
             // Alert
             showCustomAlert('success', '✅ PUBBLICATO!', 
                 `${type === 'evento' ? '🎉 EVENTO' : '📚 GUIDA'} pubblicato con successo!\n\n` +
-                `📝 "${titolo}"\n\n` +
+                `📝 "${titolo}"\n` +
+                `🆔 Event ID: ${eventId}\n\n` +
                 `✅ Visibile FISSATO in alto!\n` +
                 `✅ Inviato su Discord!`
             );
@@ -1284,7 +1299,7 @@ function deleteEventFixed(eventId) {
         return;
     }
     
-    if (!confirm('⚠️ Sei sicuro di voler eliminare questo evento?\n\nL\'evento verrà rimosso dal sito E da Discord!')) {
+    if (!confirm('⚠️ Sei sicuro di voler eliminare questo evento?\n\nL\'evento verrà rimosso da:\n• Sito web\n• Canale Discord\n• Eventi del server Discord')) {
         return;
     }
     
@@ -1301,7 +1316,9 @@ function deleteEventFixed(eventId) {
     events.splice(eventIndex, 1);
     localStorage.setItem('pinnedEvents', JSON.stringify(events));
     
-    // Notifica Discord
+    console.log(`🗑️ Evento rimosso da localStorage: ${event.title}`);
+    
+    // ✅ NOTIFICA DISCORD PER ELIMINAZIONE COMPLETA
     const WEBHOOK_CANCELLAZIONI = 'https://discord.com/api/webhooks/1475199612490092674/JYS78dujCSP5nk3V15F6oxoY7XqBFb6TfGeX1QewHw_3nNz6wxbZfswgij0t9riL_Gfh';
     
     fetch(WEBHOOK_CANCELLAZIONI, {
@@ -1311,23 +1328,34 @@ function deleteEventFixed(eventId) {
             username: 'Sistema Cancellazioni',
             content: 'EVENTO_CANCELLATO',
             embeds: [{
-                title: '🗑️ Evento Cancellato',
+                title: '🗑️ Richiesta Eliminazione Evento',
                 color: 0xff0000,
                 fields: [
+                    { name: '🆔 Event ID', value: eventId, inline: true },
                     { name: '📝 Titolo', value: event.title, inline: false },
                     { name: '👤 Cancellato da', value: user.username, inline: true },
-                    { name: '🆔 Event ID', value: eventId, inline: true }
+                    { name: '⏰ Data', value: new Date().toLocaleString('it-IT'), inline: true }
                 ],
                 timestamp: new Date().toISOString()
             }]
         })
-    }).catch(err => console.log('⚠️ Webhook cancellazioni:', err));
+    })
+    .then(r => {
+        if (r.ok) {
+            console.log('✅ Webhook eliminazione inviato al bot');
+        }
+    })
+    .catch(err => console.log('⚠️ Webhook cancellazioni:', err));
     
     // Ricarica
     loadPinnedEventsGuides();
     
     showCustomAlert('success', '✅ Evento Eliminato!', 
-        `L'evento "${event.title}" è stato rimosso!\n\n🗑️ Rimosso dal sito\n📢 Notifica inviata`);
+        `L'evento "${event.title}" è stato rimosso!\n\n` +
+        `🗑️ Rimosso dal sito\n` +
+        `🗑️ Richiesta eliminazione inviata a Discord\n` +
+        `📢 Partecipanti verranno notificati`
+    );
 }
 
 function deleteGuideFixed(guideId) {
@@ -1431,3 +1459,95 @@ function showGuideDetailsFixed(guideId) {
 
 console.log('✅ home.js caricato completo con Discord ID!');
 console.log('💡 Al primo login, chiederà Discord ID automaticamente!');
+
+// ==================== SCHEDULER EVENTI AUTOMATICO ====================
+// Sistema che controlla eventi e invia notifiche 1h, 10min, inizio
+
+const WEBHOOK_NOTIFICHE = 'https://discord.com/api/webhooks/1475199536539369483/zw5OBB40QzrdmXJ6PWKkqMSeDuupytJu9qiLQjYkiBKiCy0NsX3J8sdC1L4hm0G-3Fay';
+const notificationsSent = new Map();
+
+function checkAndSendEventNotifications() {
+    const events = JSON.parse(localStorage.getItem('pinnedEvents') || '[]');
+    const now = new Date().getTime();
+    
+    console.log(`⏰ [SCHEDULER] Controllo ${events.length} eventi...`);
+    
+    events.forEach(event => {
+        const eventDate = new Date(event.date).getTime();
+        const timeUntilEvent = eventDate - now;
+        const minutesUntil = Math.floor(timeUntilEvent / 1000 / 60);
+        
+        const notifKey = (type) => `${event.id}_${type}`;
+        
+        // ⏰ 1 ORA PRIMA (55-65 minuti)
+        if (minutesUntil >= 55 && minutesUntil <= 65 && !notificationsSent.has(notifKey('1h'))) {
+            console.log(`⏰ [SCHEDULER] Invio notifica 1h: ${event.title}`);
+            sendEventNotification(event, 'EVENTO_INIZIA_TRA_1H');
+            notificationsSent.set(notifKey('1h'), true);
+        }
+        
+        // 🔥 10 MINUTI PRIMA (8-12 minuti)
+        if (minutesUntil >= 8 && minutesUntil <= 12 && !notificationsSent.has(notifKey('10m'))) {
+            console.log(`🔥 [SCHEDULER] Invio notifica 10min: ${event.title}`);
+            sendEventNotification(event, 'EVENTO_INIZIA_TRA_10M');
+            notificationsSent.set(notifKey('10m'), true);
+        }
+        
+        // 🎉 EVENTO INIZIA ORA (-2 a +2 minuti)
+        if (minutesUntil >= -2 && minutesUntil <= 2 && !notificationsSent.has(notifKey('now'))) {
+            console.log(`🎉 [SCHEDULER] Invio notifica INIZIO: ${event.title}`);
+            sendEventNotification(event, 'EVENTO_INIZIA_ORA');
+            notificationsSent.set(notifKey('now'), true);
+        }
+    });
+}
+
+function sendEventNotification(event, trigger) {
+    // Trova partecipanti con Discord ID
+    const participations = JSON.parse(localStorage.getItem('myParticipations') || '{}');
+    const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
+    const participantIds = [];
+    
+    Object.entries(participations).forEach(([eventId, data]) => {
+        if (eventId === event.id) {
+            const user = users.find(u => u.username === data.username);
+            if (user && user.discordId && user.discordId !== 'N/A') {
+                participantIds.push(user.discordId);
+            }
+        }
+    });
+    
+    console.log(`📤 [SCHEDULER] ${trigger} → ${participantIds.length} partecipanti`);
+    
+    if (participantIds.length === 0) {
+        console.log('⚠️ Nessun partecipante con Discord ID');
+        return;
+    }
+    
+    fetch(WEBHOOK_NOTIFICHE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: 'Sistema Notifiche',
+            content: trigger,
+            embeds: [{
+                title: '⏰ Notifica Automatica',
+                color: trigger.includes('1H') ? 0xf39c12 : 
+                       trigger.includes('10M') ? 0xe67e22 : 0x2ecc71,
+                fields: [
+                    { name: 'Evento', value: event.title, inline: false },
+                    { name: 'Partecipanti', value: participantIds.join(','), inline: false }
+                ],
+                timestamp: new Date().toISOString()
+            }]
+        })
+    })
+    .then(r => r.ok ? console.log(`✅ [SCHEDULER] ${trigger} inviato!`) : 
+                      console.error(`❌ [SCHEDULER] Errore ${r.status}`))
+    .catch(e => console.error(`❌ [SCHEDULER] Errore:`, e));
+}
+
+// ✅ AVVIA SCHEDULER
+console.log('🚀 [SCHEDULER] Avvio scheduler eventi...');
+setInterval(checkAndSendEventNotifications, 60000); // Ogni 1 minuto
+setTimeout(checkAndSendEventNotifications, 5000); // Controllo iniziale dopo 5sec
