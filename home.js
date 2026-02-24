@@ -1069,6 +1069,9 @@ function loadPinnedEventsGuides() {
     if (events.length > 0) {
         hasContent = true;
         
+        // ✅ CARICA PARTECIPAZIONI UTENTE
+        const participations = JSON.parse(localStorage.getItem('myParticipations') || '{}');
+        
         const eventsHTML = events.slice(0, 3).map(event => {
             const eventDate = new Date(event.date);
             const isPast = eventDate < new Date();
@@ -1079,6 +1082,9 @@ function loadPinnedEventsGuides() {
                 hour: '2-digit',
                 minute: '2-digit'
             });
+            
+            // ✅ CONTROLLA SE UTENTE È ISCRITTO
+            const isParticipating = participations[event.id];
             
             return `
                 <div style="background:#fff; border-radius:15px; overflow:hidden; box-shadow:0 8px 20px rgba(102,126,234,0.2); border:3px solid #667eea; position:relative;">
@@ -1101,8 +1107,8 @@ function loadPinnedEventsGuides() {
                         <div style="display:flex; gap:10px; margin-top:15px;">
                             ${!isPast ? `
                                 <button onclick="participateEventFixed('${event.id}', '${event.title.replace(/'/g, "\\'")}')" 
-                                        style="flex:1; padding:12px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; transition:all 0.3s;">
-                                    🎉 Partecipa
+                                        style="flex:1; padding:12px; background:${isParticipating ? '#e74c3c' : 'linear-gradient(135deg,#667eea,#764ba2)'}; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; transition:all 0.3s;">
+                                    ${isParticipating ? '❌ Annulla Iscrizione' : '🎉 Partecipa'}
                                 </button>
                             ` : ''}
                             <button onclick="showEventDetailsFixed('${event.id}')" 
@@ -1181,7 +1187,7 @@ function loadPinnedEventsGuides() {
 }
 
 function participateEventFixed(eventId, eventTitle) {
-    console.log('🎉 Partecipazione evento:', eventId);
+    console.log('🎉 Partecipazione/Annullamento evento:', eventId);
     
     const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
     if (!user.username) {
@@ -1189,41 +1195,84 @@ function participateEventFixed(eventId, eventTitle) {
         return;
     }
     
-    // Salva partecipazione
+    // ✅ CONTROLLA SE GIÀ ISCRITTO
     const participations = JSON.parse(localStorage.getItem('myParticipations') || '{}');
-    participations[eventId] = {
-        title: eventTitle,
-        date: new Date().toISOString(),
-        username: user.username
-    };
-    localStorage.setItem('myParticipations', JSON.stringify(participations));
+    const isAlreadyParticipating = participations[eventId];
     
-    // WEBHOOK PER DM
-    const WEBHOOK_PARTECIPAZIONI = 'https://discord.com/api/webhooks/1475199536539369483/zw5OBB40QzrdmXJ6PWKkqMSeDuupytJu9qiLQjYkiBKiCy0NsX3J8sdC1L4hm0G-3Fay';
-    
-    fetch(WEBHOOK_PARTECIPAZIONI, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            username: 'Sistema Partecipazioni',
-            content: 'PARTECIPAZIONE_EVENTO',
-            embeds: [{
-                title: '✅ Nuova Partecipazione',
-                color: 0x27ae60,
-                fields: [
-                    { name: '👤 Utente', value: user.username, inline: true },
-                    { name: '🎉 Evento', value: eventTitle, inline: true },
-                    { name: '🆔 User ID Discord', value: user.discordId || 'N/A', inline: true }
-                ],
-                timestamp: new Date().toISOString()
-            }]
-        })
-    }).catch(err => console.log('⚠️ Webhook partecipazioni:', err));
-    
-    const hasDiscordId = user.discordId && user.discordId !== 'N/A';
-    
-    showCustomAlert('success', '🎉 Iscritto all\'Evento!', 
-        `Parteciperai a:\n"${eventTitle}"\n\n${hasDiscordId ? '✅ Riceverai notifiche DM su Discord!' : '⚠️ Nessun Discord ID configurato = Nessun DM'}`);
+    if (isAlreadyParticipating) {
+        // ❌ ANNULLA ISCRIZIONE
+        delete participations[eventId];
+        localStorage.setItem('myParticipations', JSON.stringify(participations));
+        
+        // WEBHOOK ANNULLAMENTO
+        const WEBHOOK_ANNULLAMENTO = 'https://discord.com/api/webhooks/1475199536539369483/zw5OBB40QzrdmXJ6PWKkqMSeDuupytJu9qiLQjYkiBKiCy0NsX3J8sdC1L4hm0G-3Fay';
+        
+        fetch(WEBHOOK_ANNULLAMENTO, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: 'Sistema Partecipazioni',
+                content: 'ANNULLAMENTO_PARTECIPAZIONE',
+                embeds: [{
+                    title: '❌ Iscrizione Annullata',
+                    color: 0xe74c3c,
+                    fields: [
+                        { name: '👤 Utente', value: user.username, inline: true },
+                        { name: '🎉 Evento', value: eventTitle, inline: true },
+                        { name: '🆔 User ID Discord', value: user.discordId || 'N/A', inline: true }
+                    ],
+                    timestamp: new Date().toISOString()
+                }]
+            })
+        }).catch(err => console.log('⚠️ Webhook annullamento:', err));
+        
+        const hasDiscordId = user.discordId && user.discordId !== 'N/A';
+        
+        showCustomAlert('info', '❌ Iscrizione Annullata', 
+            `Hai annullato la partecipazione a:\n"${eventTitle}"\n\n${hasDiscordId ? '✅ Riceverai conferma DM su Discord!' : '⚠️ Nessun Discord ID = Nessun DM'}`);
+        
+        // Ricarica eventi per aggiornare pulsante
+        loadPinnedEventsGuides();
+        
+    } else {
+        // ✅ NUOVA ISCRIZIONE
+        participations[eventId] = {
+            title: eventTitle,
+            date: new Date().toISOString(),
+            username: user.username
+        };
+        localStorage.setItem('myParticipations', JSON.stringify(participations));
+        
+        // WEBHOOK PARTECIPAZIONE
+        const WEBHOOK_PARTECIPAZIONI = 'https://discord.com/api/webhooks/1475199536539369483/zw5OBB40QzrdmXJ6PWKkqMSeDuupytJu9qiLQjYkiBKiCy0NsX3J8sdC1L4hm0G-3Fay';
+        
+        fetch(WEBHOOK_PARTECIPAZIONI, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: 'Sistema Partecipazioni',
+                content: 'PARTECIPAZIONE_EVENTO',
+                embeds: [{
+                    title: '✅ Nuova Partecipazione',
+                    color: 0x27ae60,
+                    fields: [
+                        { name: '👤 Utente', value: user.username, inline: true },
+                        { name: '🎉 Evento', value: eventTitle, inline: true },
+                        { name: '🆔 User ID Discord', value: user.discordId || 'N/A', inline: true }
+                    ],
+                    timestamp: new Date().toISOString()
+                }]
+            })
+        }).catch(err => console.log('⚠️ Webhook partecipazioni:', err));
+        
+        const hasDiscordId = user.discordId && user.discordId !== 'N/A';
+        
+        showCustomAlert('success', '🎉 Iscritto all\'Evento!', 
+            `Parteciperai a:\n"${eventTitle}"\n\n${hasDiscordId ? '✅ Riceverai notifiche DM su Discord!' : '⚠️ Nessun Discord ID = Nessun DM'}`);
+        
+        // Ricarica eventi per aggiornare pulsante
+        loadPinnedEventsGuides();
+    }
 }
 
 function deleteEventFixed(eventId) {
