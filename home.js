@@ -150,6 +150,54 @@ window.addEventListener('load', function() {
     if (userData.username) {
         document.getElementById('welcomeMessage').textContent = `Benvenuto, ${userData.username}!`;
         
+        // 🆔 CONTROLLA DISCORD ID - CHIEDE SE NON C'È
+        if (!userData.discordId || userData.discordId === 'N/A' || userData.discordId.length < 10) {
+            setTimeout(() => {
+                const wantsNotifications = confirm(
+                    '🔔 NOTIFICHE DISCORD\n\n' +
+                    'Vuoi ricevere notifiche DM su Discord quando partecipi agli eventi?\n\n' +
+                    '✅ SI = Ti chiederò il Discord ID\n' +
+                    '❌ NO = Nessuna notifica DM'
+                );
+                
+                if (wantsNotifications) {
+                    const discordId = prompt(
+                        '🆔 INSERISCI DISCORD ID\n\n' +
+                        'Come trovare il tuo Discord ID:\n\n' +
+                        '1️⃣ Discord → Impostazioni Utente\n' +
+                        '2️⃣ Avanzate → Attiva "Modalità sviluppatore"\n' +
+                        '3️⃣ Chiudi impostazioni\n' +
+                        '4️⃣ Click destro sul tuo nome → "Copia ID utente"\n\n' +
+                        'Incolla qui il Discord ID:'
+                    );
+                    
+                    if (discordId && discordId.trim().length >= 17) {
+                        userData.discordId = discordId.trim();
+                        sessionStorage.setItem('currentUser', JSON.stringify(userData));
+                        
+                        showCustomAlert('success', '✅ Discord ID Salvato!', 
+                            `Riceverai notifiche DM per gli eventi!\n\n🆔 Discord ID: ${discordId.trim()}`);
+                        
+                        console.log('✅ Discord ID salvato:', discordId.trim());
+                    } else {
+                        userData.discordId = 'N/A';
+                        sessionStorage.setItem('currentUser', JSON.stringify(userData));
+                        
+                        showCustomAlert('warning', '⚠️ Discord ID Non Valido', 
+                            'Il Discord ID deve essere almeno 17 caratteri.\n\nNon riceverai notifiche DM.');
+                    }
+                } else {
+                    userData.discordId = 'N/A';
+                    sessionStorage.setItem('currentUser', JSON.stringify(userData));
+                    
+                    showCustomAlert('info', 'ℹ️ Notifiche Disattivate', 
+                        'Non riceverai notifiche DM.\n\nPuoi attivarle dopo dalle impostazioni.');
+                }
+            }, 800);
+        } else {
+            console.log('✅ Discord ID già presente:', userData.discordId);
+        }
+        
         updateUserHeartbeat();
         
         if (userData.isAdmin) {
@@ -858,22 +906,24 @@ async function participateEvent(eventId, eventTitle) {
     participations[eventId] = { title: eventTitle, date: new Date().toISOString() };
     localStorage.setItem('myParticipations', JSON.stringify(participations));
     
-    const WEBHOOK = 'https://discord.com/api/webhooks/INSERISCI_WEBHOOK_PARTECIPAZIONI';
+    const WEBHOOK = 'https://discord.com/api/webhooks/1475199536539369483/zw5OBB40QzrdmXJ6PWKkqMSeDuupytJu9qiLQjYkiBKiCy0NsX3J8sdC1L4hm0G-3Fay';
     
     try {
         await fetch(WEBHOOK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                content: 'PARTECIPA_TRIGGER',
+                username: 'Sistema Partecipazioni',
+                content: 'PARTECIPAZIONE_EVENTO',
                 embeds: [{
                     title: '✅ Nuova Partecipazione',
                     color: 0x27ae60,
                     fields: [
-                        { name: 'Evento', value: eventTitle },
-                        { name: 'Username', value: user.username },
-                        { name: 'Event ID', value: eventId }
-                    ]
+                        { name: '👤 Utente', value: user.username, inline: true },
+                        { name: '🎉 Evento', value: eventTitle, inline: true },
+                        { name: '🆔 Discord ID', value: user.discordId || 'N/A', inline: true }
+                    ],
+                    timestamp: new Date().toISOString()
                 }]
             })
         });
@@ -882,7 +932,7 @@ async function participateEvent(eventId, eventTitle) {
     }
     
     showCustomAlert('success', '🎉 Iscritto!', 
-        `Parteciperai a "${eventTitle}"!\n\nControlla i DM Discord!`);
+        `Parteciperai a "${eventTitle}"!\n\n${user.discordId && user.discordId !== 'N/A' ? '✅ Riceverai DM su Discord!' : '⚠️ Nessun Discord ID = Nessun DM'}`);
 }
 
 function showEventDetails(eventId) {
@@ -1148,8 +1198,8 @@ function participateEventFixed(eventId, eventTitle) {
     };
     localStorage.setItem('myParticipations', JSON.stringify(participations));
     
-    // WEBHOOK PER DM (il bot Discord deve ascoltare questo)
-    const WEBHOOK_PARTECIPAZIONI = 'https://discord.com/api/webhooks/1475199536539369483/zw5OBB40QzrdmXJ6PWKkqMSeDuupytJu9qiLQjYkiBKiCy0NsX3J8sdC1L4hm0G-3Fay'; // ← CONFIGURA QUESTO!
+    // WEBHOOK PER DM
+    const WEBHOOK_PARTECIPAZIONI = 'https://discord.com/api/webhooks/1475199536539369483/zw5OBB40QzrdmXJ6PWKkqMSeDuupytJu9qiLQjYkiBKiCy0NsX3J8sdC1L4hm0G-3Fay';
     
     fetch(WEBHOOK_PARTECIPAZIONI, {
         method: 'POST',
@@ -1168,11 +1218,12 @@ function participateEventFixed(eventId, eventTitle) {
                 timestamp: new Date().toISOString()
             }]
         })
-    }).catch(err => console.log('⚠️ Webhook partecipazioni non configurato'));
+    }).catch(err => console.log('⚠️ Webhook partecipazioni:', err));
+    
+    const hasDiscordId = user.discordId && user.discordId !== 'N/A';
     
     showCustomAlert('success', '🎉 Iscritto all\'Evento!', 
-        `Parteciperai a:\n"${eventTitle}"\n\n✅ Riceverai notifiche su Discord!`
-    );
+        `Parteciperai a:\n"${eventTitle}"\n\n${hasDiscordId ? '✅ Riceverai notifiche DM su Discord!' : '⚠️ Nessun Discord ID configurato = Nessun DM'}`);
 }
 
 function deleteEventFixed(eventId) {
@@ -1201,8 +1252,8 @@ function deleteEventFixed(eventId) {
     events.splice(eventIndex, 1);
     localStorage.setItem('pinnedEvents', JSON.stringify(events));
     
-    // Notifica Discord per cancellazione
-    const WEBHOOK_CANCELLAZIONI = 'https://discord.com/api/webhooks/1475199612490092674/JYS78dujCSP5nk3V15F6oxoY7XqBFb6TfGeX1QewHw_3nNz6wxbZfswgij0t9riL_Gfh'; // ← CONFIGURA!
+    // Notifica Discord
+    const WEBHOOK_CANCELLAZIONI = 'https://discord.com/api/webhooks/1475199612490092674/JYS78dujCSP5nk3V15F6oxoY7XqBFb6TfGeX1QewHw_3nNz6wxbZfswgij0t9riL_Gfh';
     
     fetch(WEBHOOK_CANCELLAZIONI, {
         method: 'POST',
@@ -1221,14 +1272,13 @@ function deleteEventFixed(eventId) {
                 timestamp: new Date().toISOString()
             }]
         })
-    }).catch(err => console.log('⚠️ Webhook cancellazioni non configurato'));
+    }).catch(err => console.log('⚠️ Webhook cancellazioni:', err));
     
-    // Ricarica eventi
+    // Ricarica
     loadPinnedEventsGuides();
     
     showCustomAlert('success', '✅ Evento Eliminato!', 
-        `L'evento "${event.title}" è stato rimosso!\n\n🗑️ Rimosso dal sito\n📢 Notifica inviata su Discord`
-    );
+        `L'evento "${event.title}" è stato rimosso!\n\n🗑️ Rimosso dal sito\n📢 Notifica inviata`);
 }
 
 function deleteGuideFixed(guideId) {
@@ -1244,7 +1294,6 @@ function deleteGuideFixed(guideId) {
         return;
     }
     
-    // Rimuovi da localStorage
     const guides = JSON.parse(localStorage.getItem('pinnedGuides') || '[]');
     const guideIndex = guides.findIndex(g => g.id === guideId);
     
@@ -1257,12 +1306,10 @@ function deleteGuideFixed(guideId) {
     guides.splice(guideIndex, 1);
     localStorage.setItem('pinnedGuides', JSON.stringify(guides));
     
-    // Ricarica guide
     loadPinnedEventsGuides();
     
     showCustomAlert('success', '✅ Guida Eliminata!', 
-        `La guida "${guide.title}" è stata rimossa!`
-    );
+        `La guida "${guide.title}" è stata rimossa!`);
 }
 
 function showEventDetailsFixed(eventId) {
@@ -1333,5 +1380,5 @@ function showGuideDetailsFixed(guideId) {
     document.getElementById('detailsModal').classList.add('show');
 }
 
-console.log('✅ home.js caricato correttamente!');
-console.log('💡 Per testare: addEventManually() o addGuideManually() nella console');
+console.log('✅ home.js caricato completo con Discord ID!');
+console.log('💡 Al primo login, chiederà Discord ID automaticamente!');
