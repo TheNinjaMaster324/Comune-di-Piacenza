@@ -1084,8 +1084,10 @@ function loadPinnedEventsGuides() {
     if (events.length > 0) {
         hasContent = true;
         
-        // ✅ CARICA PARTECIPAZIONI UTENTE
-        const participations = JSON.parse(localStorage.getItem('myParticipations') || '{}');
+        // ✅ CARICA PARTECIPAZIONI DELL'UTENTE CORRENTE
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+        const storageKey = currentUser.username ? `myParticipations_${currentUser.username}` : 'myParticipations_guest';
+        const participations = JSON.parse(localStorage.getItem(storageKey) || '{}');
         
         const eventsHTML = events.slice(0, 3).map(event => {
             const eventDate = new Date(event.date);
@@ -1210,14 +1212,15 @@ function participateEventFixed(eventId, eventTitle) {
         return;
     }
     
-    // ✅ CONTROLLA SE GIÀ ISCRITTO
-    const participations = JSON.parse(localStorage.getItem('myParticipations') || '{}');
+    // ✅ PARTECIPAZIONI PER UTENTE (non globali!)
+    const storageKey = `myParticipations_${user.username}`;
+    const participations = JSON.parse(localStorage.getItem(storageKey) || '{}');
     const isAlreadyParticipating = participations[eventId];
     
     if (isAlreadyParticipating) {
         // ❌ ANNULLA ISCRIZIONE
         delete participations[eventId];
-        localStorage.setItem('myParticipations', JSON.stringify(participations));
+        localStorage.setItem(storageKey, JSON.stringify(participations));
         
         // WEBHOOK ANNULLAMENTO
         const WEBHOOK_ANNULLAMENTO = 'https://discord.com/api/webhooks/1475199536539369483/zw5OBB40QzrdmXJ6PWKkqMSeDuupytJu9qiLQjYkiBKiCy0NsX3J8sdC1L4hm0G-3Fay';
@@ -1256,7 +1259,7 @@ function participateEventFixed(eventId, eventTitle) {
             date: new Date().toISOString(),
             username: user.username
         };
-        localStorage.setItem('myParticipations', JSON.stringify(participations));
+        localStorage.setItem(storageKey, JSON.stringify(participations));
         
         // WEBHOOK PARTECIPAZIONE
         const WEBHOOK_PARTECIPAZIONI = 'https://discord.com/api/webhooks/1475199536539369483/zw5OBB40QzrdmXJ6PWKkqMSeDuupytJu9qiLQjYkiBKiCy0NsX3J8sdC1L4hm0G-3Fay';
@@ -1299,7 +1302,7 @@ function deleteEventFixed(eventId) {
         return;
     }
     
-    if (!confirm('⚠️ Sei sicuro di voler eliminare questo evento?\n\nL\'evento verrà rimosso da:\n• Sito web\n• Canale Discord\n• Eventi del server Discord')) {
+    if (!confirm('⚠️ Sei sicuro di voler eliminare questo evento?\n\nL\'evento verrà rimosso da:\n• Sito web\n• Canale Discord\n• Eventi del server Discord\n• Tutti i partecipanti riceveranno notifica')) {
         return;
     }
     
@@ -1318,6 +1321,30 @@ function deleteEventFixed(eventId) {
     
     console.log(`🗑️ Evento rimosso da localStorage: ${event.title}`);
     
+    // ✅ RACCOGLIE DISCORD ID DI TUTTI I PARTECIPANTI
+    const users = JSON.parse(localStorage.getItem('piacenzaUsers') || '[]');
+    const participantsDiscordIds = [];
+    
+    // Controlla le partecipazioni di OGNI utente
+    users.forEach(u => {
+        if (!u.username) return;
+        const storageKey = `myParticipations_${u.username}`;
+        const userParticipations = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        
+        if (userParticipations[eventId]) {
+            // Questo utente aveva partecipato!
+            if (u.discordId && u.discordId !== 'N/A') {
+                participantsDiscordIds.push(u.discordId);
+            }
+            
+            // Rimuovi la partecipazione anche per lui
+            delete userParticipations[eventId];
+            localStorage.setItem(storageKey, JSON.stringify(userParticipations));
+        }
+    });
+    
+    console.log(`👥 Trovati ${participantsDiscordIds.length} partecipanti con Discord ID`);
+    
     // ✅ NOTIFICA DISCORD PER ELIMINAZIONE COMPLETA
     const WEBHOOK_CANCELLAZIONI = 'https://discord.com/api/webhooks/1475199612490092674/JYS78dujCSP5nk3V15F6oxoY7XqBFb6TfGeX1QewHw_3nNz6wxbZfswgij0t9riL_Gfh';
     
@@ -1334,6 +1361,7 @@ function deleteEventFixed(eventId) {
                     { name: '🆔 Event ID', value: eventId, inline: true },
                     { name: '📝 Titolo', value: event.title, inline: false },
                     { name: '👤 Cancellato da', value: user.username, inline: true },
+                    { name: '👥 Partecipanti', value: participantsDiscordIds.join(',') || 'Nessuno', inline: false },
                     { name: '⏰ Data', value: new Date().toLocaleString('it-IT'), inline: true }
                 ],
                 timestamp: new Date().toISOString()
@@ -1354,7 +1382,7 @@ function deleteEventFixed(eventId) {
         `L'evento "${event.title}" è stato rimosso!\n\n` +
         `🗑️ Rimosso dal sito\n` +
         `🗑️ Richiesta eliminazione inviata a Discord\n` +
-        `📢 Partecipanti verranno notificati`
+        `📢 ${participantsDiscordIds.length} partecipanti verranno notificati`
     );
 }
 
